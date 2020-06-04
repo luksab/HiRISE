@@ -1,0 +1,24 @@
+- [ ] Minimalistische Cinematic Engine
+    - [ ] Datenformat aus Blender exportieren, in Programm importieren
+    - [ ] protobuf oder json als Dateiformat?
+    - [ ] Kameraposition, Skelettanimationen
+- [ ] Rigging für Charaktere
+    - [ ] muss sehr gut funktion, um realistische Bewegungen zu erlauben
+- [ ] Physikalische Simulation der Glassplitter
+    - kann auch in Blender vorsimuliert werden, sollte es nicht in echtzeit möglich sein
+- [ ] Reflexion im Glas
+    - [ ] Zunächst bei intakter Scheibe durch duplikation der Szene unsetzbar
+    - [ ] Bei vielen Glassplittern andere Technik notwendig
+    - [ ] z.B. SS (unvollständig), Ray-tracing (zu teuer), Environment Map
+- [x] Dispacement Mapping + PDS Parser
+    - [x] Höhendaten und Bilder von Marsoberfläche aus PDS Daten laden
+    - [x] Marsoberfläche von HiRISE-daten
+- [ ] Sound
+    - Etwas Musikunterlage
+###Optionale Features
+- [x] Dynamische Subdivision Surface der Marsoberfläche
+    - Erhöht sowohl Performance, als auch Qualität
+- [ ] Prozedurale Texturen für Mars- [ ]oberfläche
+    - [x] Farben für Flächen, auf denen die HiRISE Kamera keine Farbinformationen erhalten hat
+- [ ] HDR- [ ]Effekte, Bewegungsunschärfe, Fokusunschärfe
+    - [ ] Qualität erhöhen, wenn noch Zeit und Performace über ist (Priorität absteigend)
