@@ -18,7 +18,7 @@
 ###Optionale Features
 - [x] Dynamische Subdivision Surface der Marsoberfläche
     - Erhöht sowohl Performance, als auch Qualität
-- [ ] Prozedurale Texturen für Mars- [ ]oberfläche
+- [ ] Prozedurale Texturen für Mars-oberfläche
     - [x] Farben für Flächen, auf denen die HiRISE Kamera keine Farbinformationen erhalten hat
-- [ ] HDR- [ ]Effekte, Bewegungsunschärfe, Fokusunschärfe
+- [ ] HDR-Effekte, Bewegungsunschärfe, Fokusunschärfe
     - [ ] Qualität erhöhen, wenn noch Zeit und Performace über ist (Priorität absteigend)
