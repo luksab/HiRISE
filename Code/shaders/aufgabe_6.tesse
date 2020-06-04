@@ -1,0 +1,20 @@
+#version 430 core
+
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+uniform mat4 proj_mat;
+
+uniform sampler2D height;
+
+layout (triangles, equal_spacing, ccw) in;
+out vec3 interp_pos;
+
+void main(void)
+{
+    vec4 pos = (gl_TessCoord.x * gl_in[0].gl_Position) +
+                  (gl_TessCoord.y * gl_in[1].gl_Position) +
+                  (gl_TessCoord.z * gl_in[2].gl_Position);
+    float offset = texture2D(height, pos.xy/2+0.5).r;
+    gl_Position = proj_mat * view_mat * model_mat * vec4(pos.x, pos.y, pos.z+offset, 1.0);
+    interp_pos = pos.xyz;
+}

@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.effect": "hlsl",
+        "*.tcc": "cpp"
+    }
+}

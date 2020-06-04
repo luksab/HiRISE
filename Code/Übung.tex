@@ -1,0 +1,81 @@
+\documentclass[fontsize=10pt,a4paper]{scrartcl}
+
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+\usepackage{amsmath,amssymb,amstext}
+\usepackage{siunitx}  
+\usepackage{eurosym}
+\usepackage{subfig}
+\usepackage{geometry}
+\geometry{
+	left=3cm,
+	right=3cm,
+	top=1.5cm,
+	bottom=3cm,
+}
+
+\title{CG Übung I}
+\author{Lukas Sabatschus}
+\date{23.4.2020}
+\makeatletter
+\def\@seccntformat#1{%
+	\expandafter\ifx\csname c@#1\endcsname\c@section
+	Aufgabe \thesection:
+	\else
+	\csname the#1\endcsname\quad
+	\fi}
+\makeatother
+\begin{document}
+\maketitle
+%\tableofcontents \newpage
+
+\section{Theoretischer Aufgabenteil}
+\subsection{a}
+Für 3 Punkte $\mathbf{p}_0,\mathbf{p}_1,\mathbf{p}_2\in \mathbb{R}^2$
+eines Dreiecks $\Delta(\mathbf{p}_0,\mathbf{p}_1,\mathbf{p}_2)$
+soll gezeigt werden, das aus
+\begin{align*}
+	\lambda_0\mathbf{p}_0+\lambda_1\mathbf{p}_1+\lambda_2\mathbf{p}_2&=\mathbf{p}\\
+	\lambda_0+\lambda_1+\lambda_2&=1
+\end{align*}
+folgende $\lambda$s folgen:
+\begin{align*}
+	\lambda_0 & =\frac{A(\Delta(\mathbf{p},\mathbf{p}_1,\mathbf{p}_2))}{A(\Delta(\mathbf{p}_0,\mathbf{p}_1,\mathbf{p}_2))} \\
+	\lambda_1 & =\frac{A(\Delta(\mathbf{p}_0,\mathbf{p},\mathbf{p}_2))}{A(\Delta(\mathbf{p}_0,\mathbf{p}_1,\mathbf{p}_2))} \\
+	\lambda_2 & =\frac{A(\Delta(\mathbf{p}_0,\mathbf{p}_1,\mathbf{p}))}{A(\Delta(\mathbf{p}_0,\mathbf{p}_1,\mathbf{p}_2))} \\
+\end{align*}
+
+Dafür lösen wir folgendes LGS:
+\begin{align}
+	\lambda_0\mathbf{p}_{0x}+\lambda_1\mathbf{p}_{1x}+\lambda_2\mathbf{p}_{2x}&=\mathbf{p}_x\\
+	\lambda_0\mathbf{p}_{0y}+\lambda_1\mathbf{p}_{1y}+\lambda_2\mathbf{p}_{2y}&=\mathbf{p}_y\\
+	\lambda_0+\lambda_1+\lambda_2&=1
+\end{align}
+
+\begin{align}
+(3) umgeformt:\space \lambda_0&=1-\lambda_1-\lambda_2\\
+(4) in (2):\mathbf{p}_y&=\space (1-\lambda_1-\lambda_2)\mathbf{p}_0y+\lambda_1\mathbf{p}_1y+\lambda_2\mathbf{p}_2y\\
+\lambda_2&=\frac{-\lambda_1\mathbf{p}_{0y}+\lambda_1\mathbf{p}_{1y}-\mathbf{p}_{y}+\mathbf{p}_{0y}}{\mathbf{p}_{0y}-\lambda_1\mathbf{p}_{2y}}\\
+(3)\&(6)in(1): \textnormal{[zu lang für meine \LaTeX-skills]}\\
+\textnormal{Nach }\lambda_0\textnormal{ umgeformt:}\lambda_0&=\frac{\mathbf{p}_y(\mathbf{p}_{0x}-\mathbf{p}_{2x})+\mathbf{p}_{x}(\mathbf{p}_{0y}-\mathbf{p}_{2y})
+	-\mathbf{p}_{0y}\mathbf{p}_{2x}+\mathbf{p}_{0x}\mathbf{p}_{2y}}{\mathbf{p}_{0y}(\mathbf{p}_{1x}-\mathbf{p}_{2x})+\mathbf{p}_{0x}(\mathbf{p}_{0x}(\mathbf{p}_{2y}-\mathbf{p}_{1y}+\mathbf{p}_{1y}\mathbf{p}_{2x}-\mathbf{p}_{1x}\mathbf{p}_{2y}))}\\
+	\Rightarrow \lambda_0 & =\frac{\vert\left(\mathbf{p}_{1x}-\mathbf{p}_{x}\right)-\left(\mathbf{p}_{2y}-\mathbf{p}_{y}\right)\vert}{\vert\left(\mathbf{p}_{1x}-\mathbf{p}_{0x}\right)-\left(\mathbf{p}_{2y}-\mathbf{p}_{0y}\right)\vert} \\
+	\Rightarrow \lambda_0 & =\frac{A(\Delta(\mathbf{p},\mathbf{p}_1,\mathbf{p}_2))}{A(\Delta(\mathbf{p}_0,\mathbf{p}_1,\mathbf{p}_2))} \\
+\end{align}
+Wobei $A(\Delta(a,b,c))$ die Fläche des durch $\mathbf{a},\mathbf{b},\mathbf{c}\in\mathbb{R}^2$ aufgespannten Dreiecks bezeichnet.\\
+Analoges unformen für $\lambda_1$\&$\lambda_2$ ergibt die entsprechenden Frormeln von oben.
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
