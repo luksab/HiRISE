@@ -183,10 +183,10 @@ void set_texture_wrap_mode(unsigned int texture, GLenum mode)
 unsigned int setupShader()
 {
     // load and compile shaders and link program
-    unsigned int vertexShader = compileShader("aufgabe_6.vert", GL_VERTEX_SHADER);
-    unsigned int fragmentShader = compileShader("aufgabe_6.frag", GL_FRAGMENT_SHADER);
-    unsigned int tesselationShader = compileShader("aufgabe_6.tess", GL_TESS_CONTROL_SHADER);
-    unsigned int tesselationEShader = compileShader("aufgabe_6.tesse", GL_TESS_EVALUATION_SHADER);
+    unsigned int vertexShader = compileShader("main.vert", GL_VERTEX_SHADER);
+    unsigned int fragmentShader = compileShader("main.frag", GL_FRAGMENT_SHADER);
+    unsigned int tesselationShader = compileShader("main.tess", GL_TESS_CONTROL_SHADER);
+    unsigned int tesselationEShader = compileShader("main.tesse", GL_TESS_EVALUATION_SHADER);
     unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader, tesselationShader, tesselationEShader);
     //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
     // after linking the program the shader objects are no longer needed
