@@ -10,15 +10,17 @@ uniform sampler2D height;
 uniform vec3 colorA;
 uniform vec3 colorB;
 uniform float discardFactor;
+uniform float h;
 
 const float eps = 1E-06;
 const float pi = 3.14159265359;
 
 float derive(vec2 uv, float h){
+    uv -= 0.5*h;
     float a = texture2D(height, uv).r;
     return length(vec2(a-texture2D(height, vec2(uv.x+h,uv.y)).r, a-texture2D(height, vec2(uv.x,uv.y+h)).r))*(1/h);
 }
-
+//hsv/rgb from: http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
 // All components are in the range [0…1], including hue.
 vec4 rgb2hsv(vec4 c)
 {
@@ -41,11 +43,11 @@ vec4 hsv2rgb(vec4 c)
 
 void main() {
     vec2 tc;
-    tc = interp_pos.xy/2+0.5;
+    tc = interp_pos.xz/2+0.5;
     
     float a = texture2D(tex, tc).r;
 
-    float d = derive(tc, 0.01);
+    float d = sqrt(derive(tc,h));//min(2.,derive(tc, h));
 
     float b = d+0.2-a;
 
@@ -62,7 +64,7 @@ void main() {
     vec4 col = hsv2rgb(vec4(colorRampHSV.xy,e,colorRampHSV.w));
 
     //frag_color = col;
-    if(texture2D(tex,(interp_pos.xy*discardFactor)/2+0.5).r == 0.0){
+    if(texture2D(tex,(interp_pos.xz*discardFactor)/2+0.5).r == 0.0){
         frag_color = vec4(1,0,0,0);
     }else{
         frag_color = col;

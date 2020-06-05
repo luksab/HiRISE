@@ -208,8 +208,8 @@ int main(int, char *argv[])
 
     unsigned int shaderProgram = setupShader();
 
-    geometry plane = loadMesh("HiresPlane.obj", true, glm::vec4(0.f, 0.f, 0.f, 1.f));
-    if (plane.vertex_count == 0)
+    geometry model = loadMesh("plane.dae", true, glm::vec4(0.f, 0.f, 0.f, 1.f));
+    if (model.vertex_count == 0)
     {
         exit(1);
     }
@@ -229,9 +229,11 @@ int main(int, char *argv[])
     float colbS = 0.122;
     float colbV = 0.606;
     int tessFactor_loc = glGetUniformLocation(shaderProgram, "tessFactor");
-    float tessFactor = 1;
+    float tessFactor = 5;
     int discardFactor_loc = glGetUniformLocation(shaderProgram, "discardFactor");
     float discardFactor = 1.055;
+    int h_loc = glGetUniformLocation(shaderProgram, "h");
+    float h = 3.0;
     
 
     proj_matrix = glm::perspective(FOV, static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT, NEAR_VALUE, FAR_VALUE);
@@ -245,10 +247,12 @@ int main(int, char *argv[])
     int pds_channels = 1;
     float *pds_tex_data = load_pds_data(DATA_ROOT + "DTEEC_048136_1725_041121_1725_A01.img", &pds_width, &pds_height, &pds_channels);
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     unsigned int image_tex = create_texture_rgba32f(image_width, image_height, image_tex_data);
-    //set_texture_wrap_mode(image_tex, GL_CLAMP_TO_EDGE);
     set_texture_wrap_mode(image_tex, GL_CLAMP_TO_BORDER);
     unsigned int pds_tex = create_texture_r32f(pds_width, pds_height, pds_tex_data);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
     glBindTextureUnit(0, image_tex);
     glBindTextureUnit(1, pds_tex);
@@ -323,6 +327,7 @@ int main(int, char *argv[])
             ImGui::SliderFloat("colbS", &colbS, 0.0f, 1.0f);
             ImGui::SliderFloat("colbV", &colbV, 0.0f, 1.0f);
             ImGui::SliderFloat("discardFactor", &discardFactor, 1.f, 1.1f);
+            ImGui::SliderFloat("h", &h, 1.f, 7.f);
             ImGui::End();
         }
         glUniform3f(cola_loc, colaH, colaS, colaV);
@@ -330,6 +335,8 @@ int main(int, char *argv[])
 
         glUniform1f(tessFactor_loc, tessFactor);
         glUniform1f(discardFactor_loc, discardFactor);
+        //printf("%lf\n",pow(10.,-h));
+        glUniform1f(h_loc, pow(10.,-h));
         
 
         if (vSync)
@@ -343,14 +350,18 @@ int main(int, char *argv[])
 
         proj_matrix = glm::perspective(FOV, static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT, NEAR_VALUE, FAR_VALUE);
 
+        camera_state* state = cam.getState();
+        //state->phi += 0.01;
+        //state->look_at.x -= 0.01;
+        cam.update();
         glm::mat4 view_matrix = cam.view_matrix();
         glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, &view_matrix[0][0]);
         glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &proj_matrix[0][0]);
 
         glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &model_matrix[0][0]);
-        plane.bind();
-        //glDrawElements(GL_TRIANGLES, plane.vertex_count, GL_UNSIGNED_INT, (void *)0);
-        glDrawElements(GL_PATCHES, plane.vertex_count, GL_UNSIGNED_INT, (void *)0);
+        model.bind();
+        //glDrawElements(GL_TRIANGLES, model.vertex_count, GL_UNSIGNED_INT, (void *)0);
+        glDrawElements(GL_PATCHES, model.vertex_count, GL_UNSIGNED_INT, (void *)0);
 
         // render UI
         imgui_render();

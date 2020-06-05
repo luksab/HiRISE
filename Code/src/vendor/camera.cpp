@@ -4,25 +4,6 @@
 #define M_PI 3.14159265359
 #endif
 
-struct camera_state {
-    // mouse state
-    int last_x;
-    int last_y;
-    int drag_start_x;
-    int drag_start_y;
-    bool left_down;
-    bool middle_down;
-    bool right_down;
-    bool dragging;
-
-    // transform state
-    glm::vec3 look_at;
-    float phi;
-    float theta;
-    float radius;
-    glm::mat4 view_mat;
-};
-
 static camera_state* state;
 
 camera_state* getState(){
@@ -201,6 +182,34 @@ camera::~camera() {
 glm::mat4
 camera::view_matrix() const {
     return state->view_mat;
+}
+
+camera_state *
+camera::getState() const {
+    return state;
+}
+
+void
+camera::update() {
+    glm::mat4 trans_radius = glm::identity<glm::mat4>();
+    glm::mat4 trans_center = glm::identity<glm::mat4>();
+    glm::mat4 rot_theta = glm::identity<glm::mat4>();
+    glm::mat4 rot_phi = glm::identity<glm::mat4>();
+
+    trans_radius[3][2] = -state->radius;
+    trans_center[3] = glm::vec4(-state->look_at, 1.f);
+
+    rot_theta[1][1] = cosf(state->theta);
+    rot_theta[2][1] = sinf(state->theta);
+    rot_theta[1][2] = -rot_theta[2][1];
+    rot_theta[2][2] = rot_theta[1][1];
+
+    rot_phi[0][0] = cosf(state->phi);
+    rot_phi[0][2] = sinf(state->phi);
+    rot_phi[2][0] = -rot_phi[0][2];
+    rot_phi[2][2] = rot_phi[0][0];
+
+    state->view_mat = trans_radius * rot_theta * rot_phi * trans_center;
 }
 
 glm::vec3
