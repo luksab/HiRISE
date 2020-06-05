@@ -40,6 +40,24 @@ compileShader(const char* filename, unsigned int type) {
 }
 
 unsigned int
+linkProgram(unsigned int computeShader) {
+    unsigned int shaderProgram;
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, computeShader);
+    glLinkProgram(shaderProgram);
+    int success;
+    char infoLog[512];
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if(!success) {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cerr << "Linking program failed\n" << infoLog << std::endl;
+        return 0;
+    }
+
+    return shaderProgram;
+}
+
+unsigned int
 linkProgram(unsigned int vertexShader, unsigned int fragmentShader) {
     unsigned int shaderProgram;
     shaderProgram = glCreateProgram();

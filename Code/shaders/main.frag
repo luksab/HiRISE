@@ -1,6 +1,7 @@
 #version 430 core
 
 in vec3 interp_pos;
+in vec4 interpc_pos;
 
 out vec4 frag_color;
 
@@ -41,6 +42,14 @@ vec4 hsv2rgb(vec4 c)
     return vec4(c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y), c.w);
 }
 
+vec4 applyFog( in vec4  color,      // original color of the pixel
+               in float distance)
+{
+    float fogAmount = (1.0-exp(-distance));
+    vec4  fogColor  = vec4(0.5,0.6,0.7,1.0);
+    return mix( color, fogColor, fogAmount );
+}
+
 void main() {
     vec2 tc;
     tc = interp_pos.xz/2+0.5;
@@ -63,10 +72,11 @@ void main() {
 
     vec4 col = hsv2rgb(vec4(colorRampHSV.xy,e,colorRampHSV.w));
 
+    //col = applyFog(col,length(interpc_pos.xyz));
     //frag_color = col;
     if(texture2D(tex,(interp_pos.xz*discardFactor)/2+0.5).r == 0.0){
         frag_color = vec4(1,0,0,0);
     }else{
         frag_color = col;
-    }    
+    }
 }
