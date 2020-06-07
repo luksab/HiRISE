@@ -69,7 +69,7 @@ load_pds_data(std::string filename, int *width, int *height, int *channels)
         //printf("Retrieved line of length %zu:\n", read);
         //printf("%s", line);
         skipLen += read;
-        if (strncmp(line, "  LINES            = ", 21) == 0)
+        if (strncmp(line, "  LINES            = ", 21) == 0)//21 = len("  LINES            = ")
         {
             *height = atoi(line + 21);
         }
@@ -135,7 +135,7 @@ load_pds_data(std::string filename, int *width, int *height, int *channels)
                 /*if (j == 0)
                     printf("%lf\n", data[j * w * *channels + i * *channels + k]);*/
                 //max = max>data[j * w * *channels + i * *channels + k]?max:data[j * w * *channels + i * *channels + k];
-                //min = min<data[j * w * *channels + i * *channels + k]?max:data[j * w * *channels + i * *channels + k];
+                //min = min<data[j * w * *channels + i * *channels + k]?max:data[j * w * *channels + i * *channels + k]; 
             }
         }
     }
