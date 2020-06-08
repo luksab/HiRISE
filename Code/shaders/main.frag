@@ -2,6 +2,7 @@
 
 in vec3 interp_pos;
 in vec4 interpc_pos;
+in vec2 TexCoord_FS_in;
 
 out vec4 frag_color;
 
@@ -53,6 +54,7 @@ vec4 applyFog( in vec4  color,      // original color of the pixel
 void main() {
     vec2 tc;
     tc = interp_pos.xz/2+0.5;
+    tc = TexCoord_FS_in;
     
     float a = texture2D(tex, tc).r;
 
@@ -74,7 +76,7 @@ void main() {
 
     //col = applyFog(col,length(interpc_pos.xyz));
     //frag_color = col;
-    if(texture2D(tex,(interp_pos.xz*discardFactor)/2+0.5).r == 0.0){
+    if(texture2D(tex,((((tc*2)-1)*discardFactor)+1)/2).r == 0.0){
         frag_color = vec4(1,0,0,0);
     }else{
         frag_color = col;

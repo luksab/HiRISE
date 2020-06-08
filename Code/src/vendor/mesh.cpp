@@ -169,29 +169,31 @@ loadScene(const char* filename, bool smooth, const glm::vec4& color) {
                 geometry m{};
                 m.positions.resize(mesh->mNumVertices);
                 m.normals.resize(mesh->mNumVertices);
+                m.uvCords.resize(mesh->mNumUVComponents[0]);
                 m.colors.resize(mesh->mNumVertices, glm::vec4(0.9f, 0.9f, 0.9f, 1.f));
                 m.faces.resize(mesh->mNumFaces);
 
-                float* vbo_data = new float[mesh->mNumVertices * 10];
+                float* vbo_data = new float[mesh->mNumVertices * 8];
                 unsigned int* ibo_data = new unsigned int[mesh->mNumFaces * 3];
                 for (uint32_t i = 0; i < mesh->mNumVertices; ++i) {
                     glm::vec3 pos(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
                     glm::vec3 nrm(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+                    glm::vec2 uv(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
 
                     m.positions[i] = pos;
                     m.normals[i] = nrm;
                     m.colors[i] = color;
 
-                    vbo_data[10 * i + 0] = pos[0];
-                    vbo_data[10 * i + 1] = pos[1];
-                    vbo_data[10 * i + 2] = pos[2];
-                    vbo_data[10 * i + 3] = nrm[0];
-                    vbo_data[10 * i + 4] = nrm[1];
-                    vbo_data[10 * i + 5] = nrm[2];
-                    vbo_data[10 * i + 6] = color[0];
-                    vbo_data[10 * i + 7] = color[1];
-                    vbo_data[10 * i + 8] = color[2];
-                    vbo_data[10 * i + 9] = color[3];
+                    vbo_data[8 * i + 0] = pos[0];
+                    vbo_data[8 * i + 1] = pos[1];
+                    vbo_data[8 * i + 2] = pos[2];
+                    vbo_data[8 * i + 3] = nrm[0];
+                    vbo_data[8 * i + 4] = nrm[1];
+                    vbo_data[8 * i + 5] = nrm[2];
+                    vbo_data[8 * i + 6] = uv[0];
+                    vbo_data[8 * i + 7] = uv[1];
+                    //printf("%lf %lf\n",uv[0], uv[1]);
+                    //vbo_data[10 * i + 9] = uv[2];
                 }
 
                 for (uint32_t i = 0; i < mesh->mNumFaces; ++i) {
@@ -206,12 +208,12 @@ loadScene(const char* filename, bool smooth, const glm::vec4& color) {
 
                 glGenVertexArrays(1, &m.vao);
                 glBindVertexArray(m.vao);
-                m.vbo = makeBuffer(GL_ARRAY_BUFFER, GL_STATIC_DRAW, mesh->mNumVertices * 10 * sizeof(float), vbo_data);
+                m.vbo = makeBuffer(GL_ARRAY_BUFFER, GL_STATIC_DRAW, mesh->mNumVertices * 8 * sizeof(float), vbo_data);
                 m.ibo = makeBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, mesh->mNumFaces * 3 * sizeof(unsigned int), ibo_data);
                 glBindBuffer(GL_ARRAY_BUFFER, m.vbo);
-                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)0);
-                glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(3*sizeof(float)));
-                glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(6*sizeof(float)));
+                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+                glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
+                glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6*sizeof(float)));
                 glEnableVertexAttribArray(0);
                 glEnableVertexAttribArray(1);
                 glEnableVertexAttribArray(2);

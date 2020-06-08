@@ -18,6 +18,7 @@ struct geometry {
     unsigned int vertex_count;
     std::vector<glm::vec3> positions;
     std::vector<glm::vec3> normals;
+    std::vector<glm::vec3> uvCords;
     std::vector<glm::vec4> colors;
     std::vector<glm::uvec3> faces;
 };
