@@ -15,8 +15,6 @@ const int WINDOW_HEIGHT = 1080;
 float FOV = 45.;
 const float NEAR_VALUE = 0.1f;
 const float FAR_VALUE = 100.f;
-const int TEXTURE_WIDTH = 20;
-const int TEXTURE_HEIGHT = 20;
 
 #ifndef M_PI
 #define M_PI 3.14159265359
