@@ -1,5 +1,6 @@
 #include <random>
 #include <glm/gtx/transform.hpp>
+#include "glm/gtx/string_cast.hpp"
 #include <stb_image.h>
 
 #include "common.hpp"
@@ -67,7 +68,7 @@ load_pds_data(std::string filename, int *width, int *height, int *channels)
         //printf("Retrieved line of length %zu:\n", read);
         //printf("%s", line);
         skipLen += read;
-        if (strncmp(line, "  LINES            = ", 21) == 0)//21 = len("  LINES            = ")
+        if (strncmp(line, "  LINES            = ", 21) == 0) //21 = len("  LINES            = ")
         {
             *height = atoi(line + 21);
         }
@@ -133,7 +134,7 @@ load_pds_data(std::string filename, int *width, int *height, int *channels)
                 /*if (j == 0)
                     printf("%lf\n", data[j * w * *channels + i * *channels + k]);*/
                 //max = max>data[j * w * *channels + i * *channels + k]?max:data[j * w * *channels + i * *channels + k];
-                //min = min<data[j * w * *channels + i * *channels + k]?max:data[j * w * *channels + i * *channels + k]; 
+                //min = min<data[j * w * *channels + i * *channels + k]?max:data[j * w * *channels + i * *channels + k];
             }
         }
     }
@@ -154,6 +155,37 @@ create_texture_rgba32f(int width, int height, float *data)
     glTextureSubImage2D(handle, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, data);
 
     return handle;
+}
+
+unsigned int loadCubemap(std::vector<std::string> faces)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+    int width, height, nrChannels;
+    for (unsigned int i = 0; i < faces.size(); i++)
+    {
+        unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                         0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
+            stbi_image_free(data);
+        }
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return textureID;
 }
 
 unsigned int
@@ -195,6 +227,18 @@ unsigned int setupShader()
     return shaderProgram;
 }
 
+unsigned int setupCubeShader()
+{
+    // load and compile shaders and link program
+    unsigned int vertexShader = compileShader("cubeMap/vert.vert", GL_VERTEX_SHADER);
+    unsigned int fragmentShader = compileShader("cubeMap/frag.frag", GL_FRAGMENT_SHADER);
+    unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
+    // after linking the program the shader objects are no longer needed
+    glDeleteShader(fragmentShader);
+    glDeleteShader(vertexShader);
+    return shaderProgram;
+}
+
 int main(int, char *argv[])
 {
     GLFWwindow *window = initOpenGL(WINDOW_WIDTH, WINDOW_HEIGHT, argv[0]);
@@ -232,7 +276,6 @@ int main(int, char *argv[])
     float discardFactor = 1.055;
     int h_loc = glGetUniformLocation(shaderProgram, "h");
     float h = 3.0;
-    
 
     proj_matrix = glm::perspective(FOV, static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT, NEAR_VALUE, FAR_VALUE);
     glm::mat4 model_matrix = glm::identity<glm::mat4>();
@@ -260,11 +303,82 @@ int main(int, char *argv[])
     delete[] image_tex_data;
     delete[] pds_tex_data;
 
+    //Cubemap loading
+    std::vector<std::string> faces = {
+        DATA_ROOT + "Cubemap/" + "px.png",
+        DATA_ROOT + "Cubemap/" + "nx.png",
+        DATA_ROOT + "Cubemap/" + "py.png",
+        DATA_ROOT + "Cubemap/" + "ny.png",
+        DATA_ROOT + "Cubemap/" + "pz.png",
+        DATA_ROOT + "Cubemap/" + "nz.png"};
+    unsigned int cubemapTexture = loadCubemap(faces);
+
+    float skyboxVertices[] = {
+        // positions
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+
+        -1.0f, 1.0f, -1.0f,
+        1.0f, 1.0f, -1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f};
+
+    unsigned int skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+
+    unsigned int cubeShder = setupCubeShader();
+    glUseProgram(cubeShder);
+    int view_mat_loc_cube = glGetUniformLocation(cubeShder, "view_mat");
+    int proj_mat_loc_cube = glGetUniformLocation(cubeShder, "proj_mat");
+    glBindTextureUnit(0, cubemapTexture);
+
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     bool vSync = true;
+    bool rotate = false;
     bool Framerate = true;
     bool Camera = false;
     bool Color = false;
@@ -274,10 +388,13 @@ int main(int, char *argv[])
     int nbFrames = 0;
     int fps = 0;
     double frameTime = 0.;
+    double dt = 0;
+    double currentTime = 0;
     // rendering loop
     while (glfwWindowShouldClose(window) == false)
     {
-        double currentTime = glfwGetTime();
+        dt = glfwGetTime() - currentTime;
+        currentTime = glfwGetTime();
         nbFrames++;
         if (currentTime - lastTime >= 1.0)
         { // If last prinf() was more than 1 sec ago
@@ -311,7 +428,8 @@ int main(int, char *argv[])
         if (Camera)
         {
             ImGui::Begin("Camera");
-            ImGui::SliderFloat("float", &FOV, 44.0f, 47.0f);
+            ImGui::SliderFloat("float", &FOV, 10.0f, 90.0f);
+            ImGui::Checkbox("rotate", &rotate);
             ImGui::SliderFloat("tessFactor", &tessFactor, 0.0f, 20.0f);
             ImGui::End();
         }
@@ -328,14 +446,22 @@ int main(int, char *argv[])
             ImGui::SliderFloat("h", &h, 1.f, 7.f);
             ImGui::End();
         }
+        glUseProgram(shaderProgram);
         glUniform3f(cola_loc, colaH, colaS, colaV);
         glUniform3f(colb_loc, colbH, colbS, colbV);
 
         glUniform1f(tessFactor_loc, tessFactor);
         glUniform1f(discardFactor_loc, discardFactor);
         //printf("%lf\n",pow(10.,-h));
-        glUniform1f(h_loc, pow(10.,-h));
-        
+        glUniform1f(h_loc, pow(10., -h));
+
+        if (rotate)
+        {
+            camera_state *state = cam.getState();
+            state->phi += 0.1 * dt;
+            //state->look_at.x -= 0.01;
+            cam.update();
+        }
 
         if (vSync)
         {
@@ -346,12 +472,9 @@ int main(int, char *argv[])
             glfwSwapInterval(0);
         }
 
-        proj_matrix = glm::perspective(FOV, static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT, NEAR_VALUE, FAR_VALUE);
+        proj_matrix = glm::perspective(glm::radians(FOV), static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT, NEAR_VALUE, FAR_VALUE);
+        //printf("%s\n",glm::to_string(proj_matrix).c_str());
 
-        camera_state* state = cam.getState();
-        //state->phi += 0.01;
-        //state->look_at.x -= 0.01;
-        cam.update();
         glm::mat4 view_matrix = cam.view_matrix();
         glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, &view_matrix[0][0]);
         glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &proj_matrix[0][0]);
@@ -360,6 +483,18 @@ int main(int, char *argv[])
         model.bind();
         //glDrawElements(GL_TRIANGLES, model.vertex_count, GL_UNSIGNED_INT, (void *)0);
         glDrawElements(GL_PATCHES, model.vertex_count, GL_UNSIGNED_INT, (void *)0);
+
+        glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+        glUseProgram(cubeShder);
+        glUniformMatrix4fv(view_mat_loc_cube, 1, GL_FALSE, &view_matrix[0][0]);
+        glUniformMatrix4fv(proj_mat_loc_cube, 1, GL_FALSE, &proj_matrix[0][0]);
+        // skybox cube
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthFunc(GL_LESS); // set depth function back to default
 
         // render UI
         imgui_render();
