@@ -35,7 +35,6 @@ loadSceneAnim(const char *filename, bool smooth)
 std::vector<animated>
 loadSceneAnim(const char *filename, double scale, bool smooth)
 {
-    printf("%lf\n", scale);
     Assimp::Importer importer;
     int process = aiProcess_JoinIdenticalVertices;
     if (smooth)
