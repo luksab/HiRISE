@@ -8,6 +8,7 @@
 #include "camera.hpp"
 #include "buffer.hpp"
 #include "mesh.hpp"
+#include "animation.hpp"
 
 #include <imgui.hpp>
 
@@ -239,6 +240,18 @@ unsigned int setupCubeShader()
     return shaderProgram;
 }
 
+unsigned int setupGlassShader()
+{
+    // load and compile shaders and link program
+    unsigned int vertexShader = compileShader("glass/glass.vert", GL_VERTEX_SHADER);
+    unsigned int fragmentShader = compileShader("glass/glass.frag", GL_FRAGMENT_SHADER);
+    unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
+    // after linking the program the shader objects are no longer needed
+    glDeleteShader(fragmentShader);
+    glDeleteShader(vertexShader);
+    return shaderProgram;
+}
+
 int main(int, char *argv[])
 {
     GLFWwindow *window = initOpenGL(WINDOW_WIDTH, WINDOW_HEIGHT, argv[0]);
@@ -252,6 +265,12 @@ int main(int, char *argv[])
 
     geometry model = loadMesh("hiresUV.obj", false, glm::vec4(0.f, 0.f, 0.f, 1.f));
     if (model.vertex_count == 0)
+    {
+        exit(1);
+    }
+
+    animated glass = loadMeshAnim("shard.dae", true);
+    if (glass.vertex_count == 0)
     {
         exit(1);
     }
@@ -372,6 +391,13 @@ int main(int, char *argv[])
     int proj_mat_loc_cube = glGetUniformLocation(cubeShder, "proj_mat");
     glBindTextureUnit(0, cubemapTexture);
 
+    unsigned int glassShder = setupGlassShader();
+    glUseProgram(glassShder);
+    int model_mat_loc_glass = glGetUniformLocation(glassShder, "model_mat");
+    int view_mat_loc_glass = glGetUniformLocation(glassShder, "view_mat");
+    int proj_mat_loc_glass = glGetUniformLocation(glassShder, "proj_mat");
+    glBindTextureUnit(0, cubemapTexture);
+
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -390,6 +416,7 @@ int main(int, char *argv[])
     double frameTime = 0.;
     double dt = 0;
     double currentTime = 0;
+    int animationFrame = 0;
     // rendering loop
     while (glfwWindowShouldClose(window) == false)
     {
@@ -483,6 +510,15 @@ int main(int, char *argv[])
         model.bind();
         //glDrawElements(GL_TRIANGLES, model.vertex_count, GL_UNSIGNED_INT, (void *)0);
         glDrawElements(GL_PATCHES, model.vertex_count, GL_UNSIGNED_INT, (void *)0);
+
+        glUseProgram(glassShder);
+        glUniformMatrix4fv(view_mat_loc_glass, 1, GL_FALSE, &view_matrix[0][0]);
+        glUniformMatrix4fv(proj_mat_loc_glass, 1, GL_FALSE, &proj_matrix[0][0]);
+        //glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.transform[animationFrame++%glass.transform.size()][0][0]);
+        glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.transform[0][0][0]);
+        //glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &model_matrix[0][0]);
+        glass.bind();
+        glDrawElements(GL_TRIANGLES, glass.vertex_count, GL_UNSIGNED_INT, (void *)0);
 
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         glUseProgram(cubeShder);
