@@ -274,6 +274,7 @@ int main(int, char *argv[])
     {
         exit(1);
     }
+    printf("Animation dt: %lf\n",glass.timePerFrame);
 
     glUseProgram(shaderProgram);
     int model_mat_loc = glGetUniformLocation(shaderProgram, "model_mat");
@@ -421,9 +422,9 @@ int main(int, char *argv[])
     while (glfwWindowShouldClose(window) == false)
     {
         dt = glfwGetTime() - currentTime;
-        currentTime = glfwGetTime();
+        currentTime += dt;
         nbFrames++;
-        if (currentTime - lastTime >= 1.0)
+        if (glfwGetTime() - lastTime >= 1.0)
         { // If last prinf() was more than 1 sec ago
             // printf and reset timer
             fps = nbFrames;
@@ -511,14 +512,6 @@ int main(int, char *argv[])
         //glDrawElements(GL_TRIANGLES, model.vertex_count, GL_UNSIGNED_INT, (void *)0);
         glDrawElements(GL_PATCHES, model.vertex_count, GL_UNSIGNED_INT, (void *)0);
 
-        glUseProgram(glassShder);
-        glUniformMatrix4fv(view_mat_loc_glass, 1, GL_FALSE, &view_matrix[0][0]);
-        glUniformMatrix4fv(proj_mat_loc_glass, 1, GL_FALSE, &proj_matrix[0][0]);
-        //glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.transform[animationFrame++%glass.transform.size()][0][0]);
-        glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.transform[0][0][0]);
-        //glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &model_matrix[0][0]);
-        glass.bind();
-        glDrawElements(GL_TRIANGLES, glass.vertex_count, GL_UNSIGNED_INT, (void *)0);
 
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         glUseProgram(cubeShder);
@@ -531,6 +524,17 @@ int main(int, char *argv[])
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
+
+        //render transparency last
+        glUseProgram(glassShder);
+        glUniformMatrix4fv(view_mat_loc_glass, 1, GL_FALSE, &view_matrix[0][0]);
+        glUniformMatrix4fv(proj_mat_loc_glass, 1, GL_FALSE, &proj_matrix[0][0]);
+        glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.transform[animationFrame++%glass.transform.size()][0][0]);
+        //glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.transform[0][0][0]);
+        //glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &model_matrix[0][0]);
+        glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.matrixAt(currentTime)[0][0]);
+        glass.bind();
+        glDrawElements(GL_TRIANGLES, glass.vertex_count, GL_UNSIGNED_INT, (void *)0);
 
         // render UI
         imgui_render();

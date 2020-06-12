@@ -68,6 +68,9 @@ loadSceneAnim(const char *filename, bool smooth)
                 
 
                 aiNodeAnim *pNodeAnim = scene->mAnimations[0]->mChannels[node->mMeshes[i]];
+                //m.timePerFrame = ((1.)/(scene->mAnimations[0]->mTicksPerSecond));
+                m.timePerFrame = ((1.)/(24.));
+
                 m.transform.resize(pNodeAnim->mNumPositionKeys);
                 for (uint32_t j = 0; j < pNodeAnim->mNumPositionKeys; j++)
                 {
@@ -162,6 +165,20 @@ loadSceneAnim(const char *filename, bool smooth)
     traverse(scene->mRootNode, glm::identity<glm::mat4>());
     return objects;
 }
+
+glm::mat4 animated::matrixAt(double time){
+    uint PositionIndex = (uint)(time/timePerFrame)%transform.size(); //FindPosition(AnimationTime, pNodeAnim);
+    uint NextPositionIndex = (PositionIndex + 1)%transform.size();
+    float DeltaTime = (float)(timePerFrame);
+    float Factor = timePerFrame / DeltaTime;
+    //assert(Factor >= 0.0f && Factor <= 1.0f);
+    glm::mat4 Start = transform[PositionIndex];
+    glm::mat4 End = transform[NextPositionIndex];
+    glm::mat4 Delta = End - Start;
+    glm::mat4 Out = Start + Factor * Delta;
+    return Out;
+}
+
 
 animated
 loadMeshAnim(const char *filename, bool smooth)

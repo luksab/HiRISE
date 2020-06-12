@@ -17,5 +17,6 @@ void main() {
     vec3 d = interpG_pos;
     vec3 n = interp_normal;//normalize(normal_in);
     frag_color = texture(skybox, reflect(d,n));
+    frag_color.w = 0.1;
     //frag_color = vec4(1.,1.,1.,1.);
 }
