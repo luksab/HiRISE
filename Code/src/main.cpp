@@ -12,8 +12,8 @@
 
 #include <imgui.hpp>
 
-const int WINDOW_WIDTH = 1920;
-const int WINDOW_HEIGHT = 1080;
+int WINDOW_WIDTH = 1920;
+int WINDOW_HEIGHT = 1080;
 float FOV = 45.;
 const float NEAR_VALUE = 0.1f;
 const float FAR_VALUE = 100.f;
@@ -545,6 +545,8 @@ int main(int, char *argv[])
 void resizeCallback(GLFWwindow *, int width, int height)
 {
     // set new width and height as viewport size
+    WINDOW_WIDTH = width;
+    WINDOW_HEIGHT = height;
     glViewport(0, 0, width, height);
     proj_matrix = glm::perspective(FOV, static_cast<float>(width) / height, NEAR_VALUE, FAR_VALUE);
 }
