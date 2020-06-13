@@ -8,14 +8,21 @@ uniform sampler2D height;
 
 layout (triangles, equal_spacing, ccw) in;
 in vec2 TexCoord_ES_in[];
+in float factor_ES_in[];
 
 out vec2 TexCoord_FS_in;
+out float factor_FS_in;
 out vec3 interp_pos;
 out vec4 interpc_pos;
 
 vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2)                                                   
 {                                                                                               
     return vec2(gl_TessCoord.x) * v0 + vec2(gl_TessCoord.y) * v1 + vec2(gl_TessCoord.z) * v2;   
+} 
+
+float interpolate(float v0, float v1, float v2)                                                   
+{                                                                                               
+    return gl_TessCoord.x * v0 + gl_TessCoord.y * v1 + gl_TessCoord.z * v2;   
 } 
 
 void main(void)
@@ -28,4 +35,5 @@ void main(void)
     interpc_pos = proj_mat * view_mat * model_mat * vec4(pos.x, pos.y+offset, pos.z, 1.0);
     gl_Position = interpc_pos;
     TexCoord_FS_in = interpolate2D(TexCoord_ES_in[0], TexCoord_ES_in[1], TexCoord_ES_in[2]);
+    factor_FS_in = factor_ES_in[0];//interpolate(factor_ES_in[0],factor_ES_in[1],factor_ES_in[2]);
 }

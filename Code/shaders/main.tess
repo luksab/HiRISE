@@ -3,6 +3,7 @@
 layout (vertices = 3) out;
 in vec2 TexCoord_CS_in[];
 out vec2 TexCoord_ES_in[];
+out float factor_ES_in[];
 
 uniform mat4 model_mat;
 uniform mat4 view_mat;
@@ -12,27 +13,35 @@ uniform sampler2D height;
 
 uniform float tessFactor;
 
+float GetTessLevel(float Distance0, float Distance1)                                            
+{                                                                                               
+    float AvgDistance = (Distance0 + Distance1) / 2.0;   
+
+    if (AvgDistance <= 0.5) {                                                                   
+        return 32.0;                                                                            
+    }else if (AvgDistance <= 2.0) {                                                                   
+        return 10.0;                                                                            
+    }                                                                                           
+    else if (AvgDistance <= 5.0) {                                                              
+        return 7.0;                                                                             
+    }                                                                                           
+    else {                                                                                      
+        return 3.0;                                                                             
+    }                                                                                           
+}        
+
 void main(void)
 {
     if (gl_InvocationID == 0)
     {
         vec4 pos = gl_in[gl_InvocationID].gl_Position;
-        float offset = texture2D(height, (pos.xy*0.99)/2+0.5).r;
-        pos = proj_mat * view_mat * model_mat * pos;//vec4(pos.x, pos.y, pos.z+offset, 1.0);
-        float factor = (1-(length(pos)/100.0))*tessFactor;
-        factor = clamp(tessFactor*(1/(abs(pos.z)+.1)),1,64);
-        gl_TessLevelInner[0] = factor*1.0;
+        float offset = texture2D(height, TexCoord_CS_in[gl_InvocationID]).r;
 
-        gl_TessLevelOuter[0] = factor*1.0;
-        gl_TessLevelOuter[1] = factor*1.0;
-        gl_TessLevelOuter[2] = factor*1.0;
-
-        /*if(offset<0){
-            gl_TessLevelInner[0] = 0;
-            gl_TessLevelOuter[0] = 0;
-            gl_TessLevelOuter[1] = 0;
-            gl_TessLevelOuter[2] = 0;
-        }*/
+        gl_TessLevelOuter[0] = GetTessLevel(length(proj_mat * view_mat * model_mat * gl_in[1].gl_Position), length(proj_mat * view_mat * model_mat * gl_in[2].gl_Position));
+        gl_TessLevelOuter[1] = GetTessLevel(length(proj_mat * view_mat * model_mat * gl_in[2].gl_Position), length(proj_mat * view_mat * model_mat * gl_in[0].gl_Position));
+        gl_TessLevelOuter[2] = GetTessLevel(length(proj_mat * view_mat * model_mat * gl_in[0].gl_Position), length(proj_mat * view_mat * model_mat * gl_in[1].gl_Position));
+        gl_TessLevelInner[0] = gl_TessLevelOuter[2];
+        factor_ES_in[gl_InvocationID] = gl_TessLevelOuter[2];
     }
 
     gl_out[gl_InvocationID].gl_Position =

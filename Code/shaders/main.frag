@@ -3,6 +3,7 @@
 in vec3 interp_pos;
 in vec4 interpc_pos;
 in vec2 TexCoord_FS_in;
+in float factor_FS_in;
 
 out vec4 frag_color;
 out float gl_FragDepth;
@@ -53,9 +54,7 @@ vec4 applyFog( in vec4  color,      // original color of the pixel
 }
 
 void main() {
-    vec2 tc;
-    tc = interp_pos.xz/2+0.5;
-    tc = TexCoord_FS_in;
+    vec2 tc = TexCoord_FS_in;
     
     float a = texture2D(tex, tc).r;
 
@@ -84,4 +83,6 @@ void main() {
         gl_FragDepth = gl_FragCoord.z;
         frag_color = col;
     }
+
+    //frag_color = vec4(factor_FS_in/16,factor_FS_in/16,factor_FS_in/16,1.0);
 }
