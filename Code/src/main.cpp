@@ -397,6 +397,10 @@ int main(int, char *argv[])
     int model_mat_loc_glass = glGetUniformLocation(glassShder, "model_mat");
     int view_mat_loc_glass = glGetUniformLocation(glassShder, "view_mat");
     int proj_mat_loc_glass = glGetUniformLocation(glassShder, "proj_mat");
+    int glass_power_loc = glGetUniformLocation(glassShder, "power");
+    float glass_power = 2.0;
+    int glass_factor_loc = glGetUniformLocation(glassShder, "factor");
+    float glass_factor = 1.0;
     glBindTextureUnit(0, cubemapTexture);
 
 
@@ -464,12 +468,14 @@ int main(int, char *argv[])
         if (Color)
         {
             ImGui::Begin("Color");
-            ImGui::SliderFloat("colaH", &colaH, 0.0f, 1.0f);
-            ImGui::SliderFloat("colaS", &colaS, 0.0f, 1.0f);
-            ImGui::SliderFloat("colaV", &colaV, 0.0f, 1.0f);
-            ImGui::SliderFloat("colbH", &colbH, 0.0f, 1.0f);
-            ImGui::SliderFloat("colbS", &colbS, 0.0f, 1.0f);
-            ImGui::SliderFloat("colbV", &colbV, 0.0f, 1.0f);
+            // ImGui::SliderFloat("colaH", &colaH, 0.0f, 1.0f);
+            // ImGui::SliderFloat("colaS", &colaS, 0.0f, 1.0f);
+            // ImGui::SliderFloat("colaV", &colaV, 0.0f, 1.0f);
+            // ImGui::SliderFloat("colbH", &colbH, 0.0f, 1.0f);
+            // ImGui::SliderFloat("colbS", &colbS, 0.0f, 1.0f);
+            // ImGui::SliderFloat("colbV", &colbV, 0.0f, 1.0f);
+            ImGui::SliderFloat("glass_power", &glass_power, 0.5f, 4.0f);
+            ImGui::SliderFloat("glass_factor", &glass_factor, 0.0f, 5.0f);
             ImGui::SliderFloat("discardFactor", &discardFactor, 1.f, 1.1f);
             ImGui::SliderFloat("h", &h, 1.f, 7.f);
             ImGui::End();
@@ -529,10 +535,12 @@ int main(int, char *argv[])
         glUseProgram(glassShder);
         glUniformMatrix4fv(view_mat_loc_glass, 1, GL_FALSE, &view_matrix[0][0]);
         glUniformMatrix4fv(proj_mat_loc_glass, 1, GL_FALSE, &proj_matrix[0][0]);
-        glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.transform[animationFrame++%glass.transform.size()][0][0]);
+        //glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.transform[animationFrame++%glass.transform.size()][0][0]);
         //glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.transform[0][0][0]);
         //glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &model_matrix[0][0]);
         glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.matrixAt(currentTime)[0][0]);
+        glUniform1f(glass_factor_loc, glass_factor);
+        glUniform1f(glass_power_loc, glass_power);
         glass.bind();
         glDrawElements(GL_TRIANGLES, glass.vertex_count, GL_UNSIGNED_INT, (void *)0);
 
