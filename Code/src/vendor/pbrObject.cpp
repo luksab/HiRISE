@@ -20,6 +20,24 @@
 #include "shader.hpp"
 #include "pbrObject.hpp"
 
+void pbrObject::setup(animated *model, const char* vertex, const char* fragment)
+{
+    object = model;
+    // load and compile shaders and link program
+    unsigned int vertexShader = compileShader(vertex, GL_VERTEX_SHADER);
+    unsigned int fragmentShader = compileShader(fragment, GL_FRAGMENT_SHADER);
+    shaderProgram = linkProgram(vertexShader, fragmentShader);
+    //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
+    // after linking the program the shader objects are no longer needed
+    glDeleteShader(fragmentShader);
+    glDeleteShader(vertexShader);
+
+    glUseProgram(shaderProgram);
+    model_mat_loc = glGetUniformLocation(shaderProgram, "model_mat");
+    view_mat_loc = glGetUniformLocation(shaderProgram, "view_mat");
+    proj_mat_loc = glGetUniformLocation(shaderProgram, "proj_mat");
+}
+
 void pbrObject::setup(animated *model, bool tessellation)
 {
     object = model;

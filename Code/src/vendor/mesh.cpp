@@ -165,6 +165,7 @@ loadScene(const char* filename, bool smooth, const glm::vec4& color) {
         if (node->mNumMeshes > 0) {
             for (uint32_t i = 0; i < node->mNumMeshes; ++i) {
                 aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+                assert(mesh->mTextureCoords[0]);
 
                 geometry m{};
                 m.positions.resize(mesh->mNumVertices);
