@@ -70,6 +70,10 @@ int main(int, char *argv[])
     pbrObject renderCube = {};
     renderCube.setup(&pbr, "cubeMap/hdr.vert", "cubeMap/hdr.frag");
 
+    pbrObject irradianceCube = {};
+    irradianceCube.setup(&pbr, "equirectangular/main.vert", "cubeMap/conv.frag");
+    unsigned int equirectangularMap_loc_irra = glGetUniformLocation(irradianceCube.shaderProgram, "environmentMap");
+
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrComponents;
     float *data = stbi_loadf((DATA_ROOT + "moonless_golf_4k.hdr").c_str(), &width, &height, &nrComponents, 0);
@@ -91,7 +95,7 @@ int main(int, char *argv[])
     {
         std::cout << "Failed to load HDR image." << std::endl;
     }
-    const int resolution = 512;
+    int resolution = 512;
 
     unsigned int captureFBO, captureRBO;
     glGenFramebuffers(1, &captureFBO);
@@ -117,7 +121,6 @@ int main(int, char *argv[])
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-
     glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
     glm::mat4 captureViews[] =
         {
@@ -137,7 +140,7 @@ int main(int, char *argv[])
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, hdrTexture);
 
-    glViewport(0, 0, 512, 512); // don't forget to configure the viewport to the capture dimensions.
+    glViewport(0, 0, resolution, resolution); // don't forget to configure the viewport to the capture dimensions.
     glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
     for (unsigned int i = 0; i < 6; ++i)
     {
@@ -148,7 +151,55 @@ int main(int, char *argv[])
 
         hdrCube.render(0); // renders a 1x1 cube
     }
+    glGenerateMipmap(envCubemap);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    //conv code
+    resolution = 32;
+    unsigned int irradianceMap;
+    glGenTextures(1, &irradianceMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
+    for (unsigned int i = 0; i < 6; ++i)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, resolution, resolution, 0,
+                     GL_RGB, GL_FLOAT, nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, resolution, resolution);
+
+    glUseProgram(irradianceCube.shaderProgram);
+    //irradianceShader.setInt("environmentMap", 0);
+    //irradianceShader.setMat4("projection", captureProjection);
+    irradianceCube.proj_matrix = &captureProjection;
+    glUniform1i(equirectangularMap_loc_irra, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+
+    glViewport(0, 0, resolution, resolution); // don't forget to configure the viewport to the capture dimensions.
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    for (unsigned int i = 0; i < 6; ++i)
+    {
+        irradianceCube.view_matrix = &captureViews[i];
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        irradianceCube.render(0);
+    }
+    glGenerateMipmap(irradianceMap);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    //glUseProgram(renderCube.shaderProgram);
+    //unsigned int environmentMap_loc_render = glGetUniformLocation(renderCube.shaderProgram, "environmentMap");
+    // glUniform1i(environmentMap_loc_render, 0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
 
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     proj_matrix = glm::perspective(FOV, static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT, NEAR_VALUE, FAR_VALUE);
