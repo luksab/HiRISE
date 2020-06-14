@@ -29,6 +29,13 @@ void animated::destroy()
 std::vector<animated>
 loadSceneAnim(const char *filename, bool smooth)
 {
+    return loadSceneAnim(filename, 1., smooth);
+}
+
+std::vector<animated>
+loadSceneAnim(const char *filename, double scale, bool smooth)
+{
+    printf("%lf\n", scale);
     Assimp::Importer importer;
     int process = aiProcess_JoinIdenticalVertices;
     if (smooth)
@@ -77,7 +84,7 @@ loadSceneAnim(const char *filename, bool smooth)
                     // Interpolate scaling and generate scaling transformation matrix
                     const aiVector3D& Scaling = pNodeAnim->mScalingKeys[j].mValue;
                     Matrix4f ScalingM;
-                    ScalingM.InitScaleTransform(Scaling.x, Scaling.y, Scaling.z);
+                    ScalingM.InitScaleTransform(Scaling.x * scale, Scaling.y * scale, Scaling.z * scale);
 
                     // Interpolate rotation and generate rotation transformation matrix
                     aiQuaternion RotationQ = pNodeAnim->mRotationKeys[j].mValue;
@@ -86,7 +93,7 @@ loadSceneAnim(const char *filename, bool smooth)
                     // Interpolate translation and generate translation transformation matrix
                     aiVector3D Translation = pNodeAnim->mPositionKeys[j].mValue;
                     Matrix4f TranslationM = Matrix4f();
-                    TranslationM.InitTranslationTransform(Translation.x, Translation.y, Translation.z);
+                    TranslationM.InitTranslationTransform(Translation.x * scale, Translation.y * scale, Translation.z * scale);
 
                     // Combine the above transformations
                     Matrix4f NodeTransformation = TranslationM * RotationM * ScalingM;
@@ -184,4 +191,10 @@ animated
 loadMeshAnim(const char *filename, bool smooth)
 {
     return loadSceneAnim(filename, smooth)[0];
+}
+
+animated
+loadMeshAnim(const char *filename, double scale, bool smooth)
+{
+    return loadSceneAnim(filename, scale, smooth)[0];
 }

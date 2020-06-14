@@ -9,6 +9,7 @@
 #include "buffer.hpp"
 #include "mesh.hpp"
 #include "animation.hpp"
+#include "pbrObject.hpp"
 
 #include <imgui.hpp>
 
@@ -264,17 +265,12 @@ int main(int, char *argv[])
     unsigned int shaderProgram = setupShader();
 
     geometry model = loadMesh("hiresUV.obj", false, glm::vec4(0.f, 0.f, 0.f, 1.f));
-    if (model.vertex_count == 0)
-    {
-        exit(1);
-    }
 
-    animated glass = loadMeshAnim("shard.dae", true);
-    if (glass.vertex_count == 0)
-    {
-        exit(1);
-    }
-    printf("Animation dt: %lf\n",glass.timePerFrame);
+    animated glass = loadMeshAnim("shard.dae", 0.1, true);
+
+    animated pbr = loadMeshAnim("suzanne.dae", true);
+    pbrObject pbrObj = {};
+    pbrObj.setup(&pbr, false);
 
     glUseProgram(shaderProgram);
     int model_mat_loc = glGetUniformLocation(shaderProgram, "model_mat");
@@ -518,6 +514,8 @@ int main(int, char *argv[])
         //glDrawElements(GL_TRIANGLES, model.vertex_count, GL_UNSIGNED_INT, (void *)0);
         glDrawElements(GL_PATCHES, model.vertex_count, GL_UNSIGNED_INT, (void *)0);
 
+        pbrObj.setMaticies(&view_matrix, &proj_matrix);
+        pbrObj.render(currentTime);
 
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         glUseProgram(cubeShder);

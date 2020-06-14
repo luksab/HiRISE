@@ -28,5 +28,11 @@ struct animated {
 std::vector<animated>
 loadSceneAnim(const char* filename, bool smooth);
 
+std::vector<animated>
+loadSceneAnim(const char *filename, double scale, bool smooth);
+
 animated
 loadMeshAnim(const char* filename, bool smooth);
+
+animated
+loadMeshAnim(const char *filename, double scale, bool smooth);

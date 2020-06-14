@@ -30,7 +30,8 @@ include_directories(include/
                     vendor/glad/include/
                     vendor/glfw/include/
                     vendor/glm/
-                    vendor/stb/)
+                    vendor/stb/
+                    vendor/gli/)
 
 file(GLOB VENDORS_SOURCES vendor/glad/src/glad.c src/vendor/*.cpp)
 file(GLOB PROJECT_HEADERS include/*.hpp)
