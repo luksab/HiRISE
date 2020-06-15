@@ -25,6 +25,8 @@ const int TEXTURE_HEIGHT = 20;
 
 glm::mat4 proj_matrix;
 
+void renderQuad();
+
 void resizeCallback(GLFWwindow *window, int width, int height);
 
 float *
@@ -53,6 +55,45 @@ load_texture_data(std::string filename, int *width, int *height)
     return data;
 }
 
+// utility function for loading a 2D texture from file
+// ---------------------------------------------------
+unsigned int loadTexture(char const *path)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum format;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
+    return textureID;
+}
+
 int main(int, char *argv[])
 {
     GLFWwindow *window = initOpenGL(WINDOW_WIDTH, WINDOW_HEIGHT, argv[0]);
@@ -61,22 +102,64 @@ int main(int, char *argv[])
     camera cam(window);
 
     init_imgui(window);
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
     animated pbr = loadMeshAnim("cube.dae", true);
     pbrObject hdrCube = {};
     hdrCube.setup(&pbr, "equirectangular/main.vert", "equirectangular/main.frag");
+    hdrCube.defaultMat = true;
     unsigned int equirectangularMap_loc = glGetUniformLocation(hdrCube.shaderProgram, "equirectangularMap");
-
-    pbrObject renderCube = {};
-    renderCube.setup(&pbr, "cubeMap/hdr.vert", "cubeMap/hdr.frag");
 
     pbrObject irradianceCube = {};
     irradianceCube.setup(&pbr, "equirectangular/main.vert", "cubeMap/conv.frag");
+    irradianceCube.defaultMat = true;
     unsigned int equirectangularMap_loc_irra = glGetUniformLocation(irradianceCube.shaderProgram, "environmentMap");
+
+    pbrObject filterCube = {};
+    filterCube.setup(&pbr, "equirectangular/main.vert", "cubeMap/rough.frag");
+    filterCube.defaultMat = true;
+    unsigned int equirectangularMap_locF_irra = glGetUniformLocation(filterCube.shaderProgram, "environmentMap");
+    filterCube.setInt("environmentMap", 0);
+
+    pbrObject renderCube = {};
+    renderCube.setup(&pbr, "cubeMap/hdr.vert", "cubeMap/hdr.frag");
+    renderCube.defaultMat = true;
+    renderCube.setInt("environmentMap", 0);
+
+    pbrObject brdfCube = {};
+    brdfCube.setup(&pbr, "brdf/brdf.vs", "brdf/brdf.fs");
+
+    pbrObject Cube = {};
+    Cube.setup(&pbr, false);
+    Cube.use();
+    Cube.setInt("irradianceMap", 0);
+    Cube.setInt("prefilterMap", 1);
+    Cube.setInt("brdfLUT", 2);
+    Cube.setInt("albedoMap", 3);
+    Cube.setInt("normalMap", 4);
+    Cube.setInt("metallicMap", 5);
+    Cube.setInt("roughnessMap", 6);
+    Cube.setInt("aoMap", 7);
+
+    // load PBR material textures
+    // --------------------------
+    // unsigned int albedo = loadTexture((DATA_ROOT + "rust/albedo.png").c_str());
+    // unsigned int normal = loadTexture((DATA_ROOT + "rust/normal.png").c_str());
+    // unsigned int metallic = loadTexture((DATA_ROOT + "rust/metallic.png").c_str());
+    // unsigned int roughness = loadTexture((DATA_ROOT + "rust/roughness.png").c_str());
+    // unsigned int ao = loadTexture((DATA_ROOT + "rust/ao.png").c_str());
+
+    unsigned int albedo = loadTexture((DATA_ROOT + "book/book_pattern_col2_8k.png").c_str());
+    unsigned int normal = loadTexture((DATA_ROOT + "book/book_pattern_nor_8k.png").c_str());
+    //unsigned int metallic = loadTexture((DATA_ROOT + "book/book_pattern_disp_8k.png").c_str());
+    unsigned int metallic;
+    glGenTextures(1, &metallic);
+    unsigned int roughness = loadTexture((DATA_ROOT + "book/book_pattern_rough_8k.png").c_str());
+    unsigned int ao = loadTexture((DATA_ROOT + "book/book_pattern_AO_8k.png").c_str());
 
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrComponents;
-    float *data = stbi_loadf((DATA_ROOT + "moonless_golf_4k.hdr").c_str(), &width, &height, &nrComponents, 0);
+    float *data = stbi_loadf((DATA_ROOT + "construction_yard_8k.hdr").c_str(), &width, &height, &nrComponents, 0);
     unsigned int hdrTexture;
     if (data)
     {
@@ -190,7 +273,6 @@ int main(int, char *argv[])
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         irradianceCube.render(0);
     }
     glGenerateMipmap(irradianceMap);
@@ -199,7 +281,84 @@ int main(int, char *argv[])
     //glUseProgram(renderCube.shaderProgram);
     //unsigned int environmentMap_loc_render = glGetUniformLocation(renderCube.shaderProgram, "environmentMap");
     // glUniform1i(environmentMap_loc_render, 0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
+    //glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
+
+    //roughness Map
+    unsigned int prefilterMap;
+    glGenTextures(1, &prefilterMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
+    for (unsigned int i = 0; i < 6; ++i)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
+    filterCube.use();
+    glUseProgram(filterCube.shaderProgram);
+    filterCube.setInt("environmentMap", 0);
+    filterCube.proj_matrix = &captureProjection;
+    glUniform1i(equirectangularMap_locF_irra, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+
+    unsigned int maxMipLevels = 5;
+    for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
+    {
+        // reisze framebuffer according to mip-level size.
+        unsigned int mipWidth = 128 * std::pow(0.5, mip);
+        unsigned int mipHeight = 128 * std::pow(0.5, mip);
+        glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
+        glViewport(0, 0, mipWidth, mipHeight);
+
+        float roughness = (float)mip / (float)(maxMipLevels - 1);
+        filterCube.setFloat("roughness", roughness);
+        for (unsigned int i = 0; i < 6; ++i)
+        {
+            filterCube.view_matrix = &captureViews[i];
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap, mip);
+
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            filterCube.render(0);
+        }
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // pbr: generate a 2D LUT from the BRDF equations used.
+    // ----------------------------------------------------
+    unsigned int brdfLUTTexture;
+    glGenTextures(1, &brdfLUTTexture);
+
+    // pre-allocate enough memory for the LUT texture.
+    glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, 512, 512, 0, GL_RG, GL_FLOAT, 0);
+    // be sure to set wrapping mode to GL_CLAMP_TO_EDGE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // then re-configure capture framebuffer object and render screen-space quad with BRDF shader.
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfLUTTexture, 0);
+
+    glViewport(0, 0, 512, 512);
+    brdfCube.use();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    renderQuad();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     proj_matrix = glm::perspective(FOV, static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT, NEAR_VALUE, FAR_VALUE);
@@ -271,8 +430,33 @@ int main(int, char *argv[])
         glm::mat4 view_matrix = cam.view_matrix();
 
         glDepthFunc(GL_LEQUAL);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
         renderCube.setMaticies(&view_matrix, &proj_matrix);
         renderCube.render(0);
+
+        // bind pre-computed IBL data
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, albedo);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, normal);
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, metallic);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, roughness);
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, ao);
+
+        Cube.setMaticies(&view_matrix, &proj_matrix);
+        Cube.setVec3("camPos", cam.position());
+        Cube.render(0);
 
         // render UI
         imgui_render();
@@ -289,4 +473,49 @@ void resizeCallback(GLFWwindow *, int width, int height)
     // set new width and height as viewport size
     glViewport(0, 0, width, height);
     proj_matrix = glm::perspective(FOV, static_cast<float>(width) / height, NEAR_VALUE, FAR_VALUE);
+}
+
+unsigned int quadVAO = 0;
+unsigned int quadVBO;
+void renderQuad()
+{
+    if (quadVAO == 0)
+    {
+        float quadVertices[] = {
+            // positions        // texture Coords
+            -1.0f,
+            1.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            -1.0f,
+            -1.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            1.0f,
+            0.0f,
+            1.0f,
+            1.0f,
+            1.0f,
+            -1.0f,
+            0.0f,
+            1.0f,
+            0.0f,
+        };
+        // setup plane VAO
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+    }
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
 }

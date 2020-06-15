@@ -20,8 +20,9 @@
 #include "shader.hpp"
 #include "pbrObject.hpp"
 
-void pbrObject::setup(animated *model, const char* vertex, const char* fragment)
+void pbrObject::setup(animated *model, const char *vertex, const char *fragment)
 {
+    defaultMat = false;
     object = model;
     // load and compile shaders and link program
     unsigned int vertexShader = compileShader(vertex, GL_VERTEX_SHADER);
@@ -40,6 +41,7 @@ void pbrObject::setup(animated *model, const char* vertex, const char* fragment)
 
 void pbrObject::setup(animated *model, bool tessellation)
 {
+    defaultMat = true;
     object = model;
     useTessellation = tessellation;
     if (tessellation)
@@ -62,8 +64,8 @@ void pbrObject::setup(animated *model, bool tessellation)
     else
     {
         // load and compile shaders and link program
-        unsigned int vertexShader = compileShader("pbr/pbr.vert", GL_VERTEX_SHADER);
-        unsigned int fragmentShader = compileShader("pbr/pbr.frag", GL_FRAGMENT_SHADER);
+        unsigned int vertexShader = compileShader("pbr/pbrT.vs", GL_VERTEX_SHADER);
+        unsigned int fragmentShader = compileShader("pbr/pbrT.fs", GL_FRAGMENT_SHADER);
         shaderProgram = linkProgram(vertexShader, fragmentShader);
         //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
         // after linking the program the shader objects are no longer needed
@@ -99,8 +101,42 @@ void pbrObject::setup(animated *model, bool tessellation)
     glUniform1f(ref_index_loc, refraction_index);
 }
 
+void pbrObject::use()
+{
+    glUseProgram(shaderProgram);
+}
+
+void pbrObject::setInt(char const *name, int value)
+{
+    glUseProgram(shaderProgram);
+    unsigned int loc = glGetUniformLocation(shaderProgram, name);
+    glUniform1i(loc, value);
+}
+
+void pbrObject::setFloat(char const *name, float value)
+{
+    glUseProgram(shaderProgram);
+    unsigned int loc = glGetUniformLocation(shaderProgram, name);
+    glUniform1f(loc, value);
+}
+
+void pbrObject::setMat4(char const *name, glm::mat4* value)
+{
+    glUseProgram(shaderProgram);
+    unsigned int loc = glGetUniformLocation(shaderProgram, name);
+    glUniformMatrix4fv(loc, 1, GL_FALSE, &(*value)[0][0]);
+}
+
+void pbrObject::setVec3(char const * name, glm::vec3 value){
+    glUseProgram(shaderProgram);
+    unsigned int loc = glGetUniformLocation(shaderProgram, name);
+    glUniform3f(loc, value[0], value[1], value[2]);
+}
+
+
 void pbrObject::setMaticies(glm::mat4 *view_mat, glm::mat4 *proj_mat)
 {
+    glUseProgram(shaderProgram);
     view_matrix = view_mat;
     proj_matrix = proj_mat;
 }
@@ -108,10 +144,13 @@ void pbrObject::setMaticies(glm::mat4 *view_mat, glm::mat4 *proj_mat)
 void pbrObject::render(double currentTime)
 {
     glUseProgram(shaderProgram);
-    glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, &(*view_matrix)[0][0]);
-    glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &(*proj_matrix)[0][0]);
-
+    if (defaultMat)
+    {
+        glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, &(*view_matrix)[0][0]);
+        glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &(*proj_matrix)[0][0]);
+    }
     glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(*object).matrixAt(currentTime)[0][0]);
+
     (*object).bind();
     if (useTessellation)
     {

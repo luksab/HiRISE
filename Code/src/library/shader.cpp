@@ -17,6 +17,10 @@ loadShaderFile(const char* filename) {
 unsigned int
 compileShader(const char* filename, unsigned int type) {
     const char* shaderSource = loadShaderFile(filename);
+    if(shaderSource[0] == '\0'){
+        printf("could not find code at: %s\n", filename);
+        assert(0);
+    }
 
     // create shader object
     unsigned int shader = glCreateShader(type);

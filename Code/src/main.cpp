@@ -266,9 +266,9 @@ int main(int, char *argv[])
 
     geometry model = loadMesh("hiresUV.obj", false, glm::vec4(0.f, 0.f, 0.f, 1.f));
 
-    animated glass = loadMeshAnim("shard.dae", 0.1, true);
+    animated glass = loadMeshAnim("shard.dae", 1., true);
 
-    animated pbr = loadMeshAnim("suzanne.dae", true);
+    animated pbr = loadMeshAnim("suzanne.dae", 0.l, true);
     pbrObject pbrObj = {};
     pbrObj.setup(&pbr, false);
 
@@ -412,17 +412,19 @@ int main(int, char *argv[])
 
     //fuer fps
     double lastTime = glfwGetTime();
+    double lastGLTime = lastTime;
     int nbFrames = 0;
     int fps = 0;
     double frameTime = 0.;
     double dt = 0;
     double currentTime = 0;
-    int animationFrame = 0;
+    float timeScale = 1.0;
     // rendering loop
     while (glfwWindowShouldClose(window) == false)
     {
-        dt = glfwGetTime() - currentTime;
-        currentTime += dt;
+        dt = glfwGetTime() - lastGLTime;
+        lastGLTime = glfwGetTime();
+        currentTime += dt*timeScale;
         nbFrames++;
         if (glfwGetTime() - lastTime >= 1.0)
         { // If last prinf() was more than 1 sec ago
@@ -451,6 +453,7 @@ int main(int, char *argv[])
             ImGui::Text("FPs: %04d", fps);
             ImGui::Text("avg. frametime: %04f", frameTime);
             ImGui::Checkbox("V-Sync", &vSync);
+            ImGui::SliderFloat("timeScale", &timeScale, 0.0f, 2.0f);
             ImGui::End();
         }
         if (Camera)
