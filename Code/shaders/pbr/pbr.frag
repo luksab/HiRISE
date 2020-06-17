@@ -4,6 +4,7 @@ in vec2 TexCoords;
 in vec3 WorldPos;
 in vec3 Normal;
 in vec3 viewDir;
+in vec3 factor;
 
 // material parameters
 uniform sampler2D albedoMap;
@@ -173,4 +174,5 @@ void main()
     color = pow(color, vec3(1.0/2.2)); 
 
     FragColor = vec4(color , 1.0);
+    FragColor = vec4(factor.xyz, 1.0);
 }

@@ -9,6 +9,8 @@
 #include "buffer.hpp"
 #include "mesh.hpp"
 #include "pbrObject.hpp"
+#include "boneObject.hpp"
+#include "glm/gtx/string_cast.hpp"
 
 #include <imgui.hpp>
 
@@ -151,20 +153,32 @@ int main(int, char *argv[])
     pbrObject brdfCube = {};
     brdfCube.setup(&pbr, "brdf/brdf.vs", "brdf/brdf.fs");
 
-    animated suzanne = loadMeshAnim("hiresSphere.dae", false);
-    pbrObject pbrObj = {};
-    glPatchParameteri(GL_PATCH_VERTICES, 3);
-    pbrObj.setup(&suzanne, false);
-    pbrObj.use();
-    pbrObj.setInt("irradianceMap", 0);
-    pbrObj.setInt("prefilterMap", 1);
-    pbrObj.setInt("brdfLUT", 2);
-    pbrObj.setInt("albedoMap", 3);
-    pbrObj.setInt("normalMap", 4);
-    pbrObj.setInt("metallicMap", 5);
-    pbrObj.setInt("roughnessMap", 6);
-    pbrObj.setInt("aoMap", 7);
-    pbrObj.setInt("heightMap", 8);
+    bones human = loadMeshBone("Lowpolymesh_Eliber.dae", false);
+    // std::cout << "main: " << glm::to_string(human.boneTransform[0][5]) << "\n";
+    // for (int i = 0; i < 51*16; i++)
+    // {
+    //     if(i%16==0)printf("\n");
+    //     std::cout << *((&(human.boneTransform[5][0][0][0]))+i) << ",";
+    // }
+
+    // for (size_t i = 0; i < human.boneWeight.size(); i++)
+    // {
+    //     std::cout << glm::to_string(human.boneWeight[i]) << ", " << glm::to_string(human.boneIndex[i]) << "\n";
+    // }
+    
+    
+    boneObject boneObj = {};
+    boneObj.setup(&human, false);
+    boneObj.use();
+    boneObj.setInt("irradianceMap", 0);
+    boneObj.setInt("prefilterMap", 1);
+    boneObj.setInt("brdfLUT", 2);
+    boneObj.setInt("albedoMap", 3);
+    boneObj.setInt("normalMap", 4);
+    boneObj.setInt("metallicMap", 5);
+    boneObj.setInt("roughnessMap", 6);
+    boneObj.setInt("aoMap", 7);
+    boneObj.setInt("heightMap", 8);
 
     // load PBR material textures
     // --------------------------
@@ -451,8 +465,6 @@ int main(int, char *argv[])
             ImGui::End();
         }
 
-        pbrObj.setFloat("displacementFactor", df);
-
         if (vSync)
         {
             glfwSwapInterval(1);
@@ -493,9 +505,9 @@ int main(int, char *argv[])
         glActiveTexture(GL_TEXTURE8);
         glBindTexture(GL_TEXTURE_2D, disp);
 
-        pbrObj.setMaticies(&view_matrix, &proj_matrix);
-        pbrObj.setVec3("camPos", cam.position());
-        pbrObj.render(0);
+        boneObj.setMaticies(&view_matrix, &proj_matrix);
+        boneObj.setVec3("camPos", cam.position());
+        boneObj.render(currentTime);
 
         // render UI
         imgui_render();

@@ -7,6 +7,7 @@
 #include <config.hpp>
 #include <buffer.hpp>
 #include "ogldev_math_3d.h"
+#include "glm/gtx/string_cast.hpp"
 
 void bones::bind()
 {
@@ -27,13 +28,13 @@ void bones::destroy()
 }
 
 std::vector<bones>
-loadSceneAnim(const char *filename, bool smooth)
+loadSceneBone(const char *filename, bool smooth)
 {
-    return loadSceneAnim(filename, 1., smooth);
+    return loadSceneBone(filename, 1., smooth);
 }
 
 std::vector<bones>
-loadSceneAnim(const char *filename, double scale, bool smooth)
+loadSceneBone(const char *filename, double scale, bool smooth)
 {
     Assimp::Importer importer;
     int process = aiProcess_JoinIdenticalVertices;
@@ -63,70 +64,196 @@ loadSceneAnim(const char *filename, double scale, bool smooth)
         aiMatrix4x4 local_t;
         if (node->mNumMeshes > 0)
         {
-            for (uint32_t i = 0; i < node->mNumMeshes; ++i)
+            cout << "node->mNumMeshes: " << node->mNumMeshes << "\n";
+            for (uint32_t w = 0; w < node->mNumMeshes; ++w)
             {
-                aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
+                aiMesh *mesh = scene->mMeshes[node->mMeshes[w]];
+                if (!mesh->HasBones())
+                {
+                    std::cout << filename << " doesn't have bones";
+                    assert(0);
+                }
                 bones m{};
+                m.aiBones = mesh->mBones;
+
+                m.boneWeight.resize(mesh->mNumVertices);
+                m.boneIndex.resize(mesh->mNumVertices);
+                cout << "The mesh has " << mesh->mNumBones << " bones and " << scene->mAnimations[0]->mNumChannels << " channels.\n";
+                for (uint i = 0; i < mesh->mNumBones; i++)
+                {
+                    uint BoneIndex = 0;
+                    string BoneName(mesh->mBones[i]->mName.data);
+
+                    if (m.BoneMapping.find(BoneName) == m.BoneMapping.end())
+                    {
+                        // Allocate an index for a new bone
+                        BoneIndex = m.NumBones;
+                        m.NumBones++;
+                        m.BoneMapping[BoneName] = BoneIndex;
+                        //cout << BoneName << "\n";
+                    }
+                    else
+                    {
+                        cout << BoneName << "\n";
+                        BoneIndex = m.BoneMapping[BoneName];
+                    }
+
+                    for (uint j = 0; j < mesh->mBones[i]->mNumWeights; j++)
+                    {
+                        // TODO: make sure the highest weights get saved
+                        uint VertexID = mesh->mBones[i]->mWeights[j].mVertexId;
+                        int k = 0;
+                        for (; k < 4; k++)
+                        {
+                            if (!(m.boneWeight[VertexID][k] > 0))
+                            {
+                                m.boneWeight[VertexID][k] = mesh->mBones[i]->mWeights[j].mWeight;
+                                m.boneIndex[VertexID][k] = (float)i;
+                                //cout << m.boneWeight[VertexID][k] << ", " << m.boneIndex[VertexID][k] << "\n";
+                                k = 5; //break
+                            }
+                        }
+                        if (k == 5) // weight not taken into account
+                        {
+                            cout << "Too many Weights for vertex " << VertexID << "!\n";
+                            // TODO : check if weight larger than minimum for vertexID
+                        }
+                    }
+                }
                 m.positions.resize(mesh->mNumVertices);
                 m.normals.resize(mesh->mNumVertices);
                 m.uvCords.resize(mesh->mNumUVComponents[0]);
                 m.faces.resize(mesh->mNumFaces);
-                
 
-                aiNodeAnim *pNodeAnim = scene->mAnimations[0]->mChannels[node->mMeshes[i]];
-                //m.timePerFrame = ((1.)/(scene->mAnimations[0]->mTicksPerSecond));
-                m.timePerFrame = ((1.)/(24.));
-
-                m.transform.resize(pNodeAnim->mNumPositionKeys);
-                for (uint32_t j = 0; j < pNodeAnim->mNumPositionKeys; j++)
+                for (uint i = 0; i < scene->mAnimations[0]->mNumChannels; i++)
                 {
-                    // Interpolate scaling and generate scaling transformation matrix
-                    const aiVector3D& Scaling = pNodeAnim->mScalingKeys[j].mValue;
-                    Matrix4f ScalingM;
-                    ScalingM.InitScaleTransform(Scaling.x * scale, Scaling.y * scale, Scaling.z * scale);
+                    string animationName = scene->mAnimations[0]->mChannels[i]->mNodeName.C_Str();
+                    m.AimationMapping[animationName] = i;
+                }
 
-                    // Interpolate rotation and generate rotation transformation matrix
-                    aiQuaternion RotationQ = pNodeAnim->mRotationKeys[j].mValue;
-                    Matrix4f RotationM = Matrix4f(RotationQ.GetMatrix());
+                //m.timePerFrame = ((1.)/(scene->mAnimations[0]->mTicksPerSecond));
+                m.timePerFrame = ((1.) / (24.));
 
-                    // Interpolate translation and generate translation transformation matrix
-                    aiVector3D Translation = pNodeAnim->mPositionKeys[j].mValue;
-                    Matrix4f TranslationM = Matrix4f();
-                    TranslationM.InitTranslationTransform(Translation.x * scale, Translation.y * scale, Translation.z * scale);
-
-                    // Combine the above transformations
-                    Matrix4f NodeTransformation = TranslationM * RotationM * ScalingM;
-                    m.transform[j] = glm::mat4(1);
-                    for (int k = 0; k < 4; k++)
+                aiNodeAnim *pNodeAnim = scene->mAnimations[0]->mChannels[node->mMeshes[w]];
+                m.boneTransform.resize(pNodeAnim->mNumPositionKeys);
+                //std::vector<std::vector<glm::mat4>>
+                for (uint i = 0; i < pNodeAnim->mNumPositionKeys; i++)
+                {
+                    m.boneTransform[i].resize(mesh->mNumBones);
+                    for (uint j = 0; j < mesh->mNumBones; j++)
                     {
-                        for (int p = 0; p < 4; p++)
-                        {
-                            m.transform[j][k][p] = NodeTransformation.m[p][k];
-                        }
+                        m.boneTransform[i][j] = glm::mat4(1);
                     }
                 }
 
-                
+                uint bone = 0;
+                for (uint32_t p = 0; p < scene->mAnimations[0]->mNumChannels; p++)
+                {
+                    //m.boneTransform[p].resize(scene->mAnimations[0]->mNumChannels);
+                    pNodeAnim = scene->mAnimations[0]->mChannels[p];
+                    for (int i = 0; i < mesh->mNumBones; i++)
+                    {
+                        if (mesh->mBones[i]->mName == pNodeAnim->mNodeName)
+                            bone = i;
+                    }
 
-                float *vbo_data = new float[mesh->mNumVertices * 8];
+                    glm::mat4 boneMatrix = glm::mat4();
+                    
+                    for (int k = 0; k < 4; k++)
+                    {
+                        for (int q = 0; q < 4; q++)
+                        {
+                            boneMatrix[k][q] = mesh->mBones[bone]->mOffsetMatrix[q][k];
+                        }
+                    }
+                    cout << "BonePre: " << glm::to_string(boneMatrix) << "\n";
+
+
+                    for (uint32_t j = 0; j < pNodeAnim->mNumPositionKeys; j++)
+                    {
+                        // Interpolate scaling and generate scaling transformation matrix
+                        const aiVector3D &Scaling = pNodeAnim->mScalingKeys[j].mValue;
+                        Matrix4f ScalingM;
+                        ScalingM.InitScaleTransform(Scaling.x * scale, Scaling.y * scale, Scaling.z * scale);
+                        // printf("Scale\n");
+                        // ScalingM.Print();
+
+                        // Interpolate rotation and generate rotation transformation matrix
+                        aiQuaternion RotationQ = pNodeAnim->mRotationKeys[j].mValue;
+                        Matrix4f RotationM = Matrix4f(RotationQ.GetMatrix());
+                        // printf("Rotation\n");
+                        // RotationM.Print();
+
+                        // Interpolate translation and generate translation transformation matrix
+                        aiVector3D Translation = pNodeAnim->mPositionKeys[j].mValue;
+                        Matrix4f TranslationM = Matrix4f();
+                        TranslationM.InitTranslationTransform(Translation.x * scale, Translation.y * scale, Translation.z * scale);
+                        // printf("Translation\n");
+                        // TranslationM.Print();
+
+                        // Combine the above transformations
+                        Matrix4f NodeTransformation = TranslationM * RotationM * ScalingM;
+                        // printf("Total\n");
+                        // NodeTransformation.Print();
+                        // printf("\n");
+                        // printf("\n");
+                        for (int k = 0; k < 4; k++)
+                        {
+                            for (int q = 0; q < 4; q++)
+                            {
+                                m.boneTransform[j][bone][k][q] = NodeTransformation.m[q][k];
+                                //m.boneTransform[j][bone][k][q] = NodeTransformation.m[k][q];
+                            }
+                        }
+                        //mat4x4((1.000000, 0.000000, 0.000000, 0.000000), (0.000000, 0.000000, -1.000000, 0.000000), (0.000000, 1.000000, 0.000000, 0.000000), (0.000000, 0.000000, 3.923498, 1.000000))
+                        cout << "BonePost: " << glm::to_string(boneMatrix) << "\n";
+                        m.boneTransform[j][bone] = m.boneTransform[j][bone] * boneMatrix;
+                    }
+                }
+
+                uint vboSize = 16;
+                float *vbo_data = new float[mesh->mNumVertices * vboSize];
                 unsigned int *ibo_data = new unsigned int[mesh->mNumFaces * 3];
                 for (uint32_t i = 0; i < mesh->mNumVertices; ++i)
                 {
                     glm::vec3 pos(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
                     glm::vec3 nrm(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
-                    glm::vec2 uv(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+                    float u;
+                    float v;
+                    if (mesh->HasTextureCoords(0))
+                    {
+                        u = mesh->mTextureCoords[0][i].x;
+                        v = mesh->mTextureCoords[0][i].y;
+                    }
+                    else
+                    {
+                        u = v = 0;
+                    }
+                    glm::vec2 uv(u, v);
+                    glm::vec4 index(m.boneIndex[i]);
+                    glm::vec4 weight(m.boneWeight[i]);
 
                     m.positions[i] = pos;
                     m.normals[i] = nrm;
 
-                    vbo_data[8 * i + 0] = pos[0];
-                    vbo_data[8 * i + 1] = pos[1];
-                    vbo_data[8 * i + 2] = pos[2];
-                    vbo_data[8 * i + 3] = nrm[0];
-                    vbo_data[8 * i + 4] = nrm[1];
-                    vbo_data[8 * i + 5] = nrm[2];
-                    vbo_data[8 * i + 6] = uv[0];
-                    vbo_data[8 * i + 7] = uv[1];
+                    vbo_data[vboSize * i + 0] = pos[0];
+                    vbo_data[vboSize * i + 1] = pos[1];
+                    vbo_data[vboSize * i + 2] = pos[2];
+                    vbo_data[vboSize * i + 3] = nrm[0];
+                    vbo_data[vboSize * i + 4] = nrm[1];
+                    vbo_data[vboSize * i + 5] = nrm[2];
+                    vbo_data[vboSize * i + 6] = uv[0];
+                    vbo_data[vboSize * i + 7] = uv[1];
+
+                    vbo_data[vboSize * i + 8] = index[0];
+                    vbo_data[vboSize * i + 9] = index[1];
+                    vbo_data[vboSize * i + 10] = index[2];
+                    vbo_data[vboSize * i + 11] = index[3];
+
+                    vbo_data[vboSize * i + 12] = weight[0];
+                    vbo_data[vboSize * i + 13] = weight[1];
+                    vbo_data[vboSize * i + 14] = weight[2];
+                    vbo_data[vboSize * i + 15] = weight[3];
                     //printf("%lf %lf\n",uv[0], uv[1]);
                     //vbo_data[10 * i + 9] = uv[2];
                 }
@@ -144,15 +271,19 @@ loadSceneAnim(const char *filename, double scale, bool smooth)
 
                 glGenVertexArrays(1, &m.vao);
                 glBindVertexArray(m.vao);
-                m.vbo = makeBuffer(GL_ARRAY_BUFFER, GL_STATIC_DRAW, mesh->mNumVertices * 8 * sizeof(float), vbo_data);
+                m.vbo = makeBuffer(GL_ARRAY_BUFFER, GL_STATIC_DRAW, mesh->mNumVertices * vboSize * sizeof(float), vbo_data);
                 m.ibo = makeBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, mesh->mNumFaces * 3 * sizeof(unsigned int), ibo_data);
                 glBindBuffer(GL_ARRAY_BUFFER, m.vbo);
-                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
-                glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
-                glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vboSize * sizeof(float), (void *)0);
+                glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vboSize * sizeof(float), (void *)(3 * sizeof(float)));
+                glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, vboSize * sizeof(float), (void *)(6 * sizeof(float)));
+                glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, vboSize * sizeof(float), (void *)(8 * sizeof(float)));
+                glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, vboSize * sizeof(float), (void *)(12 * sizeof(float)));
                 glEnableVertexAttribArray(0);
                 glEnableVertexAttribArray(1);
                 glEnableVertexAttribArray(2);
+                glEnableVertexAttribArray(3);
+                glEnableVertexAttribArray(4);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.ibo);
                 m.vertex_count = 3 * mesh->mNumFaces;
                 objects.push_back(m);
@@ -172,28 +303,34 @@ loadSceneAnim(const char *filename, double scale, bool smooth)
     return objects;
 }
 
-glm::mat4 bones::matrixAt(double time){
-    uint PositionIndex = (uint)(time/timePerFrame)%transform.size(); //FindPosition(AnimationTime, pNodeAnim);
-    uint NextPositionIndex = (PositionIndex + 1)%transform.size();
-    float DeltaTime = (float)(timePerFrame);
-    float Factor = timePerFrame / DeltaTime;
-    //assert(Factor >= 0.0f && Factor <= 1.0f);
-    glm::mat4 Start = transform[PositionIndex];
-    glm::mat4 End = transform[NextPositionIndex];
-    glm::mat4 Delta = End - Start;
-    glm::mat4 Out = Start + Factor * Delta;
-    return Out;
+// glm::mat4 bones::matrixAt(double time)
+// {
+//     uint PositionIndex = (uint)(time / timePerFrame) % transform.size(); //FindPosition(AnimationTime, pNodeAnim);
+//     uint NextPositionIndex = (PositionIndex + 1) % transform.size();
+//     float DeltaTime = (float)(timePerFrame);
+//     float Factor = timePerFrame / DeltaTime;
+//     //assert(Factor >= 0.0f && Factor <= 1.0f);
+//     glm::mat4 Start = transform[PositionIndex];
+//     glm::mat4 End = transform[NextPositionIndex];
+//     glm::mat4 Delta = End - Start;
+//     glm::mat4 Out = Start + Factor * Delta;
+//     return Out;
+// }
+
+void bones::setTime(double time)
+{
+    for (uint i = 0; i < 1; i++)
+    {
+        /* code */
+    }
 }
 
-
-bones
-loadMeshAnim(const char *filename, bool smooth)
+bones loadMeshBone(const char *filename, bool smooth)
 {
-    return loadSceneAnim(filename, smooth)[0];
+    return loadSceneBone(filename, smooth)[0];
 }
 
-bones
-loadMeshAnim(const char *filename, double scale, bool smooth)
+bones loadMeshBone(const char *filename, double scale, bool smooth)
 {
-    return loadSceneAnim(filename, scale, smooth)[0];
+    return loadSceneBone(filename, scale, smooth)[0];
 }
