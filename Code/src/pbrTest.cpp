@@ -153,7 +153,7 @@ int main(int, char *argv[])
     pbrObject brdfCube = {};
     brdfCube.setup(&pbr, "brdf/brdf.vs", "brdf/brdf.fs");
 
-    bones human = loadMeshBone("Lowpolymesh_Eliber.dae", false);
+    bones human = loadMeshBone("Lowpolymesh_Eliber_full.dae", false);
     // std::cout << "main: " << glm::to_string(human.boneTransform[0][5]) << "\n";
     // for (int i = 0; i < 51*16; i++)
     // {

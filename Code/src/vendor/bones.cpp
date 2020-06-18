@@ -9,6 +9,8 @@
 #include "ogldev_math_3d.h"
 #include "glm/gtx/string_cast.hpp"
 
+#include <chrono>
+
 void bones::bind()
 {
     glBindVertexArray(vao);
@@ -25,6 +27,70 @@ void bones::destroy()
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ibo);
+}
+
+void traverseTree(aiNode *root, bones *m, uint time)
+{
+    glm::mat4 m_GlobalInverseTransform = glm::mat4(1.);
+    for (int k = 0; k < 4; k++)
+    {
+        for (int q = 0; q < 4; q++)
+        {
+            m_GlobalInverseTransform[k][q] = m->Scene->mRootNode->mTransformation[q][k];
+        }
+    }
+    m_GlobalInverseTransform = glm::inverse(m_GlobalInverseTransform);
+    string RootName(root->mName.data);
+    glm::mat4 boneMatrix = glm::mat4();
+
+    for (uint j = 0; j < root->mNumChildren; j++)
+    {
+        string BoneName(root->mChildren[j]->mName.data);
+        if (m->BoneMapping.find(BoneName) != m->BoneMapping.end())
+        {
+            glm::mat4 mTransformation = glm::mat4(1.);
+            for (int k = 0; k < 4; k++)
+            {
+                for (int q = 0; q < 4; q++)
+                {
+                    mTransformation[k][q] = root->mChildren[j]->mTransformation[q][k];
+                }
+            }
+            //m->boneTransform[time][m->BoneMapping[BoneName]] = m_GlobalInverseTransform * m->boneTransform[time][m->BoneMapping[RootName]] * m->boneTransform[time][m->BoneMapping[BoneName]] * boneMatrix;
+            m->boneTransform[time][m->BoneMapping[BoneName]] = glm::inverse(mTransformation) * m->boneTransform[time][m->BoneMapping[RootName]] * mTransformation * m->boneTransform[time][m->BoneMapping[BoneName]];
+        }
+        //cout << root->mChildren[j]->mName.C_Str() << "\n";
+        traverseTree(root->mChildren[j], m, time);
+        for (int k = 0; k < 4; k++)
+        {
+            for (int q = 0; q < 4; q++)
+            {
+                boneMatrix[k][q] = m->Mesh->mBones[m->BoneMapping[BoneName]]->mOffsetMatrix[q][k];
+            }
+        }
+        m->boneTransform[time][m->BoneMapping[BoneName]] = glm::inverse(boneMatrix) * m->boneTransform[time][m->BoneMapping[BoneName]] * boneMatrix;
+    }
+}
+
+void applyRootTransform(bones *m)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+    for (uint i = 0; i < m->boneTransform.size(); i++)
+    {
+        // cout << m.Scene->mRootNode->mName.C_Str();
+        // for (uint j = 0; j < m.Scene->mRootNode->mNumChildren; j++)
+        // {
+        //     cout << m.Scene->mRootNode->mChildren[j]->mName.C_Str();
+        // }
+        traverseTree(m->Scene->mRootNode, m, i);
+
+        //rootIndex = m.BoneMapping[BoneName]
+    }
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    cout << "applying root transform took " << duration.count() / 1000. << "ms" << endl;
+
+    //m.boneTransform[j][bone]
 }
 
 std::vector<bones>
@@ -74,7 +140,9 @@ loadSceneBone(const char *filename, double scale, bool smooth)
                     assert(0);
                 }
                 bones m{};
+                m.Scene = scene;
                 m.aiBones = mesh->mBones;
+                m.Mesh = mesh;
 
                 m.boneWeight.resize(mesh->mNumVertices);
                 m.boneIndex.resize(mesh->mNumVertices);
@@ -151,14 +219,14 @@ loadSceneBone(const char *filename, double scale, bool smooth)
                 {
                     //m.boneTransform[p].resize(scene->mAnimations[0]->mNumChannels);
                     pNodeAnim = scene->mAnimations[0]->mChannels[p];
-                    for (int i = 0; i < mesh->mNumBones; i++)
+                    for (uint i = 0; i < mesh->mNumBones; i++)
                     {
                         if (mesh->mBones[i]->mName == pNodeAnim->mNodeName)
                             bone = i;
                     }
 
                     glm::mat4 boneMatrix = glm::mat4();
-                    
+
                     for (int k = 0; k < 4; k++)
                     {
                         for (int q = 0; q < 4; q++)
@@ -166,8 +234,7 @@ loadSceneBone(const char *filename, double scale, bool smooth)
                             boneMatrix[k][q] = mesh->mBones[bone]->mOffsetMatrix[q][k];
                         }
                     }
-                    cout << "BonePre: " << glm::to_string(boneMatrix) << "\n";
-
+                    //cout << "BonePre: " << glm::to_string(boneMatrix) << "\n";
 
                     for (uint32_t j = 0; j < pNodeAnim->mNumPositionKeys; j++)
                     {
@@ -206,10 +273,12 @@ loadSceneBone(const char *filename, double scale, bool smooth)
                             }
                         }
                         //mat4x4((1.000000, 0.000000, 0.000000, 0.000000), (0.000000, 0.000000, -1.000000, 0.000000), (0.000000, 1.000000, 0.000000, 0.000000), (0.000000, 0.000000, 3.923498, 1.000000))
-                        cout << "BonePost: " << glm::to_string(boneMatrix) << "\n";
-                        m.boneTransform[j][bone] = m.boneTransform[j][bone] * boneMatrix;
+                        //cout << "BonePost: " << glm::to_string(boneMatrix) << "\n";
+                        //m.boneTransform[j][bone] = m.boneTransform[j][bone] * boneMatrix;
                     }
                 }
+
+                applyRootTransform(&m);
 
                 uint vboSize = 16;
                 float *vbo_data = new float[mesh->mNumVertices * vboSize];

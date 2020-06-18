@@ -20,7 +20,8 @@ struct bones {
     unsigned int ibo;
     unsigned int vao;
     std::vector<std::vector<glm::mat4>> boneTransform;
-    glm::mat4* boneTransformP;
+    const aiScene* Scene;
+    aiMesh* Mesh;
     std::vector<glm::vec4> boneIndex;
     std::vector<glm::vec4> boneWeight;
     std::map<std::string,uint> BoneMapping; // maps a bone name to its index
