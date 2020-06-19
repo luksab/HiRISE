@@ -51,7 +51,12 @@ void main()
     index=int(Index.w); //Cast to int
     newVertex = (Bone[index] * vec4(aPos, 1.0)) * weight.w + newVertex;
     newNormal = (Bone[index] * vec4(Normal, 0.0)) * weight.w + newNormal;
-    gl_Position = proj_mat * view_mat * vec4(newVertex.xyz, 1.0);
+
+    newNormal = normalize(newNormal);
+
+    float offset = (texture2D(heightMap, aTexCoords).r-.5);
+    gl_Position = proj_mat * view_mat * vec4(newVertex.x+offset*newNormal.x, newVertex.y+offset*newNormal.y, newVertex.z+offset*newNormal.z, 1.0);
+    //gl_Position = proj_mat * view_mat * vec4(newVertex.xyz, 1.0);
     Normal = newNormal.xyz;
     factor = Index.xyz;
 }

@@ -29,16 +29,22 @@ void bones::destroy()
     glDeleteBuffers(1, &ibo);
 }
 
-void traverseTree(aiNode *root, bones *m, uint time)
+glm::mat4 aiMatrix4ToGlm(aiMatrix4x4 &in)
 {
-    glm::mat4 m_GlobalInverseTransform = glm::mat4(1.);
+    glm::mat4 out = glm::mat4(1);
     for (int k = 0; k < 4; k++)
     {
         for (int q = 0; q < 4; q++)
         {
-            m_GlobalInverseTransform[k][q] = m->Scene->mRootNode->mTransformation[q][k];
+            out[k][q] = in[q][k];
         }
     }
+    return out;
+}
+
+void traverseTree(aiNode *root, bones *m, uint time)
+{
+    glm::mat4 m_GlobalInverseTransform = aiMatrix4ToGlm(m->Scene->mRootNode->mTransformation);
     m_GlobalInverseTransform = glm::inverse(m_GlobalInverseTransform);
     string RootName(root->mName.data);
     glm::mat4 boneMatrix = glm::mat4();
@@ -48,26 +54,13 @@ void traverseTree(aiNode *root, bones *m, uint time)
         string BoneName(root->mChildren[j]->mName.data);
         if (m->BoneMapping.find(BoneName) != m->BoneMapping.end())
         {
-            glm::mat4 mTransformation = glm::mat4(1.);
-            for (int k = 0; k < 4; k++)
-            {
-                for (int q = 0; q < 4; q++)
-                {
-                    mTransformation[k][q] = root->mChildren[j]->mTransformation[q][k];
-                }
-            }
+            glm::mat4 mTransformation = aiMatrix4ToGlm(root->mChildren[j]->mTransformation);
             //m->boneTransform[time][m->BoneMapping[BoneName]] = m_GlobalInverseTransform * m->boneTransform[time][m->BoneMapping[RootName]] * m->boneTransform[time][m->BoneMapping[BoneName]] * boneMatrix;
             m->boneTransform[time][m->BoneMapping[BoneName]] = glm::inverse(mTransformation) * m->boneTransform[time][m->BoneMapping[RootName]] * mTransformation * m->boneTransform[time][m->BoneMapping[BoneName]];
         }
         //cout << root->mChildren[j]->mName.C_Str() << "\n";
         traverseTree(root->mChildren[j], m, time);
-        for (int k = 0; k < 4; k++)
-        {
-            for (int q = 0; q < 4; q++)
-            {
-                boneMatrix[k][q] = m->Mesh->mBones[m->BoneMapping[BoneName]]->mOffsetMatrix[q][k];
-            }
-        }
+        boneMatrix = aiMatrix4ToGlm(m->Mesh->mBones[m->BoneMapping[BoneName]]->mOffsetMatrix);
         m->boneTransform[time][m->BoneMapping[BoneName]] = glm::inverse(boneMatrix) * m->boneTransform[time][m->BoneMapping[BoneName]] * boneMatrix;
     }
 }
