@@ -49,6 +49,8 @@ loadSceneAnim(const char *filename, double scale, bool smooth)
     if (scene == nullptr)
         return {};
 
+    //scene->mCameras[0]->GetCameraMatrix();
+
     std::vector<animated> objects;
     std::function<void(aiNode *, glm::mat4)> traverse;
     traverse = [&](aiNode *node, glm::mat4 t) {
@@ -72,8 +74,15 @@ loadSceneAnim(const char *filename, double scale, bool smooth)
                 m.uvCords.resize(mesh->mNumUVComponents[0]);
                 m.faces.resize(mesh->mNumFaces);
                 
-
-                aiNodeAnim *pNodeAnim = scene->mAnimations[0]->mChannels[node->mMeshes[i]];
+                //Look for the right animation
+                aiNodeAnim *pNodeAnim;
+                for (uint mAnimationsCounter = 0; mAnimationsCounter < scene->mAnimations[0]->mNumChannels; mAnimationsCounter++)
+                {
+                    if(scene->mAnimations[0]->mChannels[mAnimationsCounter]->mNodeName == mesh->mName){
+                        pNodeAnim = scene->mAnimations[0]->mChannels[node->mMeshes[i]];
+                    }
+                }
+                
                 //m.timePerFrame = ((1.)/(scene->mAnimations[0]->mTicksPerSecond));
                 m.timePerFrame = ((1.)/(24.));
 
