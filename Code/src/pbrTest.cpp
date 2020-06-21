@@ -97,108 +97,52 @@ unsigned int loadTexture(char const *path)
     return textureID;
 }
 
-std::vector<unsigned int> loadPBR(char const * path)
+std::vector<unsigned int> loadPBR(char const *path)
 {
     std::vector<unsigned int> ret;
-    ret.push_back(loadTexture((DATA_ROOT + path+"/"+path+"_diff_8k.jpg").c_str()));
-    ret.push_back(loadTexture((DATA_ROOT + path+"/"+path+"_nor_8k.jpg").c_str()));
-    if(access( (DATA_ROOT + path+"/"+path+"_disp_8k.jpg").c_str(), F_OK ) != -1){
-
+    ret.push_back(loadTexture((DATA_ROOT + path + "/" + path + "_diff_8k.jpg").c_str()));
+    ret.push_back(loadTexture((DATA_ROOT + path + "/" + path + "_nor_8k.jpg").c_str()));
+    if (access((DATA_ROOT + path + "/" + path + "_disp_8k.jpg").c_str(), F_OK) != -1)
+    {
     }
     //ret.push_back(loadTexture((path+"/"+path+"_disp_8k.png").c_str()));
     unsigned int metallic;
     glGenTextures(1, &metallic);
     ret.push_back(metallic);
-    ret.push_back(loadTexture((DATA_ROOT + path+"/"+path+"_rough_8k.jpg").c_str()));
-    ret.push_back(loadTexture((DATA_ROOT + path+"/"+path+"_ao_8k.jpg").c_str()));
-    ret.push_back(loadTexture((DATA_ROOT + path+"/"+path+"_disp_8k.jpg").c_str()));
+    ret.push_back(loadTexture((DATA_ROOT + path + "/" + path + "_rough_8k.jpg").c_str()));
+    ret.push_back(loadTexture((DATA_ROOT + path + "/" + path + "_ao_8k.jpg").c_str()));
+    ret.push_back(loadTexture((DATA_ROOT + path + "/" + path + "_disp_8k.jpg").c_str()));
 
     return ret;
 }
 
-int main(int, char *argv[])
+struct pbrTex
 {
-    GLFWwindow *window = initOpenGL(WINDOW_WIDTH, WINDOW_HEIGHT, argv[0]);
-    glfwSetFramebufferSizeCallback(window, resizeCallback);
+    unsigned int prefilterMap;
+    unsigned int irradianceMap;
+    unsigned int brdfLUTTexture;
+};
 
-    camera cam(window);
-
-    init_imgui(window);
-    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-
-    printf("loading meshes\n");
-
-    animated pbr = loadMeshAnim("cube.dae", true);
+pbrTex setupPBR(animated *pbr)
+{
     pbrObject hdrCube = {};
-    hdrCube.setup(&pbr, "equirectangular/main.vert", "equirectangular/main.frag");
+    hdrCube.setup(pbr, "equirectangular/main.vert", "equirectangular/main.frag");
     hdrCube.defaultMat = true;
     unsigned int equirectangularMap_loc = glGetUniformLocation(hdrCube.shaderProgram, "equirectangularMap");
 
     pbrObject irradianceCube = {};
-    irradianceCube.setup(&pbr, "equirectangular/main.vert", "cubeMap/conv.frag");
+    irradianceCube.setup(pbr, "equirectangular/main.vert", "cubeMap/conv.frag");
     irradianceCube.defaultMat = true;
     unsigned int equirectangularMap_loc_irra = glGetUniformLocation(irradianceCube.shaderProgram, "environmentMap");
 
     pbrObject filterCube = {};
-    filterCube.setup(&pbr, "equirectangular/main.vert", "cubeMap/rough.frag");
+    filterCube.setup(pbr, "equirectangular/main.vert", "cubeMap/rough.frag");
     filterCube.defaultMat = true;
     unsigned int equirectangularMap_locF_irra = glGetUniformLocation(filterCube.shaderProgram, "environmentMap");
     filterCube.setInt("environmentMap", 0);
 
-    pbrObject renderCube = {};
-    renderCube.setup(&pbr, "cubeMap/hdr.vert", "cubeMap/hdr.frag");
-    renderCube.defaultMat = true;
-    renderCube.setInt("environmentMap", 0);
-
     pbrObject brdfCube = {};
-    brdfCube.setup(&pbr, "brdf/brdf.vs", "brdf/brdf.fs");
-
-    bones human = loadMeshBone("Lowpolymesh_Eliber_full_subdiv.dae", false);
-    // std::cout << "main: " << glm::to_string(human.boneTransform[0][5]) << "\n";
-    // for (int i = 0; i < 51*16; i++)
-    // {
-    //     if(i%16==0)printf("\n");
-    //     std::cout << *((&(human.boneTransform[5][0][0][0]))+i) << ",";
-    // }
-
-    // for (size_t i = 0; i < human.boneWeight.size(); i++)
-    // {
-    //     std::cout << glm::to_string(human.boneWeight[i]) << ", " << glm::to_string(human.boneIndex[i]) << "\n";
-    // }
-    
-    
-    boneObject boneObj = {};
-    boneObj.setup(&human, false);
-    boneObj.use();
-    boneObj.setInt("irradianceMap", 0);
-    boneObj.setInt("prefilterMap", 1);
-    boneObj.setInt("brdfLUT", 2);
-    boneObj.setInt("albedoMap", 3);
-    boneObj.setInt("normalMap", 4);
-    boneObj.setInt("metallicMap", 5);
-    boneObj.setInt("roughnessMap", 6);
-    boneObj.setInt("aoMap", 7);
-    boneObj.setInt("heightMap", 8);
-
-    // load PBR material textures
-    // --------------------------
-    // unsigned int albedo = loadTexture((DATA_ROOT + "rust/albedo.png").c_str());
-    // unsigned int normal = loadTexture((DATA_ROOT + "rust/normal.png").c_str());
-    // unsigned int metallic = loadTexture((DATA_ROOT + "rust/metallic.png").c_str());
-    // unsigned int roughness = loadTexture((DATA_ROOT + "rust/roughness.png").c_str());
-    // unsigned int ao = loadTexture((DATA_ROOT + "rust/ao.png").c_str());
-
-    printf("loading textures\n");
-    std::vector<unsigned int> pbrImgs = loadPBR("rock_ground");
-    unsigned int albedo = pbrImgs[0];//loadTexture((DATA_ROOT + "book/book_pattern_col2_8k.png").c_str());
-    unsigned int normal = pbrImgs[1];//vloadTexture((DATA_ROOT + "book/book_pattern_nor_8k.png").c_str());
-    //unsigned int metallic = loadTexture((DATA_ROOT + "book/book_pattern_disp_8k.png").c_str());
-    unsigned int metallic = pbrImgs[0];
-    //glGenTextures(1, &metallic);
-    unsigned int roughness = pbrImgs[3];//loadTexture((DATA_ROOT + "book/book_pattern_rough_8k.png").c_str());
-    unsigned int ao = pbrImgs[4];//loadTexture((DATA_ROOT + "book/book_pattern_AO_8k.png").c_str());
-    //unsigned int disp = loadTexture((DATA_ROOT + "SphereDisplacement.png").c_str());//pbrImgs[5];
-    unsigned int disp = pbrImgs[5];
+    brdfCube.setup(pbr, "brdf/brdf.vs", "brdf/brdf.fs");
 
     printf("loading hdri\n");
     stbi_set_flip_vertically_on_load(true);
@@ -404,6 +348,80 @@ int main(int, char *argv[])
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     renderQuad();
 
+    pbrTex returnTex = {};
+    returnTex.prefilterMap = prefilterMap;
+    returnTex.irradianceMap = irradianceMap;
+    returnTex.brdfLUTTexture = brdfLUTTexture;
+
+    return returnTex;
+}
+
+int main(int, char *argv[])
+{
+    GLFWwindow *window = initOpenGL(WINDOW_WIDTH, WINDOW_HEIGHT, argv[0]);
+    glfwSetFramebufferSizeCallback(window, resizeCallback);
+
+    camera cam(window);
+
+    init_imgui(window);
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
+    printf("loading textures\n");
+    std::vector<unsigned int> pbrImgs = loadPBR("rock_ground");
+    unsigned int albedo = pbrImgs[0]; //loadTexture((DATA_ROOT + "book/book_pattern_col2_8k.png").c_str());
+    unsigned int normal = pbrImgs[1]; //vloadTexture((DATA_ROOT + "book/book_pattern_nor_8k.png").c_str());
+    //unsigned int metallic = loadTexture((DATA_ROOT + "book/book_pattern_disp_8k.png").c_str());
+    unsigned int metallic = pbrImgs[0];
+    //glGenTextures(1, &metallic);
+    unsigned int roughness = pbrImgs[3]; //loadTexture((DATA_ROOT + "book/book_pattern_rough_8k.png").c_str());
+    unsigned int ao = pbrImgs[4];        //loadTexture((DATA_ROOT + "book/book_pattern_AO_8k.png").c_str());
+    //unsigned int disp = loadTexture((DATA_ROOT + "SphereDisplacement.png").c_str());//pbrImgs[5];
+    unsigned int disp = pbrImgs[5];
+
+    printf("loading meshes\n");
+
+    animated pbr = loadMeshAnim("cube.dae", true);
+    pbrTex envtex = setupPBR(&pbr);
+
+    pbrObject renderCube = {};
+    renderCube.setup(&pbr, "cubeMap/hdr.vert", "cubeMap/hdr.frag");
+    renderCube.defaultMat = true;
+    renderCube.setInt("environmentMap", 0);
+
+    bones human = loadMeshBone("Lowpolymesh_Eliber2.dae", false);
+    // std::cout << "main: " << glm::to_string(human.boneTransform[0][5]) << "\n";
+    // for (int i = 0; i < 51*16; i++)
+    // {
+    //     if(i%16==0)printf("\n");
+    //     std::cout << *((&(human.boneTransform[5][0][0][0]))+i) << ",";
+    // }
+
+    // for (size_t i = 0; i < human.boneWeight.size(); i++)
+    // {
+    //     std::cout << glm::to_string(human.boneWeight[i]) << ", " << glm::to_string(human.boneIndex[i]) << "\n";
+    // }
+
+    boneObject boneObj = {};
+    boneObj.setup(&human, false);
+    boneObj.use();
+    boneObj.setInt("irradianceMap", 0);
+    boneObj.setInt("prefilterMap", 1);
+    boneObj.setInt("brdfLUT", 2);
+    boneObj.setInt("albedoMap", 3);
+    boneObj.setInt("normalMap", 4);
+    boneObj.setInt("metallicMap", 5);
+    boneObj.setInt("roughnessMap", 6);
+    boneObj.setInt("aoMap", 7);
+    boneObj.setInt("heightMap", 8);
+
+    // load PBR material textures
+    // --------------------------
+    // unsigned int albedo = loadTexture((DATA_ROOT + "rust/albedo.png").c_str());
+    // unsigned int normal = loadTexture((DATA_ROOT + "rust/normal.png").c_str());
+    // unsigned int metallic = loadTexture((DATA_ROOT + "rust/metallic.png").c_str());
+    // unsigned int roughness = loadTexture((DATA_ROOT + "rust/roughness.png").c_str());
+    // unsigned int ao = loadTexture((DATA_ROOT + "rust/ao.png").c_str());
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -480,17 +498,17 @@ int main(int, char *argv[])
 
         glDepthFunc(GL_LEQUAL);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.prefilterMap);
         renderCube.setMaticies(&view_matrix, &proj_matrix);
         renderCube.render(0);
 
         // bind pre-computed IBL data
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.irradianceMap);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.prefilterMap);
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
+        glBindTexture(GL_TEXTURE_2D, envtex.brdfLUTTexture);
 
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, albedo);
