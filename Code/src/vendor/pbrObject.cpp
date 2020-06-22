@@ -147,7 +147,33 @@ void pbrObject::render(double currentTime)
         glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, &(*view_matrix)[0][0]);
         glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &(*proj_matrix)[0][0]);
     }
-    glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(*object).matrixAt(currentTime)[0][0]);
+
+    glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &((*object).matrixAt(currentTime))[0][0]);
+
+    (*object).bind();
+    if (useTessellation)
+    {
+        glDrawElements(GL_PATCHES, (*object).vertex_count, GL_UNSIGNED_INT, (void *)0);
+    }
+    else
+    {
+        glDrawElements(GL_TRIANGLES, (*object).vertex_count, GL_UNSIGNED_INT, (void *)0);
+    }
+}
+
+void pbrObject::renderRotated(float rotation, float time)
+{
+    glUseProgram(shaderProgram);
+    if (defaultMat)
+    {
+        glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, &(*view_matrix)[0][0]);
+        glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &(*proj_matrix)[0][0]);
+    }
+
+    glm::mat4 trans = glm::mat4(1.);
+    trans = glm::rotate(trans, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(trans*(*object).matrixAt(time))[0][0]);
 
     (*object).bind();
     if (useTessellation)

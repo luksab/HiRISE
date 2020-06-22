@@ -388,7 +388,8 @@ int main(int, char *argv[])
     renderCube.defaultMat = true;
     renderCube.setInt("environmentMap", 0);
 
-    bones human = loadMeshBone("Lowpolymesh_Eliber2.dae", false);
+    //bones human = loadMeshBone("Lowpolymesh_Eliber2.dae", false);
+    animated human = loadMeshAnim("hiresSphere.dae", false);
     // std::cout << "main: " << glm::to_string(human.boneTransform[0][5]) << "\n";
     // for (int i = 0; i < 51*16; i++)
     // {
@@ -401,7 +402,7 @@ int main(int, char *argv[])
     //     std::cout << glm::to_string(human.boneWeight[i]) << ", " << glm::to_string(human.boneIndex[i]) << "\n";
     // }
 
-    boneObject boneObj = {};
+    pbrObject boneObj = {};
     boneObj.setup(&human, false);
     boneObj.use();
     boneObj.setInt("irradianceMap", 0);
@@ -525,7 +526,7 @@ int main(int, char *argv[])
 
         boneObj.setMaticies(&view_matrix, &proj_matrix);
         boneObj.setVec3("camPos", cam.position());
-        boneObj.render(currentTime);
+        boneObj.renderRotated(currentTime, 7.);
 
         // render UI
         imgui_render();

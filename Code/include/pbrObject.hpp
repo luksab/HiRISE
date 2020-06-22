@@ -7,6 +7,7 @@
 
 struct pbrObject {
     void render(double currentTime);
+    void renderRotated(float rotation, float time);
     void setup(animated* model, bool tessellation);
     void setup(animated *model, const char* vertex, const char* fragment);
     void setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat);
