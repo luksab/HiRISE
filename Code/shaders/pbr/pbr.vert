@@ -22,7 +22,7 @@ void main()
     Normal = normalize(mat3(model_mat) * aNormal);
 
     float offset = displacementFactor*(texture2D(heightMap, aTexCoords).r-.5);
-    gl_Position = proj_mat * view_mat * model_mat * vec4(WorldPos.x+offset*Normal.x, WorldPos.y+offset*Normal.y, WorldPos.z+offset*Normal.z, 1.0);
+    gl_Position = proj_mat * view_mat * vec4(WorldPos.x+offset*Normal.x, WorldPos.y+offset*Normal.y, WorldPos.z+offset*Normal.z, 1.0);
 
     //gl_Position =  proj_mat * view_mat * vec4(WorldPos, 1.0);
 }

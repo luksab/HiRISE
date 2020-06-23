@@ -72,10 +72,19 @@ loadSceneAnim(const char* filename, double scale, bool smooth)
                 if (scene->HasAnimations()) {
                     //Look for the right animation
                     aiNodeAnim* pNodeAnim;
+                    bool foundAnim = false;
                     for (uint mAnimationsCounter = 0; mAnimationsCounter < scene->mAnimations[0]->mNumChannels; mAnimationsCounter++) {
                         if (scene->mAnimations[0]->mChannels[mAnimationsCounter]->mNodeName == mesh->mName) {
                             pNodeAnim = scene->mAnimations[0]->mChannels[node->mMeshes[i]];
+                            foundAnim = true;
                         }
+                    }
+                    if (!foundAnim) {
+                        printf("Didn't find pp for %s!\nOptions were:\n", mesh->mName.C_Str());
+                        for (uint mAnimationsCounter = 0; mAnimationsCounter < scene->mAnimations[0]->mNumChannels; mAnimationsCounter++) {
+                            printf("%s\n",scene->mAnimations[0]->mChannels[mAnimationsCounter]->mNodeName.C_Str());
+                        }
+                        assert(0);
                     }
 
                     //m.timePerFrame = ((1.)/(scene->mAnimations[0]->mTicksPerSecond));

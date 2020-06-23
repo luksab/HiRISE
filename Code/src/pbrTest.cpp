@@ -274,12 +274,13 @@ pbrTex setupPBR(animated *pbr)
     //glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
 
     printf("converting environment map to roughness map\n");
+    resolution = 128;
     unsigned int prefilterMap;
     glGenTextures(1, &prefilterMap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
     for (unsigned int i = 0; i < 6; ++i)
     {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, resolution, resolution, 0, GL_RGB, GL_FLOAT, nullptr);
     }
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -303,8 +304,8 @@ pbrTex setupPBR(animated *pbr)
     for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
     {
         // reisze framebuffer according to mip-level size.
-        unsigned int mipWidth = 128 * std::pow(0.5, mip);
-        unsigned int mipHeight = 128 * std::pow(0.5, mip);
+        unsigned int mipWidth = resolution * std::pow(0.5, mip);
+        unsigned int mipHeight = resolution * std::pow(0.5, mip);
         glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
         glViewport(0, 0, mipWidth, mipHeight);
@@ -383,7 +384,6 @@ int main(int, char *argv[])
     printf("loading meshes\n");
 
     animated pbr = loadMeshAnim("cube.dae", true);
-    pbrTex envtex = setupPBR(&pbr);
 
     pbrObject renderCube = {};
     renderCube.setup(&pbr, "cubeMap/hdr.vert", "cubeMap/hdr.frag");
@@ -391,8 +391,8 @@ int main(int, char *argv[])
     renderCube.setInt("environmentMap", 0);
 
     //bones human = loadMeshBone("Lowpolymesh_Eliber2.dae", false);
-    //animated human = loadMeshAnim("hiresSphere.dae", true);
-    animated human = toAnimated(loadMesh("sphere_fine.obj", true));
+    animated human = loadMeshAnim("hiresSphereRot.dae", false);
+    //animated human = toAnimated(loadMesh("hiresSphereRot.dae", true));
     // std::cout << "main: " << glm::to_string(human.boneTransform[0][5]) << "\n";
     // for (int i = 0; i < 51*16; i++)
     // {
@@ -425,6 +425,7 @@ int main(int, char *argv[])
     // unsigned int metallic = loadTexture((DATA_ROOT + "rust/metallic.png").c_str());
     // unsigned int roughness = loadTexture((DATA_ROOT + "rust/roughness.png").c_str());
     // unsigned int ao = loadTexture((DATA_ROOT + "rust/ao.png").c_str());
+    pbrTex envtex = setupPBR(&pbr);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -443,6 +444,7 @@ int main(int, char *argv[])
     int whichBGTexture = 0;
 
     float bgLoD = 2.25;
+    float dispFac = 0.25;
 
     //fuer fps
     double lastTime = glfwGetTime();
@@ -487,6 +489,7 @@ int main(int, char *argv[])
             ImGui::Begin("Camera");
             ImGui::SliderFloat("FOV", &FOV, 90.0f, 5.0f);
             ImGui::SliderFloat("LoD for HDRI", &bgLoD, 0.0f, 6.0f);
+            ImGui::SliderFloat("Displacement Factor", &dispFac, 0.0f, 1.0f);
             ImGui::Combo("BG Texture", &whichBGTexture, BG_Textures, 3);
             ImGui::End();
         }
@@ -515,7 +518,7 @@ int main(int, char *argv[])
             glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.irradianceMap);
             break;
         case 2:
-        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.prefilterMap);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.prefilterMap);
             break;
         default:
             break;
@@ -549,9 +552,12 @@ int main(int, char *argv[])
         glActiveTexture(GL_TEXTURE8);
         glBindTexture(GL_TEXTURE_2D, disp);
 
+        glShadeModel(GL_SMOOTH);
+        boneObj.setFloat("displacementFactor", dispFac);
         boneObj.setMaticies(&view_matrix, &proj_matrix);
         boneObj.setVec3("camPos", cam.position());
-        boneObj.renderRotated(currentTime, 7.);
+        boneObj.render(currentTime);
+        //boneObj.renderRotated(currentTime, dispFac);
 
         // render UI
         imgui_render();
