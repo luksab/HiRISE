@@ -170,10 +170,10 @@ void pbrObject::renderRotated(float rotation, float time)
         glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &(*proj_matrix)[0][0]);
     }
 
-    glm::mat4 trans = glm::mat4(1.);
+    glm::mat4 trans = (*object).matrixAt(time);
     trans = glm::rotate(trans, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
 
-    glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(trans*(*object).matrixAt(time))[0][0]);
+    glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(trans)[0][0]);
 
     (*object).bind();
     if (useTessellation)

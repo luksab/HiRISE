@@ -391,7 +391,8 @@ int main(int, char *argv[])
     renderCube.setInt("environmentMap", 0);
 
     //bones human = loadMeshBone("Lowpolymesh_Eliber2.dae", false);
-    animated human = loadMeshAnim("hiresSphere.dae", false);
+    //animated human = loadMeshAnim("hiresSphere.dae", true);
+    animated human = toAnimated(loadMesh("sphere_fine.obj", true));
     // std::cout << "main: " << glm::to_string(human.boneTransform[0][5]) << "\n";
     // for (int i = 0; i < 51*16; i++)
     // {

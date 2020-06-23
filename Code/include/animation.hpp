@@ -4,6 +4,8 @@
 
 #include "common.hpp"
 
+#include "mesh.hpp"
+
 struct animated {
     void bind();
 
@@ -36,3 +38,6 @@ loadMeshAnim(const char* filename, bool smooth);
 
 animated
 loadMeshAnim(const char *filename, double scale, bool smooth);
+
+animated
+toAnimated(geometry input);
