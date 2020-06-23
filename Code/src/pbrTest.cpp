@@ -369,18 +369,6 @@ int main(int, char *argv[])
     init_imgui(window);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-    printf("loading textures\n");
-    std::vector<unsigned int> pbrImgs = loadPBR("rock_ground");
-    unsigned int albedo = pbrImgs[0]; //loadTexture((DATA_ROOT + "book/book_pattern_col2_8k.png").c_str());
-    unsigned int normal = pbrImgs[1]; //vloadTexture((DATA_ROOT + "book/book_pattern_nor_8k.png").c_str());
-    //unsigned int metallic = loadTexture((DATA_ROOT + "book/book_pattern_disp_8k.png").c_str());
-    unsigned int metallic = pbrImgs[0];
-    //glGenTextures(1, &metallic);
-    unsigned int roughness = pbrImgs[3]; //loadTexture((DATA_ROOT + "book/book_pattern_rough_8k.png").c_str());
-    unsigned int ao = pbrImgs[4];        //loadTexture((DATA_ROOT + "book/book_pattern_AO_8k.png").c_str());
-    //unsigned int disp = loadTexture((DATA_ROOT + "SphereDisplacement.png").c_str());//pbrImgs[5];
-    unsigned int disp = pbrImgs[5];
-
     printf("loading meshes\n");
 
     animated pbr = loadMeshAnim("cube.dae", true);
@@ -390,22 +378,24 @@ int main(int, char *argv[])
     renderCube.defaultMat = true;
     renderCube.setInt("environmentMap", 0);
 
-    //bones human = loadMeshBone("Lowpolymesh_Eliber2.dae", false);
-    animated human = loadMeshAnim("hiresSphereRot.dae", false);
+    //bones human = loadMeshBone("cylinderBones.dae", false);
+    bones human = loadMeshBone("Lowpolymesh_Eliber.dae", false);
+    //animated human = loadMeshAnim("hiresSphereRot.dae", false);
     //animated human = toAnimated(loadMesh("hiresSphereRot.dae", true));
     // std::cout << "main: " << glm::to_string(human.boneTransform[0][5]) << "\n";
     // for (int i = 0; i < 51*16; i++)
     // {
-    //     if(i%16==0)printf("\n");
-    //     std::cout << *((&(human.boneTransform[5][0][0][0]))+i) << ",";
-    // }
+    //     if(i%4==0)printf("\n");
+    //     if(i%16==0)printf("%d\n",i/16);
+    //     std::cout << *((&(human.boneTransform[0][0][0][0]))+i) << ",";
+    // }printf("\n");
 
     // for (size_t i = 0; i < human.boneWeight.size(); i++)
     // {
     //     std::cout << glm::to_string(human.boneWeight[i]) << ", " << glm::to_string(human.boneIndex[i]) << "\n";
     // }
 
-    pbrObject boneObj = {};
+    boneObject boneObj = {};
     boneObj.setup(&human, false);
     boneObj.use();
     boneObj.setInt("irradianceMap", 0);
@@ -417,6 +407,18 @@ int main(int, char *argv[])
     boneObj.setInt("roughnessMap", 6);
     boneObj.setInt("aoMap", 7);
     boneObj.setInt("heightMap", 8);
+
+    printf("loading textures\n");
+    std::vector<unsigned int> pbrImgs = loadPBR("rock_ground");
+    unsigned int albedo = pbrImgs[0]; //loadTexture((DATA_ROOT + "book/book_pattern_col2_8k.png").c_str());
+    unsigned int normal = pbrImgs[1]; //vloadTexture((DATA_ROOT + "book/book_pattern_nor_8k.png").c_str());
+    //unsigned int metallic = loadTexture((DATA_ROOT + "book/book_pattern_disp_8k.png").c_str());
+    unsigned int metallic = pbrImgs[0];
+    //glGenTextures(1, &metallic);
+    unsigned int roughness = pbrImgs[3]; //loadTexture((DATA_ROOT + "book/book_pattern_rough_8k.png").c_str());
+    unsigned int ao = pbrImgs[4];        //loadTexture((DATA_ROOT + "book/book_pattern_AO_8k.png").c_str());
+    //unsigned int disp = loadTexture((DATA_ROOT + "SphereDisplacement.png").c_str());//pbrImgs[5];
+    unsigned int disp = pbrImgs[5];
 
     // load PBR material textures
     // --------------------------
@@ -444,7 +446,7 @@ int main(int, char *argv[])
     int whichBGTexture = 0;
 
     float bgLoD = 2.25;
-    float dispFac = 0.25;
+    float dispFac = 0.;
 
     //fuer fps
     double lastTime = glfwGetTime();

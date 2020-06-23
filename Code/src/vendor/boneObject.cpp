@@ -16,11 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "boneObject.hpp"
 #include "common.hpp"
 #include "shader.hpp"
-#include "boneObject.hpp"
 
-void boneObject::setup(bones *model, const char *vertex, const char *fragment)
+void boneObject::setup(bones* model, const char* vertex, const char* fragment)
 {
     defaultMat = false;
     object = model;
@@ -39,13 +39,12 @@ void boneObject::setup(bones *model, const char *vertex, const char *fragment)
     proj_mat_loc = glGetUniformLocation(shaderProgram, "proj_mat");
 }
 
-void boneObject::setup(bones *model, bool tessellation)
+void boneObject::setup(bones* model, bool tessellation)
 {
     defaultMat = true;
     object = model;
     useTessellation = tessellation;
-    if (tessellation)
-    {
+    if (tessellation) {
         // load and compile shaders and link program
         unsigned int vertexShader = compileShader("pbr/pbrT.vert", GL_VERTEX_SHADER);
         unsigned int fragmentShader = compileShader("pbr/pbrT.frag", GL_FRAGMENT_SHADER);
@@ -58,11 +57,9 @@ void boneObject::setup(bones *model, bool tessellation)
         glDeleteShader(vertexShader);
         glDeleteShader(tessellationShader);
         glDeleteShader(tessellationEShader);
-    }
-    else
-    {
+    } else {
         // load and compile shaders and link program
-        unsigned int vertexShader = compileShader("pbr/pbrS.vert", GL_VERTEX_SHADER);
+        unsigned int vertexShader = compileShader("pbr/pbrS2.vert", GL_VERTEX_SHADER);
         unsigned int fragmentShader = compileShader("pbr/pbr.frag", GL_FRAGMENT_SHADER);
         shaderProgram = linkProgram(vertexShader, fragmentShader);
         //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
@@ -84,35 +81,35 @@ void boneObject::use()
     glUseProgram(shaderProgram);
 }
 
-void boneObject::setInt(char const *name, int value)
+void boneObject::setInt(char const* name, int value)
 {
     glUseProgram(shaderProgram);
     unsigned int loc = glGetUniformLocation(shaderProgram, name);
     glUniform1i(loc, value);
 }
 
-void boneObject::setFloat(char const *name, float value)
+void boneObject::setFloat(char const* name, float value)
 {
     glUseProgram(shaderProgram);
     unsigned int loc = glGetUniformLocation(shaderProgram, name);
     glUniform1f(loc, value);
 }
 
-void boneObject::setMat4(char const *name, glm::mat4 *value)
+void boneObject::setMat4(char const* name, glm::mat4* value)
 {
     glUseProgram(shaderProgram);
     unsigned int loc = glGetUniformLocation(shaderProgram, name);
     glUniformMatrix4fv(loc, 1, GL_FALSE, &(*value)[0][0]);
 }
 
-void boneObject::setVec3(char const *name, glm::vec3 value)
+void boneObject::setVec3(char const* name, glm::vec3 value)
 {
     glUseProgram(shaderProgram);
     unsigned int loc = glGetUniformLocation(shaderProgram, name);
     glUniform3f(loc, value[0], value[1], value[2]);
 }
 
-void boneObject::setMaticies(glm::mat4 *view_mat, glm::mat4 *proj_mat)
+void boneObject::setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat)
 {
     glUseProgram(shaderProgram);
     view_matrix = view_mat;
@@ -122,24 +119,33 @@ void boneObject::setMaticies(glm::mat4 *view_mat, glm::mat4 *proj_mat)
 void boneObject::render(double currentTime)
 {
     glUseProgram(shaderProgram);
-    if (defaultMat)
-    {
+    if (defaultMat) {
         glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, &(*view_matrix)[0][0]);
         glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &(*proj_matrix)[0][0]);
     }
 
-    uint index = (uint)(currentTime*24.)%object->boneTransform.size();
-    glUniformMatrix4fv(boneMats, object->NumBones, GL_FALSE, &(object->boneTransform[index][0][0][0]));
+    uint index = (uint)(currentTime * 24.) % object->boneTransform.size();
+
+    float* mats = (float*)malloc(sizeof(float) * 16 * object->NumBones);
+    for (uint i = 0; i < object->NumBones; i++) {
+        for (uint j = 0; j < 4; j++) {
+            for (uint k = 0; k < 4; k++) {
+                mats[i * 16 + j * 4 + k] = object->boneTransform[index][i][j][k];
+            }
+        }
+    }
+
+    glUniformMatrix4fv(boneMats, object->NumBones, GL_FALSE, mats);
+    free(mats);
+
+    //glUniformMatrix4fv(boneMats, object->NumBones, GL_FALSE, &(object->boneTransform[index][0][0][0]));
 
     //glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(*object).matrixAt(currentTime)[0][0]);
 
     (*object).bind();
-    if (useTessellation)
-    {
-        glDrawElements(GL_PATCHES, (*object).vertex_count, GL_UNSIGNED_INT, (void *)0);
-    }
-    else
-    {
-        glDrawElements(GL_TRIANGLES, (*object).vertex_count, GL_UNSIGNED_INT, (void *)0);
+    if (useTessellation) {
+        glDrawElements(GL_PATCHES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
+    } else {
+        glDrawElements(GL_TRIANGLES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
     }
 }

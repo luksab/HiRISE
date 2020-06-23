@@ -33,14 +33,16 @@ void main()
     // --------------------
     Normal = normalize(aNormal);
     TexCoords = aTexCoords;
-    WorldPos = aPos;
 
     //vec4 weight = normalizeSum(vec4(0.25,0.25,1.,0.));
-    vec4 weight = normalizeSum(Weight); // should be normalized, but just to be sure
+    vec4 weight = Weight; // should be normalized, but just to be sure
+
+    newVertex = vec4(aPos, 1.0) * (1-dot(weight,vec4(1)));
+    newNormal = vec4(Normal, 0.0) * (1-dot(weight,vec4(1)));
 
     index=int(Index.x); // Cast to int
-    newVertex = (Bone[index] * vec4(aPos, 1.0)) * weight.x;
-    newNormal = (Bone[index] * vec4(Normal, 0.0)) * weight.x;
+    newVertex = (Bone[index] * vec4(aPos, 1.0)) * weight.x + newVertex;
+    newNormal = (Bone[index] * vec4(Normal, 0.0)) * weight.x + newNormal;
     index=int(Index.y); //Cast to int
     newVertex = (Bone[index] * vec4(aPos, 1.0)) * weight.y + newVertex;
     newNormal = (Bone[index] * vec4(Normal, 0.0)) * weight.y + newNormal;
@@ -53,6 +55,8 @@ void main()
     newNormal = (Bone[index] * vec4(Normal, 0.0)) * weight.w + newNormal;
 
     newNormal = normalize(newNormal);
+
+    WorldPos = newVertex.xyz;
 
     float offset = (texture2D(heightMap, aTexCoords).r-.5);
     gl_Position = proj_mat * view_mat * vec4(newVertex.x+offset*newNormal.x, newVertex.y+offset*newNormal.y, newVertex.z+offset*newNormal.z, 1.0);

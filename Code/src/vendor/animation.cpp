@@ -82,7 +82,7 @@ loadSceneAnim(const char* filename, double scale, bool smooth)
                     if (!foundAnim) {
                         printf("Didn't find pp for %s!\nOptions were:\n", mesh->mName.C_Str());
                         for (uint mAnimationsCounter = 0; mAnimationsCounter < scene->mAnimations[0]->mNumChannels; mAnimationsCounter++) {
-                            printf("%s\n",scene->mAnimations[0]->mChannels[mAnimationsCounter]->mNodeName.C_Str());
+                            printf("%s\n", scene->mAnimations[0]->mChannels[mAnimationsCounter]->mNodeName.C_Str());
                         }
                         assert(0);
                     }
