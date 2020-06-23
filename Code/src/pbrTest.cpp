@@ -118,6 +118,7 @@ std::vector<unsigned int> loadPBR(char const *path)
 
 struct pbrTex
 {
+    unsigned int hdrTexture;
     unsigned int prefilterMap;
     unsigned int irradianceMap;
     unsigned int brdfLUTTexture;
@@ -352,6 +353,7 @@ pbrTex setupPBR(animated *pbr)
     returnTex.prefilterMap = prefilterMap;
     returnTex.irradianceMap = irradianceMap;
     returnTex.brdfLUTTexture = brdfLUTTexture;
+    returnTex.hdrTexture = envCubemap;
 
     return returnTex;
 }
@@ -436,7 +438,10 @@ int main(int, char *argv[])
     bool Framerate = true;
     bool Camera = false;
 
-    float df = 0.25;
+    const char *BG_Textures[] = {"HDRI", "irradiance", "prefilter"};
+    int whichBGTexture = 0;
+
+    float bgLoD = 2.25;
 
     //fuer fps
     double lastTime = glfwGetTime();
@@ -480,7 +485,8 @@ int main(int, char *argv[])
         {
             ImGui::Begin("Camera");
             ImGui::SliderFloat("FOV", &FOV, 90.0f, 5.0f);
-            ImGui::SliderFloat("displacement", &df, 0.0f, 5.0f);
+            ImGui::SliderFloat("LoD for HDRI", &bgLoD, 0.0f, 6.0f);
+            ImGui::Combo("BG Texture", &whichBGTexture, BG_Textures, 3);
             ImGui::End();
         }
 
@@ -499,7 +505,25 @@ int main(int, char *argv[])
 
         glDepthFunc(GL_LEQUAL);
         glActiveTexture(GL_TEXTURE0);
+        switch (whichBGTexture)
+        {
+        case 0:
+            glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
+            break;
+        case 1:
+            glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.irradianceMap);
+            break;
+        case 2:
         glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.prefilterMap);
+            break;
+        default:
+            break;
+        }
+        
+        renderCube.setFloat("lod", bgLoD);
+        glUseProgram(renderCube.shaderProgram);
+        unsigned int lodLoc = glGetUniformLocation(renderCube.shaderProgram, "lod");
+        glUniform1f(lodLoc, bgLoD);
         renderCube.setMaticies(&view_matrix, &proj_matrix);
         renderCube.render(0);
 
