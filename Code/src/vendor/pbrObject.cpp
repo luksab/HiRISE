@@ -18,6 +18,7 @@
 
 #include "pbrObject.hpp"
 #include "common.hpp"
+#include "glm/gtx/string_cast.hpp"
 #include "shader.hpp"
 
 void pbrObject::setup(animated* model, const char* vertex, const char* fragment)
@@ -32,6 +33,29 @@ void pbrObject::setup(animated* model, const char* vertex, const char* fragment)
     // after linking the program the shader objects are no longer needed
     glDeleteShader(fragmentShader);
     glDeleteShader(vertexShader);
+
+    glUseProgram(shaderProgram);
+    model_mat_loc = glGetUniformLocation(shaderProgram, "model_mat");
+    view_mat_loc = glGetUniformLocation(shaderProgram, "view_mat");
+    proj_mat_loc = glGetUniformLocation(shaderProgram, "proj_mat");
+}
+
+void pbrObject::setup(animated* model, const char* vertex, const char* fragment, const char* tess, const char* tesse)
+{
+    defaultMat = false;
+    object = model;
+    // load and compile shaders and link program
+    unsigned int vertexShader = compileShader(vertex, GL_VERTEX_SHADER);
+    unsigned int fragmentShader = compileShader(fragment, GL_FRAGMENT_SHADER);
+    unsigned int tessellationShader = compileShader(tess, GL_TESS_CONTROL_SHADER);
+    unsigned int tessellationEShader = compileShader(tesse, GL_TESS_EVALUATION_SHADER);
+    shaderProgram = linkProgram(vertexShader, fragmentShader, tessellationShader, tessellationEShader);
+    //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
+    // after linking the program the shader objects are no longer needed
+    glDeleteShader(fragmentShader);
+    glDeleteShader(vertexShader);
+    glDeleteShader(tessellationShader);
+    glDeleteShader(tessellationEShader);
 
     glUseProgram(shaderProgram);
     model_mat_loc = glGetUniformLocation(shaderProgram, "model_mat");
@@ -127,6 +151,13 @@ void pbrObject::setVec3(char const* name, glm::vec3 value)
     glUseProgram(shaderProgram);
     unsigned int loc = glGetUniformLocation(shaderProgram, name);
     glUniform3f(loc, value[0], value[1], value[2]);
+}
+
+void pbrObject::setVec3(char const* name, float x, float y, float z)
+{
+    glUseProgram(shaderProgram);
+    unsigned int loc = glGetUniformLocation(shaderProgram, name);
+    glUniform3f(loc, x, y, z);
 }
 
 void pbrObject::setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat)

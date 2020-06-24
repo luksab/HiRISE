@@ -10,11 +10,13 @@ struct pbrObject {
     void renderRotated(float rotation, float time);
     void setup(animated* model, bool tessellation);
     void setup(animated *model, const char* vertex, const char* fragment);
+    void setup(animated* model, const char* vertex, const char* tess, const char* tesse, const char* fragment);
     void setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat);
     void use();
     void setInt(char const * name, int value);
     void setFloat(char const * name, float value);
     void setVec3(char const * name, glm::vec3 value);
+    void setVec3(char const* name, float x, float y, float z);
     void setMat4(char const * name, glm::mat4* value);
 
     animated* object;

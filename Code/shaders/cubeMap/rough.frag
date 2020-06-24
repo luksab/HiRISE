@@ -1,5 +1,6 @@
 #version 330 core
 out vec4 FragColor;
+out float gl_FragDepth;
 in vec3 localPos;
 
 uniform samplerCube environmentMap;
@@ -71,5 +72,6 @@ void main()
 
     FragColor = vec4(prefilteredColor, 1.0);
     FragColor = texture(environmentMap, localPos);
+    gl_FragDepth = 100000000;
     //FragColor = vec4(100.0, 1.0, 1.0, 1.0);
 }  

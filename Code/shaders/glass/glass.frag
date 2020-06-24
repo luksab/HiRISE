@@ -19,7 +19,9 @@ void main() {
     vec3 d = interpG_pos;
     vec3 n = interp_normal;//normalize(normal_in);
     float k = pow(length(cross(normalize(d),n)),power)*factor;
-    frag_color = texture(skybox, reflect(d,n))*(1+k*0.5);
-    frag_color.w = k;
+    vec3 envColor = texture(skybox, reflect(d,n)).rgb*(1+k*0.5);
+    envColor = envColor / (envColor + vec3(1.0));
+    envColor = pow(envColor, vec3(1.0/2.2));
+    frag_color = vec4(envColor, k);
     //frag_color = vec4(1.,1.,1.,1.);
 }

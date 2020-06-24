@@ -15,6 +15,7 @@ out vec3 Normal;
 
 out vec3 factor;
 
+uniform mat4 model_mat;
 uniform mat4 view_mat;
 uniform mat4 proj_mat;
 
@@ -44,7 +45,7 @@ void main()
         BoneTransform = mat4(1);
     }
 
-    newVertex = proj_mat * view_mat * BoneTransform * vec4(aPos, 1.0);
+    newVertex = proj_mat * view_mat * model_mat * BoneTransform * vec4(aPos, 1.0);
 
     newNormal = normalize(BoneTransform * vec4(Normal, 0.));
 

@@ -1,15 +1,18 @@
-#include <random>
-#include <glm/gtx/transform.hpp>
 #include "glm/gtx/string_cast.hpp"
+#include <glm/gtx/transform.hpp>
+#include <random>
 #include <stb_image.h>
 
-#include "common.hpp"
-#include "shader.hpp"
-#include "camera.hpp"
-#include "buffer.hpp"
-#include "mesh.hpp"
 #include "animation.hpp"
+#include "boneObject.hpp"
+#include "buffer.hpp"
+#include "camera.hpp"
+#include "common.hpp"
+#include "mesh.hpp"
 #include "pbrObject.hpp"
+#include "pbrTex.hpp"
+#include "pngImg.hpp"
+#include "shader.hpp"
 
 #include <imgui.hpp>
 
@@ -25,22 +28,20 @@ const float FAR_VALUE = 100.f;
 
 glm::mat4 proj_matrix;
 
-void resizeCallback(GLFWwindow *window, int width, int height);
+void resizeCallback(GLFWwindow* window, int width, int height);
 
-float *
-load_texture_data(std::string filename, int *width, int *height)
+float*
+load_texture_data(std::string filename, int* width, int* height)
 {
     int channels;
-    unsigned char *file_data = stbi_load(filename.c_str(), width, height, &channels, 3);
+    unsigned char* file_data = stbi_load(filename.c_str(), width, height, &channels, 3);
 
     int w = *width;
     int h = *height;
 
-    float *data = new float[4 * w * h];
-    for (int j = 0; j < h; ++j)
-    {
-        for (int i = 0; i < w; ++i)
-        {
+    float* data = new float[4 * w * h];
+    for (int j = 0; j < h; ++j) {
+        for (int i = 0; i < w; ++i) {
             data[j * w * 4 + i * 4 + 0] = static_cast<float>(file_data[j * w * 3 + i * 3 + 0]) / 255;
             data[j * w * 4 + i * 4 + 1] = static_cast<float>(file_data[j * w * 3 + i * 3 + 1]) / 255;
             data[j * w * 4 + i * 4 + 2] = static_cast<float>(file_data[j * w * 3 + i * 3 + 2]) / 255;
@@ -53,11 +54,11 @@ load_texture_data(std::string filename, int *width, int *height)
     return data;
 }
 
-float *
-load_pds_data(std::string filename, int *width, int *height, int *channels)
+float*
+load_pds_data(std::string filename, int* width, int* height, int* channels)
 {
-    FILE *fp = fopen(filename.c_str(), "r");
-    char *line = NULL;
+    FILE* fp = fopen(filename.c_str(), "r");
+    char* line = NULL;
     size_t len = 0;
     int skipLen = 0;
     ssize_t read;
@@ -65,21 +66,16 @@ load_pds_data(std::string filename, int *width, int *height, int *channels)
     if (fp == NULL)
         exit(EXIT_FAILURE);
 
-    while ((read = getline(&line, &len, fp)) != -1)
-    {
+    while ((read = getline(&line, &len, fp)) != -1) {
         //printf("Retrieved line of length %zu:\n", read);
         //printf("%s", line);
         skipLen += read;
-        if (strncmp(line, "  LINES            = ", 21) == 0) //21 = len("  LINES            = ")
+        if (strncmp(line, "  LINES            = ", 21) == 0)//21 = len("  LINES            = ")
         {
             *height = atoi(line + 21);
-        }
-        else if (strncmp(line, "  LINE_SAMPLES     = ", 21) == 0)
-        {
+        } else if (strncmp(line, "  LINE_SAMPLES     = ", 21) == 0) {
             *width = atoi(line + 21);
-        }
-        else if ((strncmp(line, "END\n", 4) == 0 || strncmp(line, "END\r", 4) == 0) && read < 6)
-        {
+        } else if ((strncmp(line, "END\n", 4) == 0 || strncmp(line, "END\r", 4) == 0) && read < 6) {
             break;
         }
     }
@@ -98,37 +94,33 @@ load_pds_data(std::string filename, int *width, int *height, int *channels)
     if (line)
         free(line);
 
-    FILE *f = fopen(filename.c_str(), "rb");
+    FILE* f = fopen(filename.c_str(), "rb");
 
     int w = *width;
     int h = *height;
 
     //printf("channels: %d\n",*channels);
 
-    float *data = new float[*channels * w * h];
+    float* data = new float[*channels * w * h];
     long filelen = w * h * *channels;
     /*fseek(f, 0, SEEK_END);         // Jump to the end of the file
     filelen = ftell(f);            // Get the current byte offset in the file
     rewind(f);                     // Jump back to the beginning of the file*/
 
-    float *buffer = (float *)malloc(filelen * sizeof(float)); // Enough memory for the file
+    float* buffer = (float*)malloc(filelen * sizeof(float));// Enough memory for the file
     //fseek(f,4348,SEEK_SET);
     fseek(f, ftell(fp), SEEK_SET);
     //fseek(f,4625*4,SEEK_SET);
-    fread(buffer, sizeof(float), filelen, f); // Read in the entire file
+    fread(buffer, sizeof(float), filelen, f);// Read in the entire file
     fclose(f);
     //float max = -10000;
     //float min = 14286578683;
-    for (int j = 0; j < h; ++j)
-    {
-        for (int i = 0; i < w; ++i)
-        {
-            for (int k = 0; k < *channels; k++)
-            {
+    for (int j = 0; j < h; ++j) {
+        for (int i = 0; i < w; ++i) {
+            for (int k = 0; k < *channels; k++) {
                 data[j * w * *channels + i * *channels + k] = buffer[j * w * *channels + i * *channels + k];
                 data[j * w * *channels + i * *channels + k] += 4185.03;
-                if (data[j * w * *channels + i * *channels + k] < -5000 || data[j * w * *channels + i * *channels + k] > 5000)
-                {
+                if (data[j * w * *channels + i * *channels + k] < -5000 || data[j * w * *channels + i * *channels + k] > 5000) {
                     data[j * w * *channels + i * *channels + k] = -10000;
                 }
 
@@ -149,7 +141,7 @@ load_pds_data(std::string filename, int *width, int *height, int *channels)
 }
 
 unsigned int
-create_texture_rgba32f(int width, int height, float *data)
+create_texture_rgba32f(int width, int height, float* data)
 {
     unsigned int handle;
     glCreateTextures(GL_TEXTURE_2D, 1, &handle);
@@ -166,17 +158,13 @@ unsigned int loadCubemap(std::vector<std::string> faces)
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
     int width, height, nrChannels;
-    for (unsigned int i = 0; i < faces.size(); i++)
-    {
-        unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-        if (data)
-        {
+    for (unsigned int i = 0; i < faces.size(); i++) {
+        unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data) {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                         0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+                0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
             stbi_image_free(data);
-        }
-        else
-        {
+        } else {
             std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
             stbi_image_free(data);
         }
@@ -191,7 +179,7 @@ unsigned int loadCubemap(std::vector<std::string> faces)
 }
 
 unsigned int
-create_texture_r32f(int width, int height, float *data)
+create_texture_r32f(int width, int height, float* data)
 {
     unsigned int handle;
     glCreateTextures(GL_TEXTURE_2D, 1, &handle);
@@ -253,9 +241,9 @@ unsigned int setupGlassShader()
     return shaderProgram;
 }
 
-int main(int, char *argv[])
+int main(int, char* argv[])
 {
-    GLFWwindow *window = initOpenGL(WINDOW_WIDTH, WINDOW_HEIGHT, argv[0]);
+    GLFWwindow* window = initOpenGL(WINDOW_WIDTH, WINDOW_HEIGHT, argv[0]);
     glfwSetFramebufferSizeCallback(window, resizeCallback);
 
     camera cam(window);
@@ -268,9 +256,41 @@ int main(int, char *argv[])
 
     animated glass = loadMeshAnim("shard.dae", 1., true);
 
-    animated pbr = loadMeshAnim("suzanne.dae", 0.l, true);
-    pbrObject pbrObj = {};
-    pbrObj.setup(&pbr, false);
+    animated pbr = loadMeshAnim("cube.dae", true);
+
+    pbrObject renderCube = {};
+    renderCube.setup(&pbr, "cubeMap/hdr.vert", "cubeMap/hdr.frag");
+    renderCube.defaultMat = true;
+    renderCube.setInt("environmentMap", 0);
+
+    bones human = loadMeshBone("Lowpolymesh_Eliber.dae", false);
+    boneObject humanObj = {};
+    humanObj.setup(&human, false);
+    humanObj.use();
+    humanObj.setInt("irradianceMap", 0);
+    humanObj.setInt("prefilterMap", 1);
+    humanObj.setInt("brdfLUT", 2);
+    humanObj.setInt("albedoMap", 3);
+    humanObj.setInt("normalMap", 4);
+    humanObj.setInt("metallicMap", 5);
+    humanObj.setInt("roughnessMap", 6);
+    humanObj.setInt("aoMap", 7);
+    humanObj.setInt("heightMap", 8);
+    printf("loading textures\n");
+    std::vector<unsigned int> pbrImgs = loadPBR("rock_ground");
+    unsigned int albedo = pbrImgs[0];//loadTexture((DATA_ROOT + "book/book_pattern_col2_8k.png").c_str());
+    unsigned int normal = pbrImgs[1];//vloadTexture((DATA_ROOT + "book/book_pattern_nor_8k.png").c_str());
+    //unsigned int metallic = loadTexture((DATA_ROOT + "book/book_pattern_disp_8k.png").c_str());
+    unsigned int metallic = pbrImgs[0];
+    //glGenTextures(1, &metallic);
+    unsigned int roughness = pbrImgs[3];//loadTexture((DATA_ROOT + "book/book_pattern_rough_8k.png").c_str());
+    unsigned int ao = pbrImgs[4];       //loadTexture((DATA_ROOT + "book/book_pattern_AO_8k.png").c_str());
+    //unsigned int disp = loadTexture((DATA_ROOT + "SphereDisplacement.png").c_str());//pbrImgs[5];
+    unsigned int disp = pbrImgs[5];
+
+    pbrTex envtex = setupPBR(&pbr);
+    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+    proj_matrix = glm::perspective(FOV, static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT, NEAR_VALUE, FAR_VALUE);
 
     glUseProgram(shaderProgram);
     int model_mat_loc = glGetUniformLocation(shaderProgram, "model_mat");
@@ -298,11 +318,11 @@ int main(int, char *argv[])
 
     int image_width, image_height;
     //float *image_tex_data = load_texture_data(DATA_ROOT + "ESP_048136_1725_MRGB_quarter.jpg", &image_width, &image_height);
-    float *image_tex_data = load_texture_data(DATA_ROOT + "ESP_041121_1725_RED_A_01_ORTHO_quarter.jpg", &image_width, &image_height);
+    float* image_tex_data = load_texture_data(DATA_ROOT + "ESP_041121_1725_RED_A_01_ORTHO_quarter.jpg", &image_width, &image_height);
     int pds_width = 5712;
     int pds_height = 11580;
     int pds_channels = 1;
-    float *pds_tex_data = load_pds_data(DATA_ROOT + "DTEEC_048136_1725_041121_1725_A01.img", &pds_width, &pds_height, &pds_channels);
+    float* pds_tex_data = load_pds_data(DATA_ROOT + "DTEEC_048136_1725_041121_1725_A01.img", &pds_width, &pds_height, &pds_channels);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -319,75 +339,6 @@ int main(int, char *argv[])
     delete[] image_tex_data;
     delete[] pds_tex_data;
 
-    //Cubemap loading
-    std::vector<std::string> faces = {
-        DATA_ROOT + "Cubemap/" + "px.png",
-        DATA_ROOT + "Cubemap/" + "nx.png",
-        DATA_ROOT + "Cubemap/" + "py.png",
-        DATA_ROOT + "Cubemap/" + "ny.png",
-        DATA_ROOT + "Cubemap/" + "pz.png",
-        DATA_ROOT + "Cubemap/" + "nz.png"};
-    unsigned int cubemapTexture = loadCubemap(faces);
-
-    float skyboxVertices[] = {
-        // positions
-        -1.0f, 1.0f, -1.0f,
-        -1.0f, -1.0f, -1.0f,
-        1.0f, -1.0f, -1.0f,
-        1.0f, -1.0f, -1.0f,
-        1.0f, 1.0f, -1.0f,
-        -1.0f, 1.0f, -1.0f,
-
-        -1.0f, -1.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f,
-        -1.0f, 1.0f, -1.0f,
-        -1.0f, 1.0f, -1.0f,
-        -1.0f, 1.0f, 1.0f,
-        -1.0f, -1.0f, 1.0f,
-
-        1.0f, -1.0f, -1.0f,
-        1.0f, -1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, -1.0f,
-        1.0f, -1.0f, -1.0f,
-
-        -1.0f, -1.0f, 1.0f,
-        -1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f, -1.0f, 1.0f,
-        -1.0f, -1.0f, 1.0f,
-
-        -1.0f, 1.0f, -1.0f,
-        1.0f, 1.0f, -1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f, -1.0f,
-
-        -1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f, 1.0f,
-        1.0f, -1.0f, -1.0f,
-        1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f, 1.0f,
-        1.0f, -1.0f, 1.0f};
-
-    unsigned int skyboxVAO, skyboxVBO;
-    glGenVertexArrays(1, &skyboxVAO);
-    glGenBuffers(1, &skyboxVBO);
-    glBindVertexArray(skyboxVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-
-    unsigned int cubeShder = setupCubeShader();
-    glUseProgram(cubeShder);
-    int view_mat_loc_cube = glGetUniformLocation(cubeShder, "view_mat");
-    int proj_mat_loc_cube = glGetUniformLocation(cubeShder, "proj_mat");
-    glBindTextureUnit(0, cubemapTexture);
-
     unsigned int glassShder = setupGlassShader();
     glUseProgram(glassShder);
     int model_mat_loc_glass = glGetUniformLocation(glassShder, "model_mat");
@@ -397,8 +348,6 @@ int main(int, char *argv[])
     float glass_power = 2.0;
     int glass_factor_loc = glGetUniformLocation(glassShder, "factor");
     float glass_factor = 1.0;
-    glBindTextureUnit(0, cubemapTexture);
-
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -420,14 +369,12 @@ int main(int, char *argv[])
     double currentTime = 0;
     float timeScale = 1.0;
     // rendering loop
-    while (glfwWindowShouldClose(window) == false)
-    {
+    while (glfwWindowShouldClose(window) == false) {
         dt = glfwGetTime() - lastGLTime;
         lastGLTime = glfwGetTime();
-        currentTime += dt*timeScale;
+        currentTime += dt * timeScale;
         nbFrames++;
-        if (glfwGetTime() - lastTime >= 1.0)
-        { // If last prinf() was more than 1 sec ago
+        if (glfwGetTime() - lastTime >= 1.0) {// If last prinf() was more than 1 sec ago
             // printf and reset timer
             fps = nbFrames;
             frameTime = 1000.0 / double(nbFrames);
@@ -447,8 +394,7 @@ int main(int, char *argv[])
         ImGui::Checkbox("Camera", &Camera);
         ImGui::Checkbox("Color", &Color);
         ImGui::End();
-        if (Framerate)
-        {
+        if (Framerate) {
             ImGui::Begin("Framerate");
             ImGui::Text("FPs: %04d", fps);
             ImGui::Text("avg. frametime: %04f", frameTime);
@@ -456,16 +402,14 @@ int main(int, char *argv[])
             ImGui::SliderFloat("timeScale", &timeScale, 0.0f, 2.0f);
             ImGui::End();
         }
-        if (Camera)
-        {
+        if (Camera) {
             ImGui::Begin("Camera");
             ImGui::SliderFloat("float", &FOV, 10.0f, 90.0f);
             ImGui::Checkbox("rotate", &rotate);
             ImGui::SliderFloat("tessFactor", &tessFactor, 0.0f, 20.0f);
             ImGui::End();
         }
-        if (Color)
-        {
+        if (Color) {
             ImGui::Begin("Color");
             // ImGui::SliderFloat("colaH", &colaH, 0.0f, 1.0f);
             // ImGui::SliderFloat("colaS", &colaS, 0.0f, 1.0f);
@@ -488,20 +432,16 @@ int main(int, char *argv[])
         //printf("%lf\n",pow(10.,-h));
         glUniform1f(h_loc, pow(10., -h));
 
-        if (rotate)
-        {
-            camera_state *state = cam.getState();
+        if (rotate) {
+            camera_state* state = cam.getState();
             state->phi += 0.1 * dt;
             //state->look_at.x -= 0.01;
             cam.update();
         }
 
-        if (vSync)
-        {
+        if (vSync) {
             glfwSwapInterval(1);
-        }
-        else
-        {
+        } else {
             glfwSwapInterval(0);
         }
 
@@ -515,24 +455,46 @@ int main(int, char *argv[])
         glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &model_matrix[0][0]);
         model.bind();
         //glDrawElements(GL_TRIANGLES, model.vertex_count, GL_UNSIGNED_INT, (void *)0);
-        glDrawElements(GL_PATCHES, model.vertex_count, GL_UNSIGNED_INT, (void *)0);
+        glDrawElements(GL_PATCHES, model.vertex_count, GL_UNSIGNED_INT, (void*)0);
 
-        pbrObj.setMaticies(&view_matrix, &proj_matrix);
-        pbrObj.render(currentTime);
-
-        glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
-        glUseProgram(cubeShder);
-        glUniformMatrix4fv(view_mat_loc_cube, 1, GL_FALSE, &view_matrix[0][0]);
-        glUniformMatrix4fv(proj_mat_loc_cube, 1, GL_FALSE, &proj_matrix[0][0]);
-        // skybox cube
-        glBindVertexArray(skyboxVAO);
+        // bind pre-computed IBL data
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
-        glDepthFunc(GL_LESS); // set depth function back to default
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.irradianceMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.prefilterMap);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, envtex.brdfLUTTexture);
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, albedo);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, normal);
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, metallic);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, roughness);
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, ao);
+        glActiveTexture(GL_TEXTURE8);
+        glBindTexture(GL_TEXTURE_2D, disp);
+
+        glShadeModel(GL_SMOOTH);
+        humanObj.setFloat("displacementFactor", 0.);
+        humanObj.setMaticies(&view_matrix, &proj_matrix);
+        humanObj.setVec3("camPos", cam.position());
+        humanObj.render(currentTime);
+
+        glDepthFunc(GL_LEQUAL);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
+        glUseProgram(renderCube.shaderProgram);
+        renderCube.setMaticies(&view_matrix, &proj_matrix);
+        renderCube.render(0);
+        glDepthFunc(GL_LESS);
 
         //render transparency last
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
         glUseProgram(glassShder);
         glUniformMatrix4fv(view_mat_loc_glass, 1, GL_FALSE, &view_matrix[0][0]);
         glUniformMatrix4fv(proj_mat_loc_glass, 1, GL_FALSE, &proj_matrix[0][0]);
@@ -543,7 +505,7 @@ int main(int, char *argv[])
         glUniform1f(glass_factor_loc, glass_factor);
         glUniform1f(glass_power_loc, glass_power);
         glass.bind();
-        glDrawElements(GL_TRIANGLES, glass.vertex_count, GL_UNSIGNED_INT, (void *)0);
+        glDrawElements(GL_TRIANGLES, glass.vertex_count, GL_UNSIGNED_INT, (void*)0);
 
         // render UI
         imgui_render();
@@ -555,7 +517,7 @@ int main(int, char *argv[])
     glfwTerminate();
 }
 
-void resizeCallback(GLFWwindow *, int width, int height)
+void resizeCallback(GLFWwindow*, int width, int height)
 {
     // set new width and height as viewport size
     WINDOW_WIDTH = width;

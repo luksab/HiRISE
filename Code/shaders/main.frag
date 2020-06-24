@@ -77,8 +77,8 @@ void main() {
     //col = applyFog(col,length(interpc_pos.xyz));
     //frag_color = col;
     if(texture2D(tex,((((tc*2)-1)*discardFactor)+1)/2).r == 0.0){
-        gl_FragDepth = 1000000000;
-        frag_color = vec4(1,0,0,0);
+        gl_FragDepth = 1.;
+        frag_color = vec4(0.,0.,0.,0.);
     }else{
         gl_FragDepth = gl_FragCoord.z;
         frag_color = col;

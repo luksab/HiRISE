@@ -18,6 +18,7 @@
 
 #include "boneObject.hpp"
 #include "common.hpp"
+#include "glm/gtx/string_cast.hpp"
 #include "shader.hpp"
 
 void boneObject::setup(bones* model, const char* vertex, const char* fragment)
@@ -74,6 +75,7 @@ void boneObject::setup(bones* model, bool tessellation)
     proj_mat_loc = glGetUniformLocation(shaderProgram, "proj_mat");
 
     boneMats = glGetUniformLocation(shaderProgram, "Bone");
+    objMat = glm::mat4(1.);
 }
 
 void boneObject::use()
@@ -116,6 +118,23 @@ void boneObject::setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat)
     proj_matrix = proj_mat;
 }
 
+void boneObject::scale(float scale)
+{
+    glm::mat4 scaleMat = glm::mat4(scale);
+    cout << glm::to_string(scaleMat) << "\n";
+    objMat = scaleMat*objMat;
+    cout << glm::to_string(objMat) << "\n";
+}
+
+void boneObject::move(float x, float y, float z)
+{
+    glm::vec3 translateVec = glm::vec3();
+    translateVec.x = x;
+    translateVec.y = y;
+    translateVec.z = z;
+    glm::translate(glm::mat4(1.), translateVec);
+}
+
 void boneObject::render(double currentTime)
 {
     glUseProgram(shaderProgram);
@@ -138,6 +157,8 @@ void boneObject::render(double currentTime)
     glUniformMatrix4fv(boneMats, object->NumBones, GL_FALSE, mats);
     free(mats);
 
+    setMat4("model_mat",&objMat);
+    //glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(objMat)[0][0]);
     //glUniformMatrix4fv(boneMats, object->NumBones, GL_FALSE, &(object->boneTransform[index][0][0][0]));
 
     //glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(*object).matrixAt(currentTime)[0][0]);
