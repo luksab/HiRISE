@@ -20,11 +20,6 @@ uniform mat4 proj_mat;
 
 uniform float displacementFactor;
 
-vec4 normalizeSum(vec4 vec){
-    float sum = vec.x+vec.y+vec.z+vec.w;
-    return vec/sum;
-}
-
 void main()
 {
     vec4 newVertex;
@@ -34,7 +29,6 @@ void main()
     Normal = normalize(aNormal);
     TexCoords = aTexCoords;
 
-    //vec4 weight = normalizeSum(vec4(0.25,0.25,1.,0.));
     vec4 weight = Weight; // should be normalized, but just to be sure
 
     newVertex = vec4(aPos, 1.0) * (1-dot(weight,vec4(1)));
