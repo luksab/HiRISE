@@ -359,6 +359,9 @@ int main(int, char* argv[])
     bool Framerate = true;
     bool Camera = false;
     bool Color = false;
+    bool Draw = false;
+
+    bool drawObjs[3] = { false, false, false };
 
     //fuer fps
     double lastTime = glfwGetTime();
@@ -394,6 +397,7 @@ int main(int, char* argv[])
         ImGui::Checkbox("Framerate", &Framerate);
         ImGui::Checkbox("Camera", &Camera);
         ImGui::Checkbox("Color", &Color);
+        ImGui::Checkbox("Draw", &Draw);
         ImGui::End();
         if (Framerate) {
             ImGui::Begin("Framerate");
@@ -424,6 +428,11 @@ int main(int, char* argv[])
             ImGui::SliderFloat("h", &h, 1.f, 7.f);
             ImGui::End();
         }
+        if (Draw) {
+            ImGui::Checkbox("human", &(drawObjs[0]));
+            ImGui::Checkbox("glass", &(drawObjs[1]));
+            ImGui::Checkbox("mars", &(drawObjs[2]));
+        }
         glUseProgram(shaderProgram);
         glUniform3f(cola_loc, colaH, colaS, colaV);
         glUniform3f(colb_loc, colbH, colbS, colbV);
@@ -450,40 +459,44 @@ int main(int, char* argv[])
         //printf("%s\n",glm::to_string(proj_matrix).c_str());
 
         glm::mat4 view_matrix = cam.view_matrix();
-        glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, &view_matrix[0][0]);
-        glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &proj_matrix[0][0]);
+        if (drawObjs[2]) { //mars
+            glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, &view_matrix[0][0]);
+            glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &proj_matrix[0][0]);
 
-        glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &model_matrix[0][0]);
-        model.bind();
-        //glDrawElements(GL_TRIANGLES, model.vertex_count, GL_UNSIGNED_INT, (void *)0);
-        glDrawElements(GL_PATCHES, model.vertex_count, GL_UNSIGNED_INT, (void*)0);
+            glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &model_matrix[0][0]);
+            model.bind();
+            //glDrawElements(GL_TRIANGLES, model.vertex_count, GL_UNSIGNED_INT, (void *)0);
+            glDrawElements(GL_PATCHES, model.vertex_count, GL_UNSIGNED_INT, (void*)0);
+        }
 
-        // bind pre-computed IBL data
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.irradianceMap);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.prefilterMap);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, envtex.brdfLUTTexture);
+        if (drawObjs[0]) {
+            // bind pre-computed IBL data
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.irradianceMap);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.prefilterMap);
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, envtex.brdfLUTTexture);
 
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, albedo);
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, normal);
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, metallic);
-        glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, roughness);
-        glActiveTexture(GL_TEXTURE7);
-        glBindTexture(GL_TEXTURE_2D, ao);
-        glActiveTexture(GL_TEXTURE8);
-        glBindTexture(GL_TEXTURE_2D, disp);
+            glActiveTexture(GL_TEXTURE3);
+            glBindTexture(GL_TEXTURE_2D, albedo);
+            glActiveTexture(GL_TEXTURE4);
+            glBindTexture(GL_TEXTURE_2D, normal);
+            glActiveTexture(GL_TEXTURE5);
+            glBindTexture(GL_TEXTURE_2D, metallic);
+            glActiveTexture(GL_TEXTURE6);
+            glBindTexture(GL_TEXTURE_2D, roughness);
+            glActiveTexture(GL_TEXTURE7);
+            glBindTexture(GL_TEXTURE_2D, ao);
+            glActiveTexture(GL_TEXTURE8);
+            glBindTexture(GL_TEXTURE_2D, disp);
 
-        glShadeModel(GL_SMOOTH);
-        humanObj.setFloat("displacementFactor", 0.);
-        humanObj.setMaticies(&view_matrix, &proj_matrix);
-        humanObj.setVec3("camPos", cam.position());
-        humanObj.render(currentTime);
+            glShadeModel(GL_SMOOTH);
+            humanObj.setFloat("displacementFactor", 0.);
+            humanObj.setMaticies(&view_matrix, &proj_matrix);
+            humanObj.setVec3("camPos", cam.position());
+            humanObj.render(currentTime);
+        }
 
         glDepthFunc(GL_LEQUAL);
         glActiveTexture(GL_TEXTURE0);
@@ -494,19 +507,21 @@ int main(int, char* argv[])
         glDepthFunc(GL_LESS);
 
         //render transparency last
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
-        glUseProgram(glassShder);
-        glUniformMatrix4fv(view_mat_loc_glass, 1, GL_FALSE, &view_matrix[0][0]);
-        glUniformMatrix4fv(proj_mat_loc_glass, 1, GL_FALSE, &proj_matrix[0][0]);
-        //glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.transform[animationFrame++%glass.transform.size()][0][0]);
-        //glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.transform[0][0][0]);
-        //glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &model_matrix[0][0]);
-        glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.matrixAt(currentTime)[0][0]);
-        glUniform1f(glass_factor_loc, glass_factor);
-        glUniform1f(glass_power_loc, glass_power);
-        glass.bind();
-        glDrawElements(GL_TRIANGLES, glass.vertex_count, GL_UNSIGNED_INT, (void*)0);
+        if (drawObjs[1]) {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
+            glUseProgram(glassShder);
+            glUniformMatrix4fv(view_mat_loc_glass, 1, GL_FALSE, &view_matrix[0][0]);
+            glUniformMatrix4fv(proj_mat_loc_glass, 1, GL_FALSE, &proj_matrix[0][0]);
+            //glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.transform[animationFrame++%glass.transform.size()][0][0]);
+            //glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.transform[0][0][0]);
+            //glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &model_matrix[0][0]);
+            glUniformMatrix4fv(model_mat_loc_glass, 1, GL_FALSE, &glass.matrixAt(currentTime)[0][0]);
+            glUniform1f(glass_factor_loc, glass_factor);
+            glUniform1f(glass_power_loc, glass_power);
+            glass.bind();
+            glDrawElements(GL_TRIANGLES, glass.vertex_count, GL_UNSIGNED_INT, (void*)0);
+        }
 
         // render UI
         imgui_render();
