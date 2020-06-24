@@ -1,16 +1,17 @@
-#include <random>
-#include <unistd.h>
 #include <glm/gtx/transform.hpp>
+#include <random>
 #include <stb_image.h>
+#include <unistd.h>
 
-#include "common.hpp"
-#include "shader.hpp"
-#include "camera.hpp"
+#include "boneObject.hpp"
 #include "buffer.hpp"
+#include "camera.hpp"
+#include "common.hpp"
+#include "glm/gtx/string_cast.hpp"
 #include "mesh.hpp"
 #include "pbrObject.hpp"
-#include "boneObject.hpp"
-#include "glm/gtx/string_cast.hpp"
+#include "pngImg.hpp"
+#include "shader.hpp"
 
 #include <imgui.hpp>
 
@@ -30,22 +31,20 @@ glm::mat4 proj_matrix;
 
 void renderQuad();
 
-void resizeCallback(GLFWwindow *window, int width, int height);
+void resizeCallback(GLFWwindow* window, int width, int height);
 
-float *
-load_texture_data(std::string filename, int *width, int *height)
+float*
+load_texture_data(std::string filename, int* width, int* height)
 {
     int channels;
-    unsigned char *file_data = stbi_load(filename.c_str(), width, height, &channels, 3);
+    unsigned char* file_data = stbi_load(filename.c_str(), width, height, &channels, 3);
 
     int w = *width;
     int h = *height;
 
-    float *data = new float[4 * w * h];
-    for (int j = 0; j < h; ++j)
-    {
-        for (int i = 0; i < w; ++i)
-        {
+    float* data = new float[4 * w * h];
+    for (int j = 0; j < h; ++j) {
+        for (int i = 0; i < w; ++i) {
             data[j * w * 4 + i * 4 + 0] = static_cast<float>(file_data[j * w * 3 + i * 3 + 0]) / 255;
             data[j * w * 4 + i * 4 + 1] = static_cast<float>(file_data[j * w * 3 + i * 3 + 1]) / 255;
             data[j * w * 4 + i * 4 + 2] = static_cast<float>(file_data[j * w * 3 + i * 3 + 2]) / 255;
@@ -60,15 +59,14 @@ load_texture_data(std::string filename, int *width, int *height)
 
 // utility function for loading a 2D texture from file
 // ---------------------------------------------------
-unsigned int loadTexture(char const *path)
+unsigned int loadTexture(char const* path)
 {
     unsigned int textureID;
     glGenTextures(1, &textureID);
 
     int width, height, nrComponents;
-    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
-    if (data)
-    {
+    unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data) {
         GLenum format;
         if (nrComponents == 1)
             format = GL_RED;
@@ -87,9 +85,7 @@ unsigned int loadTexture(char const *path)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         stbi_image_free(data);
-    }
-    else
-    {
+    } else {
         std::cout << "Texture failed to load at path: " << path << std::endl;
         stbi_image_free(data);
     }
@@ -97,13 +93,12 @@ unsigned int loadTexture(char const *path)
     return textureID;
 }
 
-std::vector<unsigned int> loadPBR(char const *path)
+std::vector<unsigned int> loadPBR(char const* path)
 {
     std::vector<unsigned int> ret;
     ret.push_back(loadTexture((DATA_ROOT + path + "/" + path + "_diff_8k.jpg").c_str()));
     ret.push_back(loadTexture((DATA_ROOT + path + "/" + path + "_nor_8k.jpg").c_str()));
-    if (access((DATA_ROOT + path + "/" + path + "_disp_8k.jpg").c_str(), F_OK) != -1)
-    {
+    if (access((DATA_ROOT + path + "/" + path + "_disp_8k.jpg").c_str(), F_OK) != -1) {
     }
     //ret.push_back(loadTexture((path+"/"+path+"_disp_8k.png").c_str()));
     unsigned int metallic;
@@ -116,15 +111,14 @@ std::vector<unsigned int> loadPBR(char const *path)
     return ret;
 }
 
-struct pbrTex
-{
+struct pbrTex {
     unsigned int hdrTexture;
     unsigned int prefilterMap;
     unsigned int irradianceMap;
     unsigned int brdfLUTTexture;
 };
 
-pbrTex setupPBR(animated *pbr)
+pbrTex setupPBR(animated* pbr)
 {
     pbrObject hdrCube = {};
     hdrCube.setup(pbr, "equirectangular/main.vert", "equirectangular/main.frag");
@@ -148,10 +142,9 @@ pbrTex setupPBR(animated *pbr)
     printf("loading hdri\n");
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrComponents;
-    float *data = stbi_loadf((DATA_ROOT + "construction_yard_8k.hdr").c_str(), &width, &height, &nrComponents, 0);
+    float* data = stbi_loadf((DATA_ROOT + "construction_yard_8k.hdr").c_str(), &width, &height, &nrComponents, 0);
     unsigned int hdrTexture;
-    if (data)
-    {
+    if (data) {
         glGenTextures(1, &hdrTexture);
         glBindTexture(GL_TEXTURE_2D, hdrTexture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
@@ -162,9 +155,7 @@ pbrTex setupPBR(animated *pbr)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         stbi_image_free(data);
-    }
-    else
-    {
+    } else {
         std::cout << "Failed to load HDR image." << std::endl;
     }
     int resolution = 4096;
@@ -182,11 +173,10 @@ pbrTex setupPBR(animated *pbr)
     unsigned int envCubemap;
     glGenTextures(1, &envCubemap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
-    for (unsigned int i = 0; i < 6; ++i)
-    {
+    for (unsigned int i = 0; i < 6; ++i) {
         // note that we store each face with 16 bit floating point values
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F,
-                     resolution, resolution, 0, GL_RGB, GL_FLOAT, nullptr);
+            resolution, resolution, 0, GL_RGB, GL_FLOAT, nullptr);
     }
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -195,14 +185,14 @@ pbrTex setupPBR(animated *pbr)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-    glm::mat4 captureViews[] =
-        {
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
+    glm::mat4 captureViews[] = {
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))
+    };
 
     // convert HDR equirectangular environment map to cubemap equivalent
     glUseProgram(hdrCube.shaderProgram);
@@ -213,16 +203,15 @@ pbrTex setupPBR(animated *pbr)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, hdrTexture);
 
-    glViewport(0, 0, resolution, resolution); // don't forget to configure the viewport to the capture dimensions.
+    glViewport(0, 0, resolution, resolution);// don't forget to configure the viewport to the capture dimensions.
     glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-    for (unsigned int i = 0; i < 6; ++i)
-    {
+    for (unsigned int i = 0; i < 6; ++i) {
         hdrCube.view_matrix = &captureViews[i];
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, envCubemap, 0);
+            GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, envCubemap, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        hdrCube.render(0); // renders a 1x1 cube
+        hdrCube.render(0);// renders a 1x1 cube
     }
     glGenerateMipmap(envCubemap);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -232,10 +221,9 @@ pbrTex setupPBR(animated *pbr)
     unsigned int irradianceMap;
     glGenTextures(1, &irradianceMap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
-    for (unsigned int i = 0; i < 6; ++i)
-    {
+    for (unsigned int i = 0; i < 6; ++i) {
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, resolution, resolution, 0,
-                     GL_RGB, GL_FLOAT, nullptr);
+            GL_RGB, GL_FLOAT, nullptr);
     }
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -255,13 +243,12 @@ pbrTex setupPBR(animated *pbr)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
 
-    glViewport(0, 0, resolution, resolution); // don't forget to configure the viewport to the capture dimensions.
+    glViewport(0, 0, resolution, resolution);// don't forget to configure the viewport to the capture dimensions.
     glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-    for (unsigned int i = 0; i < 6; ++i)
-    {
+    for (unsigned int i = 0; i < 6; ++i) {
         irradianceCube.view_matrix = &captureViews[i];
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap, 0);
+            GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         irradianceCube.render(0);
     }
@@ -278,8 +265,7 @@ pbrTex setupPBR(animated *pbr)
     unsigned int prefilterMap;
     glGenTextures(1, &prefilterMap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
-    for (unsigned int i = 0; i < 6; ++i)
-    {
+    for (unsigned int i = 0; i < 6; ++i) {
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, resolution, resolution, 0, GL_RGB, GL_FLOAT, nullptr);
     }
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -301,8 +287,7 @@ pbrTex setupPBR(animated *pbr)
     glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
 
     unsigned int maxMipLevels = 5;
-    for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
-    {
+    for (unsigned int mip = 0; mip < maxMipLevels; ++mip) {
         // reisze framebuffer according to mip-level size.
         unsigned int mipWidth = resolution * std::pow(0.5, mip);
         unsigned int mipHeight = resolution * std::pow(0.5, mip);
@@ -312,11 +297,10 @@ pbrTex setupPBR(animated *pbr)
 
         float roughness = (float)mip / (float)(maxMipLevels - 1);
         filterCube.setFloat("roughness", roughness);
-        for (unsigned int i = 0; i < 6; ++i)
-        {
+        for (unsigned int i = 0; i < 6; ++i) {
             filterCube.view_matrix = &captureViews[i];
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                   GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap, mip);
+                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap, mip);
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             filterCube.render(0);
@@ -359,9 +343,22 @@ pbrTex setupPBR(animated *pbr)
     return returnTex;
 }
 
-int main(int, char *argv[])
+void Screendump(const char* tga_file, short W, short H)
 {
-    GLFWwindow *window = initOpenGL(WINDOW_WIDTH, WINDOW_HEIGHT, argv[0]);
+    FILE* out = fopen(tga_file, "w");
+    char pixel_data[3 * W * H];
+    short TGAhead[] = { 0, 2, 0, 0, 0, 0, W, H, 24 };
+
+    glReadBuffer(GL_FRONT);
+    glReadPixels(0, 0, W, H, GL_BGR, GL_UNSIGNED_BYTE, pixel_data);
+    fwrite(&TGAhead, sizeof(TGAhead), 1, out);
+    fwrite(pixel_data, 3 * W * H, 1, out);
+    fclose(out);
+}
+
+int main(int, char* argv[])
+{
+    GLFWwindow* window = initOpenGL(WINDOW_WIDTH, WINDOW_HEIGHT, argv[0]);
     glfwSetFramebufferSizeCallback(window, resizeCallback);
 
     camera cam(window);
@@ -410,13 +407,13 @@ int main(int, char *argv[])
 
     printf("loading textures\n");
     std::vector<unsigned int> pbrImgs = loadPBR("rock_ground");
-    unsigned int albedo = pbrImgs[0]; //loadTexture((DATA_ROOT + "book/book_pattern_col2_8k.png").c_str());
-    unsigned int normal = pbrImgs[1]; //vloadTexture((DATA_ROOT + "book/book_pattern_nor_8k.png").c_str());
+    unsigned int albedo = pbrImgs[0];//loadTexture((DATA_ROOT + "book/book_pattern_col2_8k.png").c_str());
+    unsigned int normal = pbrImgs[1];//vloadTexture((DATA_ROOT + "book/book_pattern_nor_8k.png").c_str());
     //unsigned int metallic = loadTexture((DATA_ROOT + "book/book_pattern_disp_8k.png").c_str());
     unsigned int metallic = pbrImgs[0];
     //glGenTextures(1, &metallic);
-    unsigned int roughness = pbrImgs[3]; //loadTexture((DATA_ROOT + "book/book_pattern_rough_8k.png").c_str());
-    unsigned int ao = pbrImgs[4];        //loadTexture((DATA_ROOT + "book/book_pattern_AO_8k.png").c_str());
+    unsigned int roughness = pbrImgs[3];//loadTexture((DATA_ROOT + "book/book_pattern_rough_8k.png").c_str());
+    unsigned int ao = pbrImgs[4];       //loadTexture((DATA_ROOT + "book/book_pattern_AO_8k.png").c_str());
     //unsigned int disp = loadTexture((DATA_ROOT + "SphereDisplacement.png").c_str());//pbrImgs[5];
     unsigned int disp = pbrImgs[5];
 
@@ -442,11 +439,14 @@ int main(int, char *argv[])
     bool Framerate = true;
     bool Camera = false;
 
-    const char *BG_Textures[] = {"HDRI", "irradiance", "prefilter"};
+    const char* BG_Textures[] = { "HDRI", "irradiance", "prefilter" };
     int whichBGTexture = 0;
 
     float bgLoD = 2.25;
     float dispFac = 0.;
+
+    bool recordFrames = false;
+    uint frameNumber = 0;
 
     //fuer fps
     double lastTime = glfwGetTime();
@@ -454,12 +454,15 @@ int main(int, char *argv[])
     int fps = 0;
     double frameTime = 0.;
     // rendering loop
-    while (glfwWindowShouldClose(window) == false)
-    {
-        double currentTime = glfwGetTime();
+    double currentTime = 0.;
+    while (glfwWindowShouldClose(window) == false) {
+        if (!recordFrames) {
+            currentTime = glfwGetTime();
+        }else{
+            currentTime += 0.01666666666;
+        }
         nbFrames++;
-        if (currentTime - lastTime >= 1.0)
-        { // If last prinf() was more than 1 sec ago
+        if (currentTime - lastTime >= 1.0) {// If last prinf() was more than 1 sec ago
             // printf and reset timer
             fps = nbFrames;
             frameTime = 1000.0 / double(nbFrames);
@@ -477,17 +480,16 @@ int main(int, char *argv[])
         ImGui::Begin("General");
         ImGui::Checkbox("Framerate", &Framerate);
         ImGui::Checkbox("Camera", &Camera);
+        ImGui::Checkbox("Record", &recordFrames);
         ImGui::End();
-        if (Framerate)
-        {
+        if (Framerate) {
             ImGui::Begin("Framerate");
             ImGui::Text("FPs: %04d", fps);
             ImGui::Text("avg. frametime: %04f", frameTime);
             ImGui::Checkbox("V-Sync", &vSync);
             ImGui::End();
         }
-        if (Camera)
-        {
+        if (Camera) {
             ImGui::Begin("Camera");
             ImGui::SliderFloat("FOV", &FOV, 90.0f, 5.0f);
             ImGui::SliderFloat("LoD for HDRI", &bgLoD, 0.0f, 6.0f);
@@ -496,12 +498,9 @@ int main(int, char *argv[])
             ImGui::End();
         }
 
-        if (vSync)
-        {
+        if (vSync) {
             glfwSwapInterval(1);
-        }
-        else
-        {
+        } else {
             glfwSwapInterval(0);
         }
 
@@ -511,8 +510,7 @@ int main(int, char *argv[])
 
         glDepthFunc(GL_LEQUAL);
         glActiveTexture(GL_TEXTURE0);
-        switch (whichBGTexture)
-        {
+        switch (whichBGTexture) {
         case 0:
             glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
             break;
@@ -525,7 +523,7 @@ int main(int, char *argv[])
         default:
             break;
         }
-        
+
         renderCube.setFloat("lod", bgLoD);
         glUseProgram(renderCube.shaderProgram);
         unsigned int lodLoc = glGetUniformLocation(renderCube.shaderProgram, "lod");
@@ -561,6 +559,14 @@ int main(int, char *argv[])
         boneObj.render(currentTime);
         //boneObj.renderRotated(currentTime, dispFac);
 
+
+        if (recordFrames) {
+            frameNumber++;
+            char str[7];
+            snprintf (str, 7, "%06d", frameNumber);
+            screenShotPNG((DATA_ROOT + "screenshots/s" + str + ".png").c_str(), WINDOW_WIDTH, WINDOW_HEIGHT);
+        }
+
         // render UI
         imgui_render();
 
@@ -571,7 +577,7 @@ int main(int, char *argv[])
     glfwTerminate();
 }
 
-void resizeCallback(GLFWwindow *, int width, int height)
+void resizeCallback(GLFWwindow*, int width, int height)
 {
     // set new width and height as viewport size
     glViewport(0, 0, width, height);
@@ -582,8 +588,7 @@ unsigned int quadVAO = 0;
 unsigned int quadVBO;
 void renderQuad()
 {
-    if (quadVAO == 0)
-    {
+    if (quadVAO == 0) {
         float quadVertices[] = {
             // positions        // texture Coords
             -1.0f,
@@ -614,9 +619,9 @@ void renderQuad()
         glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     }
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

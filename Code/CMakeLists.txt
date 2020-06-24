@@ -59,7 +59,7 @@ foreach(PROJECT_SOURCE_FILE ${PROJECT_SOURCES})
     add_executable(${SRC_NAME} ${PROJECT_SOURCE_FILE} ${PROJECT_HEADERS}
                                ${PROJECT_SHADERS} ${PROJECT_CONFIGS}
                                ${LIBRARY_SOURCES} ${VENDORS_SOURCES})
-    target_link_libraries(${SRC_NAME} assimp glfw
+    target_link_libraries(${SRC_NAME} assimp glfw png
                           ${GLFW_LIBRARIES} ${GLAD_LIBRARIES})
     #set_target_properties(${SRC_NAME} PROPERTIES
         #RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
