@@ -33,6 +33,7 @@ void resizeCallback(GLFWwindow* window, int width, int height);
 float*
 load_texture_data(std::string filename, int* width, int* height)
 {
+    stbi_set_flip_vertically_on_load(false);
     int channels;
     unsigned char* file_data = stbi_load(filename.c_str(), width, height, &channels, 3);
 
