@@ -21,6 +21,10 @@ int WINDOW_HEIGHT = 1080;
 float FOV = 45.;
 const float NEAR_VALUE = 0.1f;
 const float FAR_VALUE = 100.f;
+GLFWmonitor* primary;
+const GLFWvidmode* mode;
+std::array<int, 2> windowPos { 0, 0 };
+std::array<int, 2> windowSize { 0, 0 };
 
 #ifndef M_PI
 #define M_PI 3.14159265359
@@ -29,6 +33,7 @@ const float FAR_VALUE = 100.f;
 glm::mat4 proj_matrix;
 
 void resizeCallback(GLFWwindow* window, int width, int height);
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 float*
 load_texture_data(std::string filename, int* width, int* height)
@@ -169,10 +174,17 @@ void set_texture_wrap_mode(unsigned int texture, GLenum mode)
     glTextureParameteri(texture, GL_TEXTURE_WRAP_T, mode);
 }
 
-int main(int, char* argv[])
+int main(void)
 {
-    GLFWwindow* window = initOpenGL(WINDOW_WIDTH, WINDOW_HEIGHT, argv[0]);
+    GLFWwindow* window = initOpenGL(WINDOW_WIDTH, WINDOW_HEIGHT, "HiRISE");
+    primary = glfwGetPrimaryMonitor();
+    mode = glfwGetVideoMode(primary);
+    glfwSetKeyCallback(window, key_callback);
+
     glfwSetFramebufferSizeCallback(window, resizeCallback);
+    GLint tessLvl;
+    glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &tessLvl);
+    printf("max tess lvl: %d\n", tessLvl);
 
     camera cam(window);
 
@@ -203,7 +215,12 @@ int main(int, char* argv[])
     humanObj.setup(&human, false);
     humanObj.use();
     humanObj.scale(0.1);
-    humanObj.move(0.,7.,0.);
+    humanObj.move(0., 7., 0.);
+
+    animated table = loadMeshAnim("table.dae", true);
+    pbrObject tableObj = {};
+    tableObj.setup(&table, true);
+    tableObj.setFloat("displacementFactor", 100.);
 
     printf("loading model textures\n");
     char* path = "rock_ground";
@@ -265,6 +282,7 @@ int main(int, char* argv[])
     bool vSync = true;
     bool rotate = false;
     bool Framerate = true;
+    bool lineRendering = false;
     bool Camera = false;
     bool Color = false;
     bool Draw = false;
@@ -319,6 +337,7 @@ int main(int, char* argv[])
             ImGui::SliderFloat("float", &FOV, 10.0f, 90.0f);
             ImGui::Checkbox("rotate", &rotate);
             ImGui::SliderFloat("tessFactor", &tessFactor, 0.0f, 20.0f);
+            ImGui::Checkbox("render using lines", &lineRendering);
             ImGui::End();
         }
         if (Color) {
@@ -348,6 +367,12 @@ int main(int, char* argv[])
         mars.setFloat("tessFactor", tessFactor);
         mars.setFloat("discardFactor", discardFactor);
         mars.setFloat("h", pow(10., -h));
+
+        if (lineRendering) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
 
         if (rotate) {// let the camera rotate slowly
             camera_state* state = cam.getState();
@@ -400,6 +425,32 @@ int main(int, char* argv[])
             humanObj.render(currentTime);
         }
 
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.irradianceMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.prefilterMap);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, envtex.brdfLUTTexture);
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, albedo);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, normal);
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, metallic);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, roughness);
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, ao);
+        glActiveTexture(GL_TEXTURE8);
+        glBindTexture(GL_TEXTURE_2D, disp);
+        tableObj.setInt("heightMap", 5);
+        tableObj.setFloat("displacementFactor", 0.);
+        tableObj.setMaticies(&view_matrix, &proj_matrix);
+        tableObj.setVec3("camPos", cam.position());
+        glm::mat4 ident = glm::mat4(1.);
+        tableObj.render(ident);
+
         // render Background
         glDepthFunc(GL_LEQUAL);
         glActiveTexture(GL_TEXTURE0);
@@ -436,4 +487,30 @@ void resizeCallback(GLFWwindow*, int width, int height)
     WINDOW_HEIGHT = height;
     glViewport(0, 0, width, height);
     proj_matrix = glm::perspective(FOV, static_cast<float>(width) / height, NEAR_VALUE, FAR_VALUE);
+}
+
+bool IsFullscreen(GLFWwindow* window)
+{
+    return glfwGetWindowMonitor(window) != nullptr;
+}
+
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (action == GLFW_PRESS)
+        switch (key) {
+        case GLFW_KEY_ESCAPE:
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+            break;
+        case GLFW_KEY_F11:
+            if (IsFullscreen(window)) {
+                glfwSetWindowMonitor(window, nullptr, windowPos[0], windowPos[1], windowSize[0], windowSize[1], 60);
+            } else {
+                glfwGetWindowPos(window, &windowPos[0], &windowPos[1]);
+                glfwGetWindowSize(window, &windowSize[0], &windowSize[1]);
+                glfwSetWindowMonitor(window, primary, 0, 0, mode->width, mode->height, 60);
+            }
+            break;
+        default:
+            break;
+        }
 }

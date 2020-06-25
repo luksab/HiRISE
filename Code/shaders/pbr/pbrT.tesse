@@ -5,6 +5,7 @@ uniform mat4 view_mat;
 uniform mat4 proj_mat;
 
 uniform sampler2D heightMap;
+uniform float displacementFactor;
 
 layout (triangles, equal_spacing, ccw) in;
 in vec2 TexCoord_ES_in[];
@@ -40,7 +41,7 @@ void main(void)
                   (gl_TessCoord.z * gl_in[2].gl_Position);
     interp_pos = pos.xyz;
     Normal = /*mat3(model_mat) * */normalize(interpolate3D(Normal_ES_in[0],Normal_ES_in[1],Normal_ES_in[2]))*10.; 
-    float offset = texture2D(heightMap, interpolate2D(TexCoord_ES_in[0], TexCoord_ES_in[1], TexCoord_ES_in[2])).r-.5;
+    float offset = displacementFactor * (texture2D(heightMap, interpolate2D(TexCoord_ES_in[0], TexCoord_ES_in[1], TexCoord_ES_in[2])).r-.5);
     interpc_pos = proj_mat * view_mat * model_mat * vec4(pos.x+offset*Normal.x, pos.y+offset*Normal.y, pos.z+offset*Normal.z, 1.0);
     gl_Position = interpc_pos;
     TexCoords = interpolate2D(TexCoord_ES_in[0], TexCoord_ES_in[1], TexCoord_ES_in[2]);

@@ -47,7 +47,7 @@ void boneObject::setup(bones* model, bool tessellation)
     useTessellation = tessellation;
     if (tessellation) {
         // load and compile shaders and link program
-        unsigned int vertexShader = compileShader("pbr/pbrT.vert", GL_VERTEX_SHADER);
+        unsigned int vertexShader = compileShader("pbr/pbrST.vert", GL_VERTEX_SHADER);
         unsigned int fragmentShader = compileShader("pbr/pbrT.frag", GL_FRAGMENT_SHADER);
         unsigned int tessellationShader = compileShader("pbr/pbrT.tess", GL_TESS_CONTROL_SHADER);
         unsigned int tessellationEShader = compileShader("pbr/pbrT.tesse", GL_TESS_EVALUATION_SHADER);
@@ -60,7 +60,7 @@ void boneObject::setup(bones* model, bool tessellation)
         glDeleteShader(tessellationEShader);
     } else {
         // load and compile shaders and link program
-        unsigned int vertexShader = compileShader("pbr/pbrS2.vert", GL_VERTEX_SHADER);
+        unsigned int vertexShader = compileShader("pbr/pbrS.vert", GL_VERTEX_SHADER);
         unsigned int fragmentShader = compileShader("pbr/pbr.frag", GL_FRAGMENT_SHADER);
         shaderProgram = linkProgram(vertexShader, fragmentShader);
         //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);

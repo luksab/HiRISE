@@ -9,9 +9,9 @@ uniform sampler2D heightMap;
 
 uniform mat4 Bone[51];
 
-out vec2 TexCoords;
-out vec3 WorldPos;
-out vec3 Normal;
+out vec2 TexCoord_CS_in;
+out vec3 Normal_CS_in;
+out vec3 WorldPos_CS_in;
 
 out vec3 factor;
 
@@ -19,16 +19,14 @@ uniform mat4 model_mat;
 uniform mat4 view_mat;
 uniform mat4 proj_mat;
 
-uniform float displacementFactor;
-
 void main()
 {
     vec4 newVertex;
     vec4 newNormal;
     int index;
     // --------------------
-    Normal = normalize(aNormal);
-    TexCoords = aTexCoords;
+    Normal_CS_in = normalize(aNormal);
+    TexCoord_CS_in = aTexCoords;
 
     //vec4 weight = normalizeSum(vec4(0.25,0.25,1.,0.));
     vec4 weight = Weight;// should be normalized, but just to be sure
@@ -47,9 +45,9 @@ void main()
 
     newVertex = proj_mat * view_mat * model_mat * BoneTransform * vec4(aPos, 1.0);
 
-    newNormal = normalize(BoneTransform * vec4(Normal, 0.));
+    newNormal = normalize(BoneTransform * vec4(Normal_CS_in, 0.));
 
-    WorldPos = newVertex.xyz;
+    WorldPos_CS_in = newVertex.xyz;
 
     gl_Position = newVertex;
     //gl_Position = proj_mat * view_mat * vec4(aPos, 1.0);
@@ -57,6 +55,6 @@ void main()
     //float offset = (texture2D(heightMap, aTexCoords).r-.5);
     //gl_Position = proj_mat * view_mat * vec4(newVertex.x+offset*newNormal.x, newVertex.y+offset*newNormal.y, newVertex.z+offset*newNormal.z, 1.0);
     //gl_Position = proj_mat * view_mat * vec4(newVertex.xyz, 1.0);
-    Normal = newNormal.xyz;
+    Normal_CS_in = newNormal.xyz;
     factor = Weight.xyz;
 }

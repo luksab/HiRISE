@@ -92,32 +92,22 @@ void pbrObject::setup(animated* model, bool tessellation)
         glDeleteShader(vertexShader);
     }
 
+    setInt("irradianceMap", 0);
+    setInt("prefilterMap", 1);
+    setInt("brdfLUT", 2);
+    setInt("albedoMap", 3);
+    setInt("normalMap", 4);
+    setInt("metallicMap", 5);
+    setInt("roughnessMap", 6);
+    setInt("aoMap", 7);
+    setInt("heightMap", 8);
+
     glUseProgram(shaderProgram);
     model_mat_loc = glGetUniformLocation(shaderProgram, "model_mat");
     view_mat_loc = glGetUniformLocation(shaderProgram, "view_mat");
     proj_mat_loc = glGetUniformLocation(shaderProgram, "proj_mat");
-    unsigned int light_dir_loc = glGetUniformLocation(shaderProgram, "light_dir");
-    unsigned int roughness_loc = glGetUniformLocation(shaderProgram, "roughness");
-    unsigned int ref_index_loc = glGetUniformLocation(shaderProgram, "refractionIndex");
-    unsigned int diffuse_loc = glGetUniformLocation(shaderProgram, "diffuse");
-    unsigned int specular_loc = glGetUniformLocation(shaderProgram, "specular");
-    float light_phi = 0.6f;
-    float light_theta = 1.f;
-    glm::vec3 light_dir(std::cos(light_phi) * std::sin(light_theta),
-        std::cos(light_theta),
-        std::sin(light_phi) * std::sin(light_theta));
-    glUniform3f(light_dir_loc, light_dir.x, light_dir.y, light_dir.z);
 
-    glm::vec4 diffuse_color(0.7f, 0.7f, 0.7f, 1.f);
-    glm::vec4 specular_color(1.0f, 1.0f, 1.0f, 1.f);
-
-    glUniform4f(diffuse_loc, diffuse_color.x, diffuse_color.y, diffuse_color.z, diffuse_color.w);
-    glUniform4f(specular_loc, specular_color.x, specular_color.y, specular_color.z, specular_color.w);
-
-    float roughness = 0.4f;
-    float refraction_index = 0.4f;
-    glUniform1f(roughness_loc, roughness);
-    glUniform1f(ref_index_loc, refraction_index);
+    setFloat("displacementFactor", 0.);
 }
 
 void pbrObject::use()
@@ -176,6 +166,24 @@ void pbrObject::render(double currentTime)
     }
 
     glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &((*object).matrixAt(currentTime))[0][0]);
+
+    (*object).bind();
+    if (useTessellation) {
+        glDrawElements(GL_PATCHES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
+    } else {
+        glDrawElements(GL_TRIANGLES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
+    }
+}
+
+void pbrObject::render(glm::mat4& matrix)
+{
+    glUseProgram(shaderProgram);
+    if (defaultMat) {
+        glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, &(*view_matrix)[0][0]);
+        glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &(*proj_matrix)[0][0]);
+    }
+
+    glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(matrix[0][0]));
 
     (*object).bind();
     if (useTessellation) {
