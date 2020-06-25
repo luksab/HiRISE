@@ -152,33 +152,6 @@ create_texture_rgba32f(int width, int height, float* data)
     return handle;
 }
 
-unsigned int loadCubemap(std::vector<std::string> faces)
-{
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-
-    int width, height, nrChannels;
-    for (unsigned int i = 0; i < faces.size(); i++) {
-        unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-        if (data) {
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-            stbi_image_free(data);
-        } else {
-            std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
-            stbi_image_free(data);
-        }
-    }
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-    return textureID;
-}
-
 unsigned int
 create_texture_r32f(int width, int height, float* data)
 {
@@ -190,56 +163,10 @@ create_texture_r32f(int width, int height, float* data)
     return handle;
 }
 
-void set_texture_filter_mode(unsigned int texture, GLenum mode)
-{
-    glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, mode);
-}
-
 void set_texture_wrap_mode(unsigned int texture, GLenum mode)
 {
     glTextureParameteri(texture, GL_TEXTURE_WRAP_S, mode);
     glTextureParameteri(texture, GL_TEXTURE_WRAP_T, mode);
-}
-
-unsigned int setupShader()
-{
-    // load and compile shaders and link program
-    unsigned int vertexShader = compileShader("main.vert", GL_VERTEX_SHADER);
-    unsigned int fragmentShader = compileShader("main.frag", GL_FRAGMENT_SHADER);
-    unsigned int tesselationShader = compileShader("main.tess", GL_TESS_CONTROL_SHADER);
-    unsigned int tesselationEShader = compileShader("main.tesse", GL_TESS_EVALUATION_SHADER);
-    unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader, tesselationShader, tesselationEShader);
-    //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
-    // after linking the program the shader objects are no longer needed
-    glDeleteShader(fragmentShader);
-    glDeleteShader(vertexShader);
-    glDeleteShader(tesselationShader);
-    glDeleteShader(tesselationEShader);
-    return shaderProgram;
-}
-
-unsigned int setupCubeShader()
-{
-    // load and compile shaders and link program
-    unsigned int vertexShader = compileShader("cubeMap/vert.vert", GL_VERTEX_SHADER);
-    unsigned int fragmentShader = compileShader("cubeMap/frag.frag", GL_FRAGMENT_SHADER);
-    unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
-    // after linking the program the shader objects are no longer needed
-    glDeleteShader(fragmentShader);
-    glDeleteShader(vertexShader);
-    return shaderProgram;
-}
-
-unsigned int setupGlassShader()
-{
-    // load and compile shaders and link program
-    unsigned int vertexShader = compileShader("glass/glass.vert", GL_VERTEX_SHADER);
-    unsigned int fragmentShader = compileShader("glass/glass.frag", GL_FRAGMENT_SHADER);
-    unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
-    // after linking the program the shader objects are no longer needed
-    glDeleteShader(fragmentShader);
-    glDeleteShader(vertexShader);
-    return shaderProgram;
 }
 
 int main(int, char* argv[])
