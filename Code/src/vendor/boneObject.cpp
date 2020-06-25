@@ -69,6 +69,16 @@ void boneObject::setup(bones* model, bool tessellation)
         glDeleteShader(vertexShader);
     }
 
+    setInt("irradianceMap", 0);
+    setInt("prefilterMap", 1);
+    setInt("brdfLUT", 2);
+    setInt("albedoMap", 3);
+    setInt("normalMap", 4);
+    setInt("metallicMap", 5);
+    setInt("roughnessMap", 6);
+    setInt("aoMap", 7);
+    setInt("heightMap", 8);
+
     glUseProgram(shaderProgram);
     model_mat_loc = glGetUniformLocation(shaderProgram, "model_mat");
     view_mat_loc = glGetUniformLocation(shaderProgram, "view_mat");

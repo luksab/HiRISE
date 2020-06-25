@@ -268,15 +268,7 @@ int main(int, char* argv[])
     boneObject humanObj = {};
     humanObj.setup(&human, false);
     humanObj.use();
-    humanObj.setInt("irradianceMap", 0);
-    humanObj.setInt("prefilterMap", 1);
-    humanObj.setInt("brdfLUT", 2);
-    humanObj.setInt("albedoMap", 3);
-    humanObj.setInt("normalMap", 4);
-    humanObj.setInt("metallicMap", 5);
-    humanObj.setInt("roughnessMap", 6);
-    humanObj.setInt("aoMap", 7);
-    humanObj.setInt("heightMap", 8);
+    
     printf("loading textures\n");
     std::vector<unsigned int> pbrImgs = loadPBR("rock_ground");
     unsigned int albedo = pbrImgs[0];//loadTexture((DATA_ROOT + "book/book_pattern_col2_8k.png").c_str());
@@ -361,7 +353,7 @@ int main(int, char* argv[])
     bool Color = false;
     bool Draw = false;
 
-    bool drawObjs[3] = { false, false, false };
+    bool drawObjs[3] = { false, false, true };
 
     //fuer fps
     double lastTime = glfwGetTime();
@@ -429,9 +421,11 @@ int main(int, char* argv[])
             ImGui::End();
         }
         if (Draw) {
+            ImGui::Begin("Draw");
             ImGui::Checkbox("human", &(drawObjs[0]));
             ImGui::Checkbox("glass", &(drawObjs[1]));
             ImGui::Checkbox("mars", &(drawObjs[2]));
+            ImGui::End();
         }
         glUseProgram(shaderProgram);
         glUniform3f(cola_loc, colaH, colaS, colaV);
