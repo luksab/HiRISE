@@ -251,9 +251,13 @@ int main(int, char* argv[])
 
     init_imgui(window);
 
-    unsigned int shaderProgram = setupShader();
 
     geometry model = loadMesh("hiresUV.obj", false, glm::vec4(0.f, 0.f, 0.f, 1.f));
+    pbrObject mars = {};
+    animated marsAnim = toAnimated(model);
+    mars.setup(&marsAnim, "main.vert", "main.frag", "main.tess", "main.tesse");
+    unsigned int shaderProgram = mars.shaderProgram;
+
 
     animated glass = loadMeshAnim("shard.dae", 1., true);
 
