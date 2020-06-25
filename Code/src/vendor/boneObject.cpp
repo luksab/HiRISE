@@ -130,19 +130,13 @@ void boneObject::setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat)
 
 void boneObject::scale(float scale)
 {
-    glm::mat4 scaleMat = glm::mat4(scale);
-    cout << glm::to_string(scaleMat) << "\n";
+    glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(scale, scale, scale));
     objMat = scaleMat*objMat;
-    cout << glm::to_string(objMat) << "\n";
 }
 
 void boneObject::move(float x, float y, float z)
 {
-    glm::vec3 translateVec = glm::vec3();
-    translateVec.x = x;
-    translateVec.y = y;
-    translateVec.z = z;
-    glm::translate(glm::mat4(1.), translateVec);
+    objMat = glm::translate(objMat, glm::vec3(x, y, z));
 }
 
 void boneObject::render(double currentTime)
@@ -167,8 +161,8 @@ void boneObject::render(double currentTime)
     glUniformMatrix4fv(boneMats, object->NumBones, GL_FALSE, mats);
     free(mats);
 
-    setMat4("model_mat",&objMat);
-    //glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(objMat)[0][0]);
+    //setMat4("model_mat",&objMat);
+    glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(objMat)[0][0]);
     //glUniformMatrix4fv(boneMats, object->NumBones, GL_FALSE, &(object->boneTransform[index][0][0][0]));
 
     //glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(*object).matrixAt(currentTime)[0][0]);

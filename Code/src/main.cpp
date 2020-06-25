@@ -202,6 +202,8 @@ int main(int, char* argv[])
     boneObject humanObj = {};
     humanObj.setup(&human, false);
     humanObj.use();
+    humanObj.scale(0.1);
+    humanObj.move(0.,7.,0.);
 
     printf("loading model textures\n");
     char* path = "rock_ground";
