@@ -251,14 +251,12 @@ int main(int, char* argv[])
 
     init_imgui(window);
 
-
     geometry model = loadMesh("hiresUV.obj", false, glm::vec4(0.f, 0.f, 0.f, 1.f));
     pbrObject mars = {};
     animated marsAnim = toAnimated(model);
     mars.setup(&marsAnim, "main.vert", "main.frag", "main.tess", "main.tesse");
     mars.defaultMat = true;
     mars.useTessellation = true;
-
 
     animated glass = loadMeshAnim("shard.dae", 1., true);
     pbrObject glassObj = {};
@@ -276,7 +274,7 @@ int main(int, char* argv[])
     boneObject humanObj = {};
     humanObj.setup(&human, false);
     humanObj.use();
-    
+
     printf("loading textures\n");
     std::vector<unsigned int> pbrImgs = loadPBR("rock_ground");
     unsigned int albedo = pbrImgs[0];//loadTexture((DATA_ROOT + "book/book_pattern_col2_8k.png").c_str());
@@ -292,16 +290,6 @@ int main(int, char* argv[])
     pbrTex envtex = setupPBR(&pbr);
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     proj_matrix = glm::perspective(FOV, static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT, NEAR_VALUE, FAR_VALUE);
-
-    float colaH = 0.094;
-    float colaS = 0.263;
-    float colaV = 0.636;
-    float colbH = 0.162;
-    float colbS = 0.122;
-    float colbV = 0.606;
-    float tessFactor = 5;
-    float discardFactor = 1.055;
-    float h = 3.0;
 
     proj_matrix = glm::perspective(FOV, static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT, NEAR_VALUE, FAR_VALUE);
 
@@ -328,12 +316,23 @@ int main(int, char* argv[])
     delete[] image_tex_data;
     delete[] pds_tex_data;
 
-    float glass_power = 2.0;
-    float glass_factor = 1.0;
-
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // UI variables
+    float colaH = 0.094;
+    float colaS = 0.263;
+    float colaV = 0.636;
+    float colbH = 0.162;
+    float colbS = 0.122;
+    float colbV = 0.606;
+    float tessFactor = 5;
+    float discardFactor = 1.055;
+    float h = 3.0;
+
+    float glass_power = 2.0;
+    float glass_factor = 1.0;
 
     bool vSync = true;
     bool rotate = false;
@@ -344,7 +343,7 @@ int main(int, char* argv[])
 
     bool drawObjs[3] = { false, false, true };
 
-    //fuer fps
+    // timing variables
     double lastTime = glfwGetTime();
     double lastGLTime = lastTime;
     int nbFrames = 0;
@@ -360,10 +359,9 @@ int main(int, char* argv[])
         currentTime += dt * timeScale;
         nbFrames++;
         if (glfwGetTime() - lastTime >= 1.0) {// If last prinf() was more than 1 sec ago
-            // printf and reset timer
+            // reset timer
             fps = nbFrames;
             frameTime = 1000.0 / double(nbFrames);
-            //printf("%d fps, %f ms/frame\n", nbFrames, 1000.0 / double(nbFrames));
             nbFrames = 0;
             lastTime += 1.0;
         }
@@ -423,16 +421,16 @@ int main(int, char* argv[])
         mars.setFloat("discardFactor", discardFactor);
         mars.setFloat("h", pow(10., -h));
 
-        if (rotate) {
+        if (rotate) {// let the camera rotate slowly
             camera_state* state = cam.getState();
             state->phi += 0.1 * dt;
             //state->look_at.x -= 0.01;
             cam.update();
         }
 
-        if (vSync) {
+        if (vSync) {// turn vSync on
             glfwSwapInterval(1);
-        } else {
+        } else {// or off
             glfwSwapInterval(0);
         }
 
@@ -440,12 +438,12 @@ int main(int, char* argv[])
         //printf("%s\n",glm::to_string(proj_matrix).c_str());
 
         glm::mat4 view_matrix = cam.view_matrix();
-        if (drawObjs[2]) { //mars
+        if (drawObjs[2]) {// render mars
             mars.setMaticies(&view_matrix, &proj_matrix);
             mars.render(0);
         }
 
-        if (drawObjs[0]) {
+        if (drawObjs[0]) {// render human
             // bind pre-computed IBL data
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.irradianceMap);
@@ -474,6 +472,7 @@ int main(int, char* argv[])
             humanObj.render(currentTime);
         }
 
+        // render Background
         glDepthFunc(GL_LEQUAL);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
@@ -482,8 +481,8 @@ int main(int, char* argv[])
         renderCube.render(0);
         glDepthFunc(GL_LESS);
 
-        //render transparency last
-        if (drawObjs[1]) {
+        // render transparency last
+        if (drawObjs[1]) {// render glass
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
             glassObj.setMaticies(&view_matrix, &proj_matrix);
