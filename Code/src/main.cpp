@@ -251,6 +251,7 @@ int main(int, char* argv[])
 
     init_imgui(window);
 
+    printf("loading models\n");
     geometry model = loadMesh("hiresUV.obj", false, glm::vec4(0.f, 0.f, 0.f, 1.f));
     pbrObject mars = {};
     animated marsAnim = toAnimated(model);
@@ -275,17 +276,15 @@ int main(int, char* argv[])
     humanObj.setup(&human, false);
     humanObj.use();
 
-    printf("loading textures\n");
-    std::vector<unsigned int> pbrImgs = loadPBR("rock_ground");
-    unsigned int albedo = pbrImgs[0];//loadTexture((DATA_ROOT + "book/book_pattern_col2_8k.png").c_str());
-    unsigned int normal = pbrImgs[1];//vloadTexture((DATA_ROOT + "book/book_pattern_nor_8k.png").c_str());
-    //unsigned int metallic = loadTexture((DATA_ROOT + "book/book_pattern_disp_8k.png").c_str());
-    unsigned int metallic = pbrImgs[0];
-    //glGenTextures(1, &metallic);
-    unsigned int roughness = pbrImgs[3];//loadTexture((DATA_ROOT + "book/book_pattern_rough_8k.png").c_str());
-    unsigned int ao = pbrImgs[4];       //loadTexture((DATA_ROOT + "book/book_pattern_AO_8k.png").c_str());
-    //unsigned int disp = loadTexture((DATA_ROOT + "SphereDisplacement.png").c_str());//pbrImgs[5];
-    unsigned int disp = pbrImgs[5];
+    printf("loading model textures\n");
+    char* path = "rock_ground";
+    unsigned int albedo = loadTexture((DATA_ROOT + path + "/" + path + "_diff_8k.jpg").c_str());
+    unsigned int normal = loadTexture((DATA_ROOT + path + "/" + path + "_nor_8k.jpg").c_str());
+    unsigned int metallic;
+    glGenTextures(1, &metallic);
+    unsigned int roughness = loadTexture((DATA_ROOT + path + "/" + path + "_rough_8k.jpg").c_str());
+    unsigned int ao = loadTexture((DATA_ROOT + path + "/" + path + "_ao_8k.jpg").c_str());
+    unsigned int disp = loadTexture((DATA_ROOT + path + "/" + path + "_disp_8k.jpg").c_str());
 
     pbrTex envtex = setupPBR(&pbr);
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
