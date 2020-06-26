@@ -224,15 +224,38 @@ int main(void)
 
     printf("loading model textures\n");
     char* path = "rock_ground";
-    unsigned int albedo = loadTexture((DATA_ROOT + path + "/" + path + "_diff_8k.jpg").c_str());
-    unsigned int normal = loadTexture((DATA_ROOT + path + "/" + path + "_nor_8k.jpg").c_str());
-    unsigned int metallic;
-    glGenTextures(1, &metallic);
-    unsigned int roughness = loadTexture((DATA_ROOT + path + "/" + path + "_rough_8k.jpg").c_str());
-    unsigned int ao = loadTexture((DATA_ROOT + path + "/" + path + "_ao_8k.jpg").c_str());
-    unsigned int disp = loadTexture((DATA_ROOT + path + "/" + path + "_disp_8k.jpg").c_str());
+    std::vector<mapTexture> rockTex;
+    rockTex.resize(8);
+    rockTex[0].type = GL_TEXTURE_2D;
+    rockTex[0].spot = 3;
+    rockTex[0].texture = loadTexture((DATA_ROOT + path + "/" + path + "_diff_8k.jpg").c_str());
+    rockTex[1].type = GL_TEXTURE_2D;
+    rockTex[1].spot = 4;
+    rockTex[1].texture = loadTexture((DATA_ROOT + path + "/" + path + "_nor_8k.jpg").c_str());
+    rockTex[2].type = GL_TEXTURE_2D;
+    rockTex[2].spot = 5;
+    glGenTextures(1, &rockTex[2].texture);
+    rockTex[3].type = GL_TEXTURE_2D;
+    rockTex[3].spot = 6;
+    rockTex[3].texture = loadTexture((DATA_ROOT + path + "/" + path + "_rough_8k.jpg").c_str());
+    rockTex[4].type = GL_TEXTURE_2D;
+    rockTex[4].spot = 7;
+    rockTex[4].texture = loadTexture((DATA_ROOT + path + "/" + path + "_ao_8k.jpg").c_str());
+    rockTex[5].type = GL_TEXTURE_2D;
+    rockTex[5].spot = 8;
+    rockTex[5].texture = loadTexture((DATA_ROOT + path + "/" + path + "_disp_8k.jpg").c_str());
 
     pbrTex envtex = setupPBR(&pbr);
+    rockTex[6].type = GL_TEXTURE_2D;
+    rockTex[6].spot = 0;
+    rockTex[6].texture = envtex.irradianceMap;
+    rockTex[7].type = GL_TEXTURE_2D;
+    rockTex[7].spot = 0;
+    rockTex[7].texture = envtex.prefilterMap;
+    rockTex[8].type = GL_TEXTURE_2D;
+    rockTex[8].spot = 0;
+    rockTex[8].texture = envtex.brdfLUTTexture;
+
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     proj_matrix = glm::perspective(FOV, static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT, NEAR_VALUE, FAR_VALUE);
 
@@ -398,25 +421,7 @@ int main(void)
 
         if (drawObjs[0]) {// render human
             // bind pre-computed IBL data
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.irradianceMap);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.prefilterMap);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, envtex.brdfLUTTexture);
-
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, albedo);
-            glActiveTexture(GL_TEXTURE4);
-            glBindTexture(GL_TEXTURE_2D, normal);
-            glActiveTexture(GL_TEXTURE5);
-            glBindTexture(GL_TEXTURE_2D, metallic);
-            glActiveTexture(GL_TEXTURE6);
-            glBindTexture(GL_TEXTURE_2D, roughness);
-            glActiveTexture(GL_TEXTURE7);
-            glBindTexture(GL_TEXTURE_2D, ao);
-            glActiveTexture(GL_TEXTURE8);
-            glBindTexture(GL_TEXTURE_2D, disp);
+            bindTextures(rockTex);
 
             glShadeModel(GL_SMOOTH);
             humanObj.setFloat("displacementFactor", 0.);
@@ -425,25 +430,7 @@ int main(void)
             humanObj.render(currentTime);
         }
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.irradianceMap);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.prefilterMap);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, envtex.brdfLUTTexture);
-
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, albedo);
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, normal);
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, metallic);
-        glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, roughness);
-        glActiveTexture(GL_TEXTURE7);
-        glBindTexture(GL_TEXTURE_2D, ao);
-        glActiveTexture(GL_TEXTURE8);
-        glBindTexture(GL_TEXTURE_2D, disp);
+        bindTextures(rockTex);
         tableObj.setInt("heightMap", 5);
         tableObj.setFloat("displacementFactor", 0.);
         tableObj.setMaticies(&view_matrix, &proj_matrix);

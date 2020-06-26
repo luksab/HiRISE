@@ -1,6 +1,20 @@
 #pragma once
 #include "common.hpp"
 
+struct mapTexture {
+    unsigned int texture;
+    unsigned int spot;
+    unsigned int type;
+};
+
+void bindTextures(std::vector<mapTexture> textures)
+{
+    for (unsigned int i = 0; i < textures.size(); i++) {
+        glActiveTexture(GL_TEXTURE0 + textures[i].spot);
+        glBindTexture(textures[i].type, textures[i].texture);
+    }
+}
+
 // utility function for loading a 2D texture from file
 // ---------------------------------------------------
 unsigned int loadTexture(char const* path)
