@@ -119,7 +119,6 @@ load_pds_data(std::string filename, int* width, int* height, int* channels)
 
     float* buffer = (float*)malloc(filelen * sizeof(float));// Enough memory for the file
     //fseek(f,4348,SEEK_SET);
-    fseek(f, ftell(fp), SEEK_SET);
     //fseek(f,4625*4,SEEK_SET);
     fread(buffer, sizeof(float), filelen, f);// Read in the entire file
     fclose(f);
