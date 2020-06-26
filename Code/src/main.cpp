@@ -26,6 +26,10 @@ const GLFWvidmode* mode;
 std::array<int, 2> windowPos { 0, 0 };
 std::array<int, 2> windowSize { 0, 0 };
 
+unsigned int fbo = 0;
+unsigned int framebuffer_tex = 0;
+unsigned int depth_rbo = 0;
+
 #ifndef M_PI
 #define M_PI 3.14159265359
 #endif
@@ -55,7 +59,7 @@ load_texture_data(std::string filename, int* width, int* height)
         }
     }
 
-    delete[] file_data;
+    stbi_image_free(file_data);
 
     return data;
 }
@@ -158,6 +162,72 @@ create_texture_rgba32f(int width, int height, float* data)
 }
 
 unsigned int
+create_texture_rgba32f(int width, int height)
+{
+    unsigned int handle;
+    glCreateTextures(GL_TEXTURE_2D, 1, &handle);
+    glTextureStorage2D(handle, 1, GL_RGBA32F, width, height);
+
+    return handle;
+}
+
+void build_framebuffer(int width, int height)
+{
+    if (framebuffer_tex) {
+        glDeleteTextures(1, &framebuffer_tex);
+    }
+
+    if (depth_rbo) {
+        glDeleteRenderbuffers(1, &depth_rbo);
+    }
+
+    if (fbo) {
+        glDeleteFramebuffers(1, &fbo);
+    }
+
+    framebuffer_tex = create_texture_rgba32f(width, height);
+    glCreateRenderbuffers(1, &depth_rbo);
+    glNamedRenderbufferStorage(depth_rbo, GL_DEPTH24_STENCIL8, width, height);
+
+    glCreateFramebuffers(1, &fbo);
+    glNamedFramebufferTexture(fbo, GL_COLOR_ATTACHMENT0, framebuffer_tex, 0);
+    glNamedFramebufferRenderbuffer(fbo, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_rbo);
+    if (glCheckNamedFramebufferStatus(fbo, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        printf("Incomplete FBO!");
+        std::terminate();
+    }
+}
+
+unsigned int
+setup_fullscreen_quad()
+{
+    float vertices[] = {
+        -1.0f, -1.0f, 0.0f,
+        1.0f, -1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f,
+        -1.0f, 1.0f, 0.0f
+    };
+
+    unsigned int indices[] = {
+        0, 1, 2, 2, 3, 0
+    };
+
+    unsigned int VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    unsigned int VBO = makeBuffer(GL_ARRAY_BUFFER, GL_STATIC_DRAW, sizeof(vertices), vertices);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    unsigned int IBO = makeBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, sizeof(indices), indices);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+
+    return VAO;
+}
+
+unsigned int
 create_texture_r32f(int width, int height, float* data)
 {
     unsigned int handle;
@@ -174,8 +244,77 @@ void set_texture_wrap_mode(unsigned int texture, GLenum mode)
     glTextureParameteri(texture, GL_TEXTURE_WRAP_T, mode);
 }
 
+struct Plane {
+public:
+    glm::vec3 norm;
+    float d;
+
+    Plane() {}
+    Plane(float a, float b, float c, float d)
+        : norm(a, b, c)
+        , d(d)
+    {
+    }
+
+    void FromTriangle(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2);
+    void Normalize();
+    glm::mat4 MakeReflectionMatrix();
+};
+
+void Plane::FromTriangle(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2)
+{
+    norm = cross(p1 - p0, p2 - p0);
+    norm = glm::normalize(norm);
+    d = -dot(norm, p0);
+}
+
+void Plane::Normalize()
+{
+    float len = norm.x * norm.x + norm.y * norm.y + norm.z * norm.z;
+    if (len > 0.00001f) {
+        len = 1.0f / len;
+        norm.x *= len;
+        norm.y *= len;
+        norm.z *= len;
+        d *= len;
+        return;
+    }
+    norm.y = 1;
+}
+
+glm::mat4 Plane::MakeReflectionMatrix()
+{
+    //Normalize(); // let's expect it to be already normalized
+    glm::mat4 m;
+    m[0][0] = -2 * norm.x * norm.x + 1;
+    m[0][1] = -2 * norm.y * norm.x;
+    m[0][2] = -2 * norm.z * norm.x;
+    m[0][3] = 0;
+
+    m[1][0] = -2 * norm.x * norm.y;
+    m[1][1] = -2 * norm.y * norm.y + 1;
+    m[1][2] = -2 * norm.z * norm.y;
+    m[1][3] = 0;
+
+    m[2][0] = -2 * norm.x * norm.z;
+    m[2][1] = -2 * norm.y * norm.z;
+    m[2][2] = -2 * norm.z * norm.z + 1;
+    m[2][3] = 0;
+
+    m[3][0] = -2 * norm.x * d;
+    m[3][1] = -2 * norm.y * d;
+    m[3][2] = -2 * norm.z * d;
+    m[3][3] = 1;
+    return m;
+}
+
 int main(void)
 {
+    Plane p;
+    p.FromTriangle(glm::vec3(0, 0.5, 0), glm::vec3(1, 0.7, 0), glm::vec3(0, 7, 0));
+
+    glm::mat4 r = p.MakeReflectionMatrix();
+
     GLFWwindow* window = initOpenGL(WINDOW_WIDTH, WINDOW_HEIGHT, "HiRISE");
     primary = glfwGetPrimaryMonitor();
     mode = glfwGetVideoMode(primary);
@@ -225,7 +364,7 @@ int main(void)
     printf("loading model textures\n");
     char* path = "rock_ground";
     std::vector<mapTexture> rockTex;
-    rockTex.resize(8);
+    rockTex.resize(9);
     rockTex[0].type = GL_TEXTURE_2D;
     rockTex[0].spot = 3;
     rockTex[0].texture = loadTexture((DATA_ROOT + path + "/" + path + "_diff_8k.jpg").c_str());
@@ -309,8 +448,19 @@ int main(void)
     bool Camera = false;
     bool Color = false;
     bool Draw = false;
+    bool mirror = false;
 
     bool drawObjs[3] = { false, false, true };
+
+    //for deferred rendering
+    build_framebuffer(WINDOW_WIDTH, WINDOW_HEIGHT);
+    unsigned int quad = setup_fullscreen_quad();
+    unsigned int vertexShaderCompose = compileShader("deferred/deferred_compose.vert", GL_VERTEX_SHADER);
+    unsigned int fragmentShaderCompose = compileShader("deferred/deferred_compose.frag", GL_FRAGMENT_SHADER);
+    unsigned int shaderProgramCompose = linkProgram(vertexShaderCompose, fragmentShaderCompose);
+    glUseProgram(shaderProgramCompose);
+    // bind framebuffer texture to shader variable
+    int tex_loc = glGetUniformLocation(shaderProgramCompose, "tex");
 
     // timing variables
     double lastTime = glfwGetTime();
@@ -335,10 +485,6 @@ int main(void)
             lastTime += 1.0;
         }
 
-        glfwPollEvents();
-        glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         // define UI
         imgui_new_frame(400, 200);
         ImGui::Begin("General");
@@ -361,6 +507,7 @@ int main(void)
             ImGui::Checkbox("rotate", &rotate);
             ImGui::SliderFloat("tessFactor", &tessFactor, 0.0f, 20.0f);
             ImGui::Checkbox("render using lines", &lineRendering);
+            ImGui::Checkbox("mirror", &mirror);
             ImGui::End();
         }
         if (Color) {
@@ -414,7 +561,21 @@ int main(void)
         //printf("%s\n",glm::to_string(proj_matrix).c_str());
 
         glm::mat4 view_matrix = cam.view_matrix();
+
+        glfwPollEvents();
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
+        glStencilMask(0xFF);
+        glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE);
+        glDisable(GL_STENCIL_TEST);
+        //Draw normal scene
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);// Do draw any pixels on the back buffer
+
         if (drawObjs[2]) {// render mars
+            glBindTextureUnit(0, image_tex);
+            glBindTextureUnit(1, pds_tex);
             mars.setMaticies(&view_matrix, &proj_matrix);
             mars.render(0);
         }
@@ -438,7 +599,42 @@ int main(void)
         glm::mat4 ident = glm::mat4(1.);
         tableObj.render(ident);
 
+        //Draw in stencil first
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);// Do not draw any pixels on the back buffer
+        glEnable(GL_STENCIL_TEST);
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);        // Set any stencil to 1
+        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);// Only write when both tests pass
+        glDepthMask(GL_FALSE);                    // Don't write to depth buffer
+        glassObj.setMaticies(&view_matrix, &proj_matrix);
+        glassObj.render(currentTime);
+
+        // render mirrored version
+        glStencilFunc(GL_EQUAL, 1, 0xFF);      // only draw when there is reflection
+        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);// dont change stencil
+        glDepthMask(GL_TRUE);                  // enable depth test
+        glEnable(GL_DEPTH_TEST);
+
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);// draw pixels on the back buffer
+        view_matrix = cam.view_matrix() * (glass.matrixAt(currentTime)) * r;
+
+        glBindTextureUnit(0, image_tex);
+        glBindTextureUnit(1, pds_tex);
+        mars.setMaticies(&view_matrix, &proj_matrix);
+        mars.render(0);
+
+        tableObj.setMaticies(&view_matrix, &proj_matrix);
+        tableObj.setVec3("camPos", cam.position());
+        tableObj.render(ident);
+
+        humanObj.setMaticies(&view_matrix, &proj_matrix);
+        humanObj.setVec3("camPos", cam.position());
+        humanObj.render(currentTime);
+
+        glStencilFunc(GL_ALWAYS, 1, 0x00);     // Always pass stencil
+        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);// dont change stencil
+
         // render Background
+        view_matrix = cam.view_matrix();
         glDepthFunc(GL_LEQUAL);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
@@ -457,6 +653,16 @@ int main(void)
             glassObj.render(currentTime);
         }
 
+        // COMPOSE PASS
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_STENCIL_TEST);
+        glUseProgram(shaderProgramCompose);
+        glBindVertexArray(quad);
+        glBindTextureUnit(0, framebuffer_tex);
+        glUniform1i(tex_loc, 0);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+
         // render UI
         imgui_render();
 
@@ -474,6 +680,8 @@ void resizeCallback(GLFWwindow*, int width, int height)
     WINDOW_HEIGHT = height;
     glViewport(0, 0, width, height);
     proj_matrix = glm::perspective(FOV, static_cast<float>(width) / height, NEAR_VALUE, FAR_VALUE);
+
+    build_framebuffer(WINDOW_WIDTH, WINDOW_HEIGHT);
 }
 
 bool IsFullscreen(GLFWwindow* window)
