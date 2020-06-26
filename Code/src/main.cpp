@@ -144,7 +144,7 @@ load_pds_data(std::string filename, int* width, int* height, int* channels)
     //printf("max: %lf\n",max);
     //printf("min: %lf\n",min);
 
-    delete[] buffer;
+    free(buffer);
 
     return data;
 }
