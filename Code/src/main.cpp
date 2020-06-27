@@ -77,10 +77,8 @@ load_pds_data(std::string filename, int* width, int* height, int* channels)
         exit(EXIT_FAILURE);
 
     while ((read = getline(&line, &len, fp)) != -1) {
-        //printf("Retrieved line of length %zu:\n", read);
-        //printf("%s", line);
         skipLen += read;
-        if (strncmp(line, "  LINES            = ", 21) == 0)//21 = len("  LINES            = ")
+        if (strncmp(line, "  LINES            = ", 21) == 0)// 21 = len("  LINES            = ")
         {
             *height = atoi(line + 21);
         } else if (strncmp(line, "  LINE_SAMPLES     = ", 21) == 0) {
@@ -92,13 +90,6 @@ load_pds_data(std::string filename, int* width, int* height, int* channels)
 
     printf("height: %d\n", *height);
     printf("width: %d\n", *width);
-    skipLen += getline(&line, &len, fp);
-    skipLen += getline(&line, &len, fp);
-    skipLen += getline(&line, &len, fp);
-    printf("skipLen: %ld\n", ftell(fp));
-    /*printf("%d\n",read = getline(&line, &len, fp));
-    printf("%d\n",read = getline(&line, &len, fp));
-    printf("%d\n",read = getline(&line, &len, fp));*/
 
     fclose(fp);
     if (line)
@@ -109,21 +100,13 @@ load_pds_data(std::string filename, int* width, int* height, int* channels)
     int w = *width;
     int h = *height;
 
-    //printf("channels: %d\n",*channels);
 
     float* data = new float[*channels * w * h];
     long filelen = w * h * *channels;
-    /*fseek(f, 0, SEEK_END);         // Jump to the end of the file
-    filelen = ftell(f);            // Get the current byte offset in the file
-    rewind(f);                     // Jump back to the beginning of the file*/
 
     float* buffer = (float*)malloc(filelen * sizeof(float));// Enough memory for the file
-    //fseek(f,4348,SEEK_SET);
-    //fseek(f,4625*4,SEEK_SET);
     fread(buffer, sizeof(float), filelen, f);// Read in the entire file
     fclose(f);
-    //float max = -10000;
-    //float min = 14286578683;
     for (int j = 0; j < h; ++j) {
         for (int i = 0; i < w; ++i) {
             for (int k = 0; k < *channels; k++) {
@@ -134,15 +117,9 @@ load_pds_data(std::string filename, int* width, int* height, int* channels)
                 }
 
                 data[j * w * *channels + i * *channels + k] /= 1938.42;
-                /*if (j == 0)
-                    printf("%lf\n", data[j * w * *channels + i * *channels + k]);*/
-                //max = max>data[j * w * *channels + i * *channels + k]?max:data[j * w * *channels + i * *channels + k];
-                //min = min<data[j * w * *channels + i * *channels + k]?max:data[j * w * *channels + i * *channels + k];
             }
         }
     }
-    //printf("max: %lf\n",max);
-    //printf("min: %lf\n",min);
 
     free(buffer);
 
@@ -400,7 +377,6 @@ int main(void)
     proj_matrix = glm::perspective(FOV, static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT, NEAR_VALUE, FAR_VALUE);
 
     int image_width, image_height;
-    //float *image_tex_data = load_texture_data(DATA_ROOT + "ESP_048136_1725_MRGB_quarter.jpg", &image_width, &image_height);
     float* image_tex_data = load_texture_data(DATA_ROOT + "ESP_041121_1725_RED_A_01_ORTHO_quarter.jpg", &image_width, &image_height);
     int pds_width = 5712;
     int pds_height = 11580;
