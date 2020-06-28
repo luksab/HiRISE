@@ -31,6 +31,9 @@ unsigned int fbo = 0;
 unsigned int framebuffer_tex = 0;
 unsigned int depth_rbo = 0;
 
+bool paused;
+bool inCameraView;
+
 #ifndef M_PI
 #define M_PI 3.14159265359
 #endif
@@ -304,17 +307,14 @@ int main(void)
     camera cam(window);
     camera_state* state = cam.getState();
 
-    vector<splinePoint> cameraPositions;
-    cameraPositions.push_back((splinePoint) { 0., glm::vec3(0., 0.5, 0.) });
-    cameraPositions.push_back((splinePoint) { 1., glm::vec3(1., 0., 0.) });
-    cameraPositions.push_back((splinePoint) { 2., glm::vec3(2., 1., 0.) });
-    cameraPositions.push_back((splinePoint) { 3., glm::vec3(3., 0., 0.) });
-    cameraPositions.push_back((splinePoint) { 4., glm::vec3(4., 0., 3.) });
-    cameraPositions.push_back((splinePoint) { 5., glm::vec3(5., 0., 0.) });
-    cameraPositions.push_back((splinePoint) { 6., glm::vec3(6., 0., 0.) });
-    for (uint i = 0; i < cameraPositions.size(); i++) {
-        printf("time: %lf, vec(%lf,%lf,%lf)\n", cameraPositions[i].time, cameraPositions[i].pos[0], cameraPositions[i].pos[1], cameraPositions[i].pos[2]);
-    }
+    spline CamPosSpline;
+    CamPosSpline.addPoint((splinePoint) { 0., glm::vec3(0., 0.5, 0.) });
+    CamPosSpline.addPoint((splinePoint) { 1., glm::vec3(1., 0., 0.) });
+    CamPosSpline.addPoint((splinePoint) { 2., glm::vec3(2., 1., 0.) });
+    CamPosSpline.addPoint((splinePoint) { 3., glm::vec3(3., 0., 0.) });
+    CamPosSpline.addPoint((splinePoint) { 4., glm::vec3(4., 0., 3.) });
+    CamPosSpline.addPoint((splinePoint) { 5., glm::vec3(5., 0., 0.) });
+    CamPosSpline.addPoint((splinePoint) { 6., glm::vec3(6., 0., 0.) });
 
     init_imgui(window);
 
@@ -435,7 +435,6 @@ int main(void)
     bool lineRendering = false;
     bool Camera = false;
     bool CameraMove = false;
-    bool animateCamera = true;
     bool Color = false;
     bool Draw = false;
     bool mirror = false;
@@ -461,11 +460,12 @@ int main(void)
     double dt = 0;
     float currentTime = 0;
     float timeScale = 1.0;
+    paused = false;
     // rendering loop
     while (glfwWindowShouldClose(window) == false) {
         dt = glfwGetTime() - lastGLTime;
         lastGLTime = glfwGetTime();
-        currentTime += dt * timeScale;
+        currentTime += dt * timeScale * paused;
         nbFrames++;
         if (glfwGetTime() - lastTime >= 1.0) {// If last prinf() was more than 1 sec ago
             // reset timer
@@ -503,7 +503,7 @@ int main(void)
         }
         if (CameraMove) {
             ImGui::Begin("Camera");
-            ImGui::Checkbox("toggle", &animateCamera);
+            ImGui::Checkbox("toggle", &inCameraView);
             ImGui::SliderFloat("time", &currentTime, 0.0f, 20.0f);
             ImGui::End();
         }
@@ -548,8 +548,8 @@ int main(void)
             cam.update();
         }
 
-        if (animateCamera) {// animate the camera using keyframes
-            state->look_at = spline(fmod(currentTime, (cameraPositions.back().time + 1)), cameraPositions);
+        if (inCameraView) {                                                              // animate the camera using keyframes
+            state->look_at = CamPosSpline.eval(fmod(currentTime, CamPosSpline.length()));//spline(fmod(currentTime, (cameraPositions.back().time + 1)), cameraPositions);
             printf("vec3(%lf,%lf,%lf)\n", state->look_at[0], state->look_at[1], state->look_at[2]);
             //state->phi += 0.1 * dt;
             //state->look_at.x -= 0.01;
@@ -711,6 +711,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
                 glfwGetWindowSize(window, &windowSize[0], &windowSize[1]);
                 glfwSetWindowMonitor(window, primary, 0, 0, mode->width, mode->height, 60);
             }
+            break;
+        case GLFW_KEY_SPACE:
+            paused = !paused;
+            break;
+        case GLFW_KEY_KP_0:
+            inCameraView = !inCameraView;
             break;
         default:
             break;
