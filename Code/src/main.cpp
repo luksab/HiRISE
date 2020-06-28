@@ -13,6 +13,7 @@
 #include "pbrTex.hpp"
 #include "pngImg.hpp"
 #include "shader.hpp"
+#include "spline.hpp"
 
 #include <imgui.hpp>
 
@@ -100,12 +101,11 @@ load_pds_data(std::string filename, int* width, int* height, int* channels)
     int w = *width;
     int h = *height;
 
-
     float* data = new float[*channels * w * h];
     long filelen = w * h * *channels;
 
     float* buffer = (float*)malloc(filelen * sizeof(float));// Enough memory for the file
-    fread(buffer, sizeof(float), filelen, f);// Read in the entire file
+    fread(buffer, sizeof(float), filelen, f);               // Read in the entire file
     fclose(f);
     for (int j = 0; j < h; ++j) {
         for (int i = 0; i < w; ++i) {
@@ -302,6 +302,19 @@ int main(void)
     printf("max tess lvl: %d\n", tessLvl);
 
     camera cam(window);
+    camera_state* state = cam.getState();
+
+    vector<splinePoint> cameraPositions;
+    cameraPositions.push_back((splinePoint) { 0., glm::vec3(0., 0.5, 0.) });
+    cameraPositions.push_back((splinePoint) { 1., glm::vec3(1., 0., 0.) });
+    cameraPositions.push_back((splinePoint) { 2., glm::vec3(2., 1., 0.) });
+    cameraPositions.push_back((splinePoint) { 3., glm::vec3(3., 0., 0.) });
+    cameraPositions.push_back((splinePoint) { 4., glm::vec3(4., 0., 3.) });
+    cameraPositions.push_back((splinePoint) { 5., glm::vec3(5., 0., 0.) });
+    cameraPositions.push_back((splinePoint) { 6., glm::vec3(6., 0., 0.) });
+    for (uint i = 0; i < cameraPositions.size(); i++) {
+        printf("time: %lf, vec(%lf,%lf,%lf)\n", cameraPositions[i].time, cameraPositions[i].pos[0], cameraPositions[i].pos[1], cameraPositions[i].pos[2]);
+    }
 
     init_imgui(window);
 
@@ -421,11 +434,13 @@ int main(void)
     bool Framerate = true;
     bool lineRendering = false;
     bool Camera = false;
+    bool CameraMove = false;
+    bool animateCamera = true;
     bool Color = false;
     bool Draw = false;
     bool mirror = false;
 
-    bool drawObjs[3] = { false, false, true };
+    bool drawObjs[4] = { false, false, true, false };
 
     //for deferred rendering
     build_framebuffer(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -444,7 +459,7 @@ int main(void)
     int fps = 0;
     double frameTime = 0.;
     double dt = 0;
-    double currentTime = 0;
+    float currentTime = 0;
     float timeScale = 1.0;
     // rendering loop
     while (glfwWindowShouldClose(window) == false) {
@@ -465,6 +480,7 @@ int main(void)
         ImGui::Begin("General");
         ImGui::Checkbox("Framerate", &Framerate);
         ImGui::Checkbox("Camera", &Camera);
+        ImGui::Checkbox("CameraControl", &CameraMove);
         ImGui::Checkbox("Color", &Color);
         ImGui::Checkbox("Draw", &Draw);
         ImGui::End();
@@ -483,6 +499,12 @@ int main(void)
             ImGui::SliderFloat("tessFactor", &tessFactor, 0.0f, 20.0f);
             ImGui::Checkbox("render using lines", &lineRendering);
             ImGui::Checkbox("mirror", &mirror);
+            ImGui::End();
+        }
+        if (CameraMove) {
+            ImGui::Begin("Camera");
+            ImGui::Checkbox("toggle", &animateCamera);
+            ImGui::SliderFloat("time", &currentTime, 0.0f, 20.0f);
             ImGui::End();
         }
         if (Color) {
@@ -504,6 +526,7 @@ int main(void)
             ImGui::Checkbox("human", &(drawObjs[0]));
             ImGui::Checkbox("glass", &(drawObjs[1]));
             ImGui::Checkbox("mars", &(drawObjs[2]));
+            ImGui::Checkbox("reflexion", &(drawObjs[3]));
             ImGui::End();
         }
         mars.setVec3("colorA", colaH, colaS, colaV);
@@ -520,8 +543,15 @@ int main(void)
         }
 
         if (rotate) {// let the camera rotate slowly
-            camera_state* state = cam.getState();
             state->phi += 0.1 * dt;
+            //state->look_at.x -= 0.01;
+            cam.update();
+        }
+
+        if (animateCamera) {// animate the camera using keyframes
+            state->look_at = spline(fmod(currentTime, (cameraPositions.back().time + 1)), cameraPositions);
+            printf("vec3(%lf,%lf,%lf)\n", state->look_at[0], state->look_at[1], state->look_at[2]);
+            //state->phi += 0.1 * dt;
             //state->look_at.x -= 0.01;
             cam.update();
         }
@@ -574,36 +604,38 @@ int main(void)
         glm::mat4 ident = glm::mat4(1.);
         tableObj.render(ident);
 
-        //Draw in stencil first
-        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);// Do not draw any pixels on the back buffer
-        glEnable(GL_STENCIL_TEST);
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);        // Set any stencil to 1
-        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);// Only write when both tests pass
-        glDepthMask(GL_FALSE);                    // Don't write to depth buffer
-        glassObj.setMaticies(&view_matrix, &proj_matrix);
-        glassObj.render(currentTime);
+        if (drawObjs[3]) {
+            //Draw in stencil first
+            glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);// Do not draw any pixels on the back buffer
+            glEnable(GL_STENCIL_TEST);
+            glStencilFunc(GL_ALWAYS, 1, 0xFF);        // Set any stencil to 1
+            glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);// Only write when both tests pass
+            glDepthMask(GL_FALSE);                    // Don't write to depth buffer
+            glassObj.setMaticies(&view_matrix, &proj_matrix);
+            glassObj.render(currentTime);
 
-        // render mirrored version
-        glStencilFunc(GL_EQUAL, 1, 0xFF);      // only draw when there is reflection
-        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);// dont change stencil
-        glDepthMask(GL_TRUE);                  // enable depth test
-        glEnable(GL_DEPTH_TEST);
+            // render mirrored version
+            glStencilFunc(GL_EQUAL, 1, 0xFF);      // only draw when there is reflection
+            glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);// dont change stencil
+            glDepthMask(GL_TRUE);                  // enable depth test
+            glEnable(GL_DEPTH_TEST);
 
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);// draw pixels on the back buffer
-        view_matrix = cam.view_matrix() * (glass.matrixAt(currentTime)) * r;
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);// draw pixels on the back buffer
+            view_matrix = cam.view_matrix() * (glass.matrixAt(currentTime)) * r;
 
-        glBindTextureUnit(0, image_tex);
-        glBindTextureUnit(1, pds_tex);
-        mars.setMaticies(&view_matrix, &proj_matrix);
-        mars.render(0);
+            glBindTextureUnit(0, image_tex);
+            glBindTextureUnit(1, pds_tex);
+            mars.setMaticies(&view_matrix, &proj_matrix);
+            mars.render(0);
 
-        tableObj.setMaticies(&view_matrix, &proj_matrix);
-        tableObj.setVec3("camPos", cam.position());
-        tableObj.render(ident);
+            tableObj.setMaticies(&view_matrix, &proj_matrix);
+            tableObj.setVec3("camPos", cam.position());
+            tableObj.render(ident);
 
-        humanObj.setMaticies(&view_matrix, &proj_matrix);
-        humanObj.setVec3("camPos", cam.position());
-        humanObj.render(currentTime);
+            humanObj.setMaticies(&view_matrix, &proj_matrix);
+            humanObj.setVec3("camPos", cam.position());
+            humanObj.render(currentTime);
+        }
 
         glStencilFunc(GL_ALWAYS, 1, 0x00);     // Always pass stencil
         glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);// dont change stencil
