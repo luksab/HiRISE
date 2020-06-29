@@ -296,7 +296,7 @@ int main(void)
         assert(0);
     }
     irrklang::ISound* music = SoundEngine->play2D((DATA_ROOT + "audio/breakout.ogg").c_str(), true, false, true);
-    music->setVolume(0.1);
+    music->setVolume(0.);
 
     Plane p;
     p.FromTriangle(glm::vec3(0, 0.5, 0), glm::vec3(1, 0.7, 0), glm::vec3(0, 7, 0));
@@ -439,7 +439,7 @@ int main(void)
     float glass_power = 2.0;
     float glass_factor = 1.0;
 
-    float volume = 0.5;
+    float volume = 0.;
 
     bool vSync = true;
     bool rotate = false;
@@ -544,12 +544,69 @@ int main(void)
             ImGui::Checkbox("table", &(drawObjs[4]));
             ImGui::End();
         }
-        if(Music){
+        if (Music) {
             ImGui::Begin("Music");
             ImGui::SliderFloat("Volume", &volume, 0.f, 1.0f);
+            music->setVolume(volume);
             ImGui::End();
         }
-        music->setVolume(volume);
+
+        if (true) {
+            ImGui::Begin("Camera Keyframes");
+            static uint selected = 0;
+            {
+                ImGui::BeginChild("left pane", ImVec2(150, 0), true);
+                for (uint i = 0; i < CamPosSpline.points.size(); i++) {
+                    char label[128];
+                    sprintf(label, "Keyframe %d", i);
+                    if (ImGui::Selectable(label, selected == i))
+                        selected = i;
+                }
+                ImGui::EndChild();
+            }
+            ImGui::SameLine();
+            {
+                ImGui::BeginGroup();
+                ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));// Leave room for 1 line below us
+                ImGui::Text("Keyframe: %d", selected);
+                ImGui::Separator();
+                if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None)) {
+                    if (ImGui::BeginTabItem("Description")) {
+                        ImGui::TextWrapped("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ");
+                        ImGui::EndTabItem();
+                    }
+                    if (ImGui::BeginTabItem("Details")) {
+                        ImGui::Text("ID: 0123456789");
+                        ImGui::SliderFloat3("Camera Position", (float*)&(CamPosSpline.points[selected].pos), -10.0f, 10.0f);
+                        //TODO: re-sort list
+                        ImGui::SliderFloat("Camera Time", (float*)&(CamPosSpline.points[selected].time), 0.0f, 10.0f);
+                        ImGui::EndTabItem();
+                    }
+                    ImGui::EndTabBar();
+                }
+                ImGui::EndChild();
+                if (ImGui::Button("Delete")) {
+                    ImGui::OpenPopup("sure");
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Add new")) {
+                    CamPosSpline.addPoint(currentTime, cam.position());
+                }
+                ImGui::EndGroup();
+            }
+            if (ImGui::BeginPopup("sure")) {// Delete the current Keyframe
+                ImGui::Text("Are you sure?");
+                if (ImGui::Button("yes!")) {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("no"))
+                    ImGui::CloseCurrentPopup();
+                ImGui::EndPopup();
+            }
+
+            ImGui::End();
+        }
 
         mars.setVec3("colorA", colaH, colaS, colaV);
         mars.setVec3("colorB", colbH, colbS, colbV);

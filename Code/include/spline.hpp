@@ -34,9 +34,10 @@ bool operator<(const double& t, const splinePoint& c2)
 }
 
 class spline {
-    vector<splinePoint> points;
 
 public:
+    vector<splinePoint> points;
+    
     void addPoint(splinePoint point)
     {
         const auto insert_pos = std::lower_bound(std::begin(points), std::end(points), point);
@@ -65,16 +66,18 @@ public:
     {
         splinePoint point = {};
         point.time = time;
-        point.pos = glm::vec3(x,y,z);
+        point.pos = glm::vec3(x, y, z);
         const auto insert_pos = std::lower_bound(std::begin(points), std::end(points), point);
         points.insert(insert_pos, point);
     }
 
-    double length(){
+    double length()
+    {
         return points.back().time;
     }
 
-    void removePoint(uint position){
+    void removePoint(uint position)
+    {
         points.erase(points.begin() + position);
     }
 
