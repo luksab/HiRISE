@@ -16,6 +16,7 @@
 #include "spline.hpp"
 
 #include <imgui.hpp>
+#include <irrKlang.h>
 
 int WINDOW_WIDTH = 1920;
 int WINDOW_HEIGHT = 1080;
@@ -289,6 +290,14 @@ glm::mat4 Plane::MakeReflectionMatrix()
 
 int main(void)
 {
+    irrklang::ISoundEngine* SoundEngine = irrklang::createIrrKlangDevice();
+    if (!SoundEngine) {
+        printf("Could not start irrklang");// error starting up the engine
+        assert(0);
+    }
+    irrklang::ISound* music = SoundEngine->play2D((DATA_ROOT + "audio/breakout.ogg").c_str(), true, false, true);
+    music->setVolume(0.1);
+
     Plane p;
     p.FromTriangle(glm::vec3(0, 0.5, 0), glm::vec3(1, 0.7, 0), glm::vec3(0, 7, 0));
 
@@ -430,6 +439,8 @@ int main(void)
     float glass_power = 2.0;
     float glass_factor = 1.0;
 
+    float volume = 0.5;
+
     bool vSync = true;
     bool rotate = false;
     bool Framerate = true;
@@ -437,6 +448,7 @@ int main(void)
     bool Camera = false;
     bool CameraMove = false;
     bool Color = false;
+    bool Music = false;
     bool Draw = false;
     bool mirror = false;
 
@@ -484,6 +496,7 @@ int main(void)
         ImGui::Checkbox("CameraControl", &CameraMove);
         ImGui::Checkbox("Color", &Color);
         ImGui::Checkbox("Draw", &Draw);
+        ImGui::Checkbox("Music", &Music);
         ImGui::End();
         if (Framerate) {
             ImGui::Begin("Framerate");
@@ -531,6 +544,13 @@ int main(void)
             ImGui::Checkbox("table", &(drawObjs[4]));
             ImGui::End();
         }
+        if(Music){
+            ImGui::Begin("Music");
+            ImGui::SliderFloat("Volume", &volume, 0.f, 1.0f);
+            ImGui::End();
+        }
+        music->setVolume(volume);
+
         mars.setVec3("colorA", colaH, colaS, colaV);
         mars.setVec3("colorB", colbH, colbS, colbV);
 
@@ -677,6 +697,7 @@ int main(void)
         glfwSwapBuffers(window);
     }
 
+    SoundEngine->drop();
     cleanup_imgui();
     glfwTerminate();
 }
