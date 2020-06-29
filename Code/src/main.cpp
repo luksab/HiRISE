@@ -348,7 +348,8 @@ int main(void)
     animated table = loadMeshAnim("table.dae", true);
     pbrObject tableObj = {};
     tableObj.setup(&table, true);
-    tableObj.setFloat("displacementFactor", 100.);
+    tableObj.setInt("heightMap", 5);
+    tableObj.setFloat("displacementFactor", 0.);
 
     printf("loading model textures\n");
     char* path = "rock_ground";
@@ -387,12 +388,12 @@ int main(void)
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     proj_matrix = glm::perspective(FOV, static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT, NEAR_VALUE, FAR_VALUE);
 
-    proj_matrix = glm::perspective(FOV, static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT, NEAR_VALUE, FAR_VALUE);
+    glm::mat4 ident = glm::mat4(1.);
 
     int image_width, image_height;
     float* image_tex_data = load_texture_data(DATA_ROOT + "ESP_041121_1725_RED_A_01_ORTHO_quarter.jpg", &image_width, &image_height);
-    int pds_width = 5712;
-    int pds_height = 11580;
+    int pds_width;
+    int pds_height;
     int pds_channels = 1;
     float* pds_tex_data = load_pds_data(DATA_ROOT + "DTEEC_048136_1725_041121_1725_A01.img", &pds_width, &pds_height, &pds_channels);
 
@@ -439,7 +440,7 @@ int main(void)
     bool Draw = false;
     bool mirror = false;
 
-    bool drawObjs[4] = { false, false, true, false };
+    bool drawObjs[5] = { false, false, true, false, false };
 
     //for deferred rendering
     build_framebuffer(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -527,6 +528,7 @@ int main(void)
             ImGui::Checkbox("glass", &(drawObjs[1]));
             ImGui::Checkbox("mars", &(drawObjs[2]));
             ImGui::Checkbox("reflexion", &(drawObjs[3]));
+            ImGui::Checkbox("table", &(drawObjs[4]));
             ImGui::End();
         }
         mars.setVec3("colorA", colaH, colaS, colaV);
@@ -595,14 +597,12 @@ int main(void)
             humanObj.setVec3("camPos", cam.position());
             humanObj.render(currentTime);
         }
-
-        bindTextures(rockTex);
-        tableObj.setInt("heightMap", 5);
-        tableObj.setFloat("displacementFactor", 0.);
-        tableObj.setMaticies(&view_matrix, &proj_matrix);
-        tableObj.setVec3("camPos", cam.position());
-        glm::mat4 ident = glm::mat4(1.);
-        tableObj.render(ident);
+        if (drawObjs[4]) {//render table
+            bindTextures(rockTex);
+            tableObj.setMaticies(&view_matrix, &proj_matrix);
+            tableObj.setVec3("camPos", cam.position());
+            tableObj.render(ident);
+        }
 
         if (drawObjs[3]) {
             //Draw in stencil first
@@ -628,6 +628,7 @@ int main(void)
             mars.setMaticies(&view_matrix, &proj_matrix);
             mars.render(0);
 
+            bindTextures(rockTex);
             tableObj.setMaticies(&view_matrix, &proj_matrix);
             tableObj.setVec3("camPos", cam.position());
             tableObj.render(ident);
