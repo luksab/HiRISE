@@ -17,6 +17,7 @@
 
 #include <imgui.hpp>
 #include <irrKlang.h>
+#include <thread>
 
 int WINDOW_WIDTH = 1920;
 int WINDOW_HEIGHT = 1080;
@@ -288,6 +289,19 @@ glm::mat4 Plane::MakeReflectionMatrix()
     return m;
 }
 
+struct ImageThreadCall {
+    unsigned char** data;
+    unsigned char* dataP;
+    std::string path0;
+    int* widthP;
+    int* heightP;
+    int* nrComponentsP;
+    int width;
+    int height;
+    int nrComponents;
+    std::thread t;
+};
+
 int main(void)
 {
     irrklang::ISoundEngine* SoundEngine = irrklang::createIrrKlangDevice();
@@ -361,27 +375,81 @@ int main(void)
     tableObj.setFloat("displacementFactor", 0.);
 
     printf("loading model textures\n");
-    char* path = "rock_ground";
+    auto start = glfwGetTime();
+    const char* path = "rock_ground";
+
+    ImageThreadCall diff = {};
+    diff.data = &diff.dataP;
+    diff.path0 = DATA_ROOT + path + "/" + path + "_diff_8k.jpg";
+    diff.widthP = &diff.width;
+    diff.heightP = &diff.height;
+    diff.nrComponentsP = &diff.nrComponents;
+    diff.t = std::thread(loadTextureData, diff.data, diff.path0.c_str(), diff.widthP, diff.heightP, diff.nrComponentsP);
+
+    ImageThreadCall nor = {};
+    nor.data = &nor.dataP;
+    nor.path0 = DATA_ROOT + path + "/" + path + "_nor_8k.jpg";
+    nor.widthP = &nor.width;
+    nor.heightP = &nor.height;
+    nor.nrComponentsP = &nor.nrComponents;
+    nor.t = std::thread(loadTextureData, nor.data, nor.path0.c_str(), nor.widthP, nor.heightP, nor.nrComponentsP);
+
+    ImageThreadCall rough = {};
+    rough.data = &rough.dataP;
+    rough.path0 = DATA_ROOT + path + "/" + path + "_rough_8k.jpg";
+    rough.widthP = &rough.width;
+    rough.heightP = &rough.height;
+    rough.nrComponentsP = &rough.nrComponents;
+    rough.t = std::thread(loadTextureData, rough.data, rough.path0.c_str(), rough.widthP, rough.heightP, rough.nrComponentsP);
+
+    ImageThreadCall ao = {};
+    ao.data = &ao.dataP;
+    ao.path0 = DATA_ROOT + path + "/" + path + "_ao_8k.jpg";
+    ao.widthP = &ao.width;
+    ao.heightP = &ao.height;
+    ao.nrComponentsP = &ao.nrComponents;
+    ao.t = std::thread(loadTextureData, ao.data, ao.path0.c_str(), ao.widthP, ao.heightP, ao.nrComponentsP);
+
+    ImageThreadCall disp = {};
+    disp.data = &disp.dataP;
+    disp.path0 = DATA_ROOT + path + "/" + path + "_disp_8k.jpg";
+    disp.widthP = &disp.width;
+    disp.heightP = &disp.height;
+    disp.nrComponentsP = &disp.nrComponents;
+    disp.t = std::thread(loadTextureData, disp.data, disp.path0.c_str(), disp.widthP, disp.heightP, disp.nrComponentsP);
+
+    diff.t.join();
+    nor.t.join();
+    rough.t.join();
+    ao.t.join();
+    disp.t.join();
+    auto stop = glfwGetTime();
+    auto duration = stop - start;
+    cout << "loading textures took " << duration << "s" << endl;
+    start = glfwGetTime();
     std::vector<mapTexture> rockTex;
     rockTex.resize(9);
     rockTex[0].type = GL_TEXTURE_2D;
     rockTex[0].spot = 3;
-    rockTex[0].texture = loadTexture((DATA_ROOT + path + "/" + path + "_diff_8k.jpg").c_str());
+    rockTex[0].texture = loadTexture(diff.dataP, diff.width, diff.height, diff.nrComponents);
     rockTex[1].type = GL_TEXTURE_2D;
     rockTex[1].spot = 4;
-    rockTex[1].texture = loadTexture((DATA_ROOT + path + "/" + path + "_nor_8k.jpg").c_str());
+    rockTex[1].texture = loadTexture(nor.dataP, nor.width, nor.height, nor.nrComponents);
     rockTex[2].type = GL_TEXTURE_2D;
     rockTex[2].spot = 5;
     glGenTextures(1, &rockTex[2].texture);
     rockTex[3].type = GL_TEXTURE_2D;
     rockTex[3].spot = 6;
-    rockTex[3].texture = loadTexture((DATA_ROOT + path + "/" + path + "_rough_8k.jpg").c_str());
+    rockTex[3].texture = loadTexture(rough.dataP, rough.width, rough.height, rough.nrComponents);
     rockTex[4].type = GL_TEXTURE_2D;
     rockTex[4].spot = 7;
-    rockTex[4].texture = loadTexture((DATA_ROOT + path + "/" + path + "_ao_8k.jpg").c_str());
+    rockTex[4].texture = loadTexture(ao.dataP, ao.width, ao.height, ao.nrComponents);
     rockTex[5].type = GL_TEXTURE_2D;
     rockTex[5].spot = 8;
-    rockTex[5].texture = loadTexture((DATA_ROOT + path + "/" + path + "_disp_8k.jpg").c_str());
+    rockTex[5].texture = loadTexture(disp.dataP, disp.width, disp.height, disp.nrComponents);
+    stop = glfwGetTime();
+    duration = stop - start;
+    cout << "loading textures to GPU took " << duration << "s" << endl;
 
     pbrTex envtex = setupPBR(&pbr);
     rockTex[6].type = GL_TEXTURE_2D;

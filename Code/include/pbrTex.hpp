@@ -51,6 +51,45 @@ unsigned int loadTexture(char const* path)
     return textureID;
 }
 
+unsigned int loadTexture(unsigned char* data, int width, int height, int nrComponents)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    assert(data);
+
+    GLenum format;
+    if (nrComponents == 1)
+        format = GL_RED;
+    else if (nrComponents == 3)
+        format = GL_RGB;
+    else if (nrComponents == 4)
+        format = GL_RGBA;
+
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    stbi_image_free(data);
+
+    return textureID;
+}
+
+void loadTextureData(unsigned char** data, const char* path, int* width, int* height, int* nrComponents)
+{
+    *data = stbi_load(path, width, height, nrComponents, 0);
+    if (!data) {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+    return;
+}
+
 void renderQuad();
 
 struct pbrTex {
@@ -293,7 +332,7 @@ pbrTex setupPBR(animated* pbr)
     brdfCube.use();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     renderQuad();
-    
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     pbrTex returnTex = {};
