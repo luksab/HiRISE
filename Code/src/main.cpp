@@ -451,6 +451,7 @@ int main(void)
     duration = stop - start;
     cout << "loading textures to GPU took " << duration << "s" << endl;
 
+    start = glfwGetTime();
     pbrTex envtex = setupPBR(&pbr);
     rockTex[6].type = GL_TEXTURE_2D;
     rockTex[6].spot = 0;
@@ -461,12 +462,17 @@ int main(void)
     rockTex[8].type = GL_TEXTURE_2D;
     rockTex[8].spot = 0;
     rockTex[8].texture = envtex.brdfLUTTexture;
+    stop = glfwGetTime();
+    duration = stop - start;
+    cout << "loading hdri textures took " << duration << "s" << endl;
 
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     proj_matrix = glm::perspective(FOV, static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT, NEAR_VALUE, FAR_VALUE);
 
     glm::mat4 ident = glm::mat4(1.);
 
+    printf("loading mars data");
+    start = glfwGetTime();
     int image_width, image_height;
     float* image_tex_data = load_texture_data(DATA_ROOT + "ESP_041121_1725_RED_A_01_ORTHO_quarter.jpg", &image_width, &image_height);
     int pds_width;
@@ -485,6 +491,9 @@ int main(void)
     glBindTextureUnit(1, pds_tex);
     glTextureParameteri(image_tex, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     mars.setInt("height", 1);
+    stop = glfwGetTime();
+    duration = stop - start;
+    cout << "loading hdri textures took " << duration << "s" << endl;
 
     delete[] image_tex_data;
     delete[] pds_tex_data;
@@ -542,6 +551,7 @@ int main(void)
     float currentTime = 0;
     float timeScale = 1.0;
     paused = false;
+    cout << "Total loading time: " << glfwGetTime() << "s" << endl;
     // rendering loop
     while (glfwWindowShouldClose(window) == false) {
         dt = glfwGetTime() - lastGLTime;

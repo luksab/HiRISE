@@ -50,41 +50,6 @@ glm::mat4 aiMatrix4ToGlm(Matrix4f& in)
     return out;
 }
 
-void traverseTree(aiNode* root, bones* m, uint time)
-{
-    glm::mat4 m_GlobalInverseTransform = aiMatrix4ToGlm(m->Scene->mRootNode->mTransformation);
-    m_GlobalInverseTransform = glm::inverse(m_GlobalInverseTransform);
-    string RootName(root->mName.data);
-    glm::mat4 boneMatrix = glm::mat4();
-
-    for (uint j = 0; j < root->mNumChildren; j++) {
-        string BoneName(root->mChildren[j]->mName.data);
-        if (m->BoneMapping.find(BoneName) != m->BoneMapping.end()) {
-            glm::mat4 mTransformation = aiMatrix4ToGlm(root->mChildren[j]->mTransformation);
-            //m->boneTransform[time][m->BoneMapping[BoneName]] = m_GlobalInverseTransform * m->boneTransform[time][m->BoneMapping[RootName]] * m->boneTransform[time][m->BoneMapping[BoneName]] * boneMatrix;
-            m->boneTransform[time][m->BoneMapping[BoneName]] = glm::inverse(mTransformation) * m->boneTransform[time][m->BoneMapping[RootName]] * mTransformation * m->boneTransform[time][m->BoneMapping[BoneName]];
-        }
-        //cout << root->mChildren[j]->mName.C_Str() << "\n";
-        traverseTree(root->mChildren[j], m, time);
-        boneMatrix = aiMatrix4ToGlm(m->Mesh->mBones[m->BoneMapping[BoneName]]->mOffsetMatrix);
-        m->boneTransform[time][m->BoneMapping[BoneName]] = glm::inverse(boneMatrix) * m->boneTransform[time][m->BoneMapping[BoneName]] * boneMatrix;
-    }
-}
-
-void applyMats(bones* m)
-{
-    for (uint i = 0; i < m->boneTransform.size(); i++) {
-        // cout << m.Scene->mRootNode->mName.C_Str();
-        // for (uint j = 0; j < m.Scene->mRootNode->mNumChildren; j++)
-        // {
-        //     cout << m.Scene->mRootNode->mChildren[j]->mName.C_Str();
-        // }
-        traverseTree(m->Scene->mRootNode, m, i);
-
-        //rootIndex = m.BoneMapping[BoneName]
-    }
-}
-
 const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const string NodeName)
 {
     for (uint i = 0; i < pAnimation->mNumChannels; i++) {
@@ -150,7 +115,6 @@ void BoneTransform(int frame, vector<Matrix4f>& Transforms, bones* m)
 
 void applyRootTransform(bones* m)
 {
-    auto start = std::chrono::high_resolution_clock::now();
     for (uint i = 0; i < m->boneTransform.size(); i++) {
         std::vector<Matrix4f> Transforms;
         BoneTransform(i, Transforms, m);
@@ -158,11 +122,6 @@ void applyRootTransform(bones* m)
             m->boneTransform[i][j] = aiMatrix4ToGlm(Transforms[j]);
         }
     }
-    auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    cout << "applying root transform took " << duration.count() / 1000. << "ms" << endl;
-
-    //m.boneTransform[j][bone]
 }
 
 std::vector<bones>
