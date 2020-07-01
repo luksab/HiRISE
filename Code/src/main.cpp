@@ -331,13 +331,8 @@ int main(void)
     camera_state* state = cam.getState();
 
     spline CamPosSpline;
-    CamPosSpline.addPoint((splinePoint) { 0., glm::vec3(0., 0.5, 0.), glm::vec3(0., 0, 0.) });
-    CamPosSpline.addPoint((splinePoint) { 1., glm::vec3(1., 0.0, 0.), glm::vec3(0., 0, 0.) });
-    CamPosSpline.addPoint((splinePoint) { 2., glm::vec3(2., 1.0, 0.), glm::vec3(0., 0, 0.) });
-    CamPosSpline.addPoint((splinePoint) { 3., glm::vec3(3., 0.0, 0.), glm::vec3(0., 0, 0.) });
-    CamPosSpline.addPoint((splinePoint) { 4., glm::vec3(4., 0.0, 3.), glm::vec3(0., 0, 0.) });
-    CamPosSpline.addPoint((splinePoint) { 5., glm::vec3(5., 0.0, 0.), glm::vec3(0., 0, 0.) });
-    CamPosSpline.addPoint((splinePoint) { 6., glm::vec3(6., 0.0, 0.), glm::vec3(0., 0, 0.) });
+    CamPosSpline.loadFrom(DATA_ROOT + "camPos");
+    CamPosSpline.print();
 
     init_imgui(window);
 
@@ -605,8 +600,11 @@ int main(void)
                 for (uint i = 0; i < CamPosSpline.points.size(); i++) {
                     char label[128];
                     sprintf(label, "Keyframe %d", i);
-                    if (ImGui::Selectable(label, selected == i))
+                    if (ImGui::Selectable(label, selected == i)) {
                         selected = i;
+                        currentTime = CamPosSpline.points[i].time;
+                        printf("Clicked on %d t:%3.2lf\n", selected, currentTime);
+                    }
                 }
                 ImGui::EndChild();
             }
@@ -629,7 +627,11 @@ int main(void)
                         ImGui::DragFloat3("Camera Position", (float*)&(CamPosSpline.points[selected].pos), 0.1f, 0.f, 0.f, "%5.3f", 1.f);
                         ImGui::DragFloat3("Camera Rotation", (float*)&(CamPosSpline.points[selected].rot), 0.1f, 0.f, 0.f, "%5.3f", 1.f);
                         //TODO: re-sort list
-                        ImGui::SliderFloat("Camera Time", (float*)&(CamPosSpline.points[selected].time), 0.0f, 10.0f);
+                        if (ImGui::SliderFloat("Camera Time", (float*)&(CamPosSpline.points[selected].time), 0.0f, 10.0f)) {
+                            double whatTime = CamPosSpline.points[selected].time;
+                            CamPosSpline.sort();
+                            selected = CamPosSpline.getIndex(whatTime);
+                        }
                         ImGui::EndTabItem();
                     }
                     ImGui::EndTabBar();
@@ -646,11 +648,20 @@ int main(void)
                 if (ImGui::Button("Set to current")) {
                     CamPosSpline.setCurrentPoint(selected, cam.position(), glm::vec3(state->phi, state->theta, state->radius));
                 }
+                ImGui::SameLine();
+                if (ImGui::Button("Save to File")) {
+                    CamPosSpline.storeTo(DATA_ROOT + "camPos");
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Load from File")) {
+                    CamPosSpline.loadFrom(DATA_ROOT + "camPos");
+                }
                 ImGui::EndGroup();
             }
             if (ImGui::BeginPopup("sure")) {// Delete the current Keyframe
                 ImGui::Text("Are you sure?");
                 if (ImGui::Button("yes!")) {
+                    CamPosSpline.removePoint(selected);
                     ImGui::CloseCurrentPopup();
                 }
                 ImGui::SameLine();
@@ -729,6 +740,7 @@ int main(void)
         //printf("%s\n",glm::to_string(proj_matrix).c_str());
 
         glm::mat4 view_matrix = cam.view_matrix();
+        glm::mat4 view_matrix_new;
 
         glfwPollEvents();
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -782,19 +794,19 @@ int main(void)
             glEnable(GL_DEPTH_TEST);
 
             glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);// draw pixels on the back buffer
-            view_matrix = cam.view_matrix() * (glass.matrixAt(currentTime)) * r;
+            view_matrix_new = view_matrix * (glass.matrixAt(currentTime)) * r;
 
             glBindTextureUnit(0, image_tex);
             glBindTextureUnit(1, pds_tex);
-            mars.setMaticies(&view_matrix, &proj_matrix);
+            mars.setMaticies(&view_matrix_new, &proj_matrix);
             mars.render(0);
 
             bindTextures(rockTex);
-            tableObj.setMaticies(&view_matrix, &proj_matrix);
+            tableObj.setMaticies(&view_matrix_new, &proj_matrix);
             tableObj.setVec3("camPos", cam.position());
             tableObj.render(ident);
 
-            humanObj.setMaticies(&view_matrix, &proj_matrix);
+            humanObj.setMaticies(&view_matrix_new, &proj_matrix);
             humanObj.setVec3("camPos", cam.position());
             humanObj.render(currentTime);
         }
@@ -803,7 +815,6 @@ int main(void)
         glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);// dont change stencil
 
         // render Background
-        view_matrix = cam.view_matrix();
         glDepthFunc(GL_LEQUAL);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
