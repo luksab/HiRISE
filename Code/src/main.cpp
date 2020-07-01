@@ -33,7 +33,7 @@ unsigned int fbo = 0;
 unsigned int framebuffer_tex = 0;
 unsigned int depth_rbo = 0;
 
-bool paused;
+bool playing;
 bool inCameraView;
 
 #ifndef M_PI
@@ -331,13 +331,13 @@ int main(void)
     camera_state* state = cam.getState();
 
     spline CamPosSpline;
-    CamPosSpline.addPoint((splinePoint) { 0., glm::vec3(0., 0.5, 0.) });
-    CamPosSpline.addPoint((splinePoint) { 1., glm::vec3(1., 0., 0.) });
-    CamPosSpline.addPoint((splinePoint) { 2., glm::vec3(2., 1., 0.) });
-    CamPosSpline.addPoint((splinePoint) { 3., glm::vec3(3., 0., 0.) });
-    CamPosSpline.addPoint((splinePoint) { 4., glm::vec3(4., 0., 3.) });
-    CamPosSpline.addPoint((splinePoint) { 5., glm::vec3(5., 0., 0.) });
-    CamPosSpline.addPoint((splinePoint) { 6., glm::vec3(6., 0., 0.) });
+    CamPosSpline.addPoint((splinePoint) { 0., glm::vec3(0., 0.5, 0.), glm::vec3(0., 0, 0.) });
+    CamPosSpline.addPoint((splinePoint) { 1., glm::vec3(1., 0.0, 0.), glm::vec3(0., 0, 0.) });
+    CamPosSpline.addPoint((splinePoint) { 2., glm::vec3(2., 1.0, 0.), glm::vec3(0., 0, 0.) });
+    CamPosSpline.addPoint((splinePoint) { 3., glm::vec3(3., 0.0, 0.), glm::vec3(0., 0, 0.) });
+    CamPosSpline.addPoint((splinePoint) { 4., glm::vec3(4., 0.0, 3.), glm::vec3(0., 0, 0.) });
+    CamPosSpline.addPoint((splinePoint) { 5., glm::vec3(5., 0.0, 0.), glm::vec3(0., 0, 0.) });
+    CamPosSpline.addPoint((splinePoint) { 6., glm::vec3(6., 0.0, 0.), glm::vec3(0., 0, 0.) });
 
     init_imgui(window);
 
@@ -550,13 +550,14 @@ int main(void)
     double dt = 0;
     float currentTime = 0;
     float timeScale = 1.0;
-    paused = false;
+    playing = false;
     cout << "Total loading time: " << glfwGetTime() << "s" << endl;
     // rendering loop
     while (glfwWindowShouldClose(window) == false) {
         dt = glfwGetTime() - lastGLTime;
         lastGLTime = glfwGetTime();
-        currentTime += dt * timeScale * paused;
+        currentTime += dt * timeScale * playing;
+        currentTime = fmod(currentTime, CamPosSpline.length());
         nbFrames++;
         if (glfwGetTime() - lastTime >= 1.0) {// If last prinf() was more than 1 sec ago
             // reset timer
@@ -594,9 +595,69 @@ int main(void)
             ImGui::End();
         }
         if (CameraMove) {
-            ImGui::Begin("Camera");
-            ImGui::Checkbox("toggle", &inCameraView);
-            ImGui::SliderFloat("time", &currentTime, 0.0f, 20.0f);
+            ImGui::Begin("Camera Keyframes");
+            ImGui::Checkbox("ViewCam", &inCameraView);
+            ImGui::SameLine();
+            ImGui::SliderFloat("Camera Time", &currentTime, 0.0f, CamPosSpline.length());
+            static uint selected = 0;
+            {
+                ImGui::BeginChild("left pane", ImVec2(150, 0), true);
+                for (uint i = 0; i < CamPosSpline.points.size(); i++) {
+                    char label[128];
+                    sprintf(label, "Keyframe %d", i);
+                    if (ImGui::Selectable(label, selected == i))
+                        selected = i;
+                }
+                ImGui::EndChild();
+            }
+            if (playing) {
+                selected = CamPosSpline.getIndex(currentTime);
+            }
+            ImGui::SameLine();
+            {
+                ImGui::BeginGroup();
+                ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));// Leave room for 1 line below us
+                ImGui::Text("Keyframe: %d", selected);
+                ImGui::Separator();
+                if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None)) {
+                    if (ImGui::BeginTabItem("Description")) {
+                        ImGui::TextWrapped("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ");
+                        ImGui::EndTabItem();
+                    }
+                    if (ImGui::BeginTabItem("Details")) {
+                        ImGui::Text("ID: 0123456789");
+                        ImGui::DragFloat3("Camera Position", (float*)&(CamPosSpline.points[selected].pos), 0.1f, 0.f, 0.f, "%5.3f", 1.f);
+                        ImGui::DragFloat3("Camera Rotation", (float*)&(CamPosSpline.points[selected].rot), 0.1f, 0.f, 0.f, "%5.3f", 1.f);
+                        //TODO: re-sort list
+                        ImGui::SliderFloat("Camera Time", (float*)&(CamPosSpline.points[selected].time), 0.0f, 10.0f);
+                        ImGui::EndTabItem();
+                    }
+                    ImGui::EndTabBar();
+                }
+                ImGui::EndChild();
+                if (ImGui::Button("Delete")) {
+                    ImGui::OpenPopup("sure");
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Add new")) {
+                    CamPosSpline.addPoint(currentTime, cam.position(), glm::vec3(state->phi, state->theta, state->radius));
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Set to current")) {
+                    CamPosSpline.setCurrentPoint(selected, cam.position(), glm::vec3(state->phi, state->theta, state->radius));
+                }
+                ImGui::EndGroup();
+            }
+            if (ImGui::BeginPopup("sure")) {// Delete the current Keyframe
+                ImGui::Text("Are you sure?");
+                if (ImGui::Button("yes!")) {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("no"))
+                    ImGui::CloseCurrentPopup();
+                ImGui::EndPopup();
+            }
             ImGui::End();
         }
         if (Color) {
@@ -629,63 +690,6 @@ int main(void)
             ImGui::End();
         }
 
-        if (true) {
-            ImGui::Begin("Camera Keyframes");
-            static uint selected = 0;
-            {
-                ImGui::BeginChild("left pane", ImVec2(150, 0), true);
-                for (uint i = 0; i < CamPosSpline.points.size(); i++) {
-                    char label[128];
-                    sprintf(label, "Keyframe %d", i);
-                    if (ImGui::Selectable(label, selected == i))
-                        selected = i;
-                }
-                ImGui::EndChild();
-            }
-            ImGui::SameLine();
-            {
-                ImGui::BeginGroup();
-                ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));// Leave room for 1 line below us
-                ImGui::Text("Keyframe: %d", selected);
-                ImGui::Separator();
-                if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None)) {
-                    if (ImGui::BeginTabItem("Description")) {
-                        ImGui::TextWrapped("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ");
-                        ImGui::EndTabItem();
-                    }
-                    if (ImGui::BeginTabItem("Details")) {
-                        ImGui::Text("ID: 0123456789");
-                        ImGui::SliderFloat3("Camera Position", (float*)&(CamPosSpline.points[selected].pos), -10.0f, 10.0f);
-                        //TODO: re-sort list
-                        ImGui::SliderFloat("Camera Time", (float*)&(CamPosSpline.points[selected].time), 0.0f, 10.0f);
-                        ImGui::EndTabItem();
-                    }
-                    ImGui::EndTabBar();
-                }
-                ImGui::EndChild();
-                if (ImGui::Button("Delete")) {
-                    ImGui::OpenPopup("sure");
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("Add new")) {
-                    CamPosSpline.addPoint(currentTime, cam.position());
-                }
-                ImGui::EndGroup();
-            }
-            if (ImGui::BeginPopup("sure")) {// Delete the current Keyframe
-                ImGui::Text("Are you sure?");
-                if (ImGui::Button("yes!")) {
-                    ImGui::CloseCurrentPopup();
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("no"))
-                    ImGui::CloseCurrentPopup();
-                ImGui::EndPopup();
-            }
-
-            ImGui::End();
-        }
-
         mars.setVec3("colorA", colaH, colaS, colaV);
         mars.setVec3("colorB", colbH, colbS, colbV);
 
@@ -705,11 +709,13 @@ int main(void)
             cam.update();
         }
 
-        if (inCameraView) {                                                              // animate the camera using keyframes
-            state->look_at = CamPosSpline.eval(fmod(currentTime, CamPosSpline.length()));//spline(fmod(currentTime, (cameraPositions.back().time + 1)), cameraPositions);
-            printf("vec3(%lf,%lf,%lf)\n", state->look_at[0], state->look_at[1], state->look_at[2]);
-            //state->phi += 0.1 * dt;
-            //state->look_at.x -= 0.01;
+        if (inCameraView) {// animate the camera using keyframes
+            splinePoint current = CamPosSpline.eval(fmod(currentTime, CamPosSpline.length()));
+            state->look_at = current.pos;//spline(fmod(currentTime, (cameraPositions.back().time + 1)), cameraPositions);
+            state->phi = current.rot[0];
+            state->theta = current.rot[1];
+            state->radius = current.rot[2];
+            //printf("vec3(%lf,%lf,%lf)\n", state->look_at[0], state->look_at[1], state->look_at[2]);
             cam.update();
         }
 
@@ -870,7 +876,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
             }
             break;
         case GLFW_KEY_SPACE:
-            paused = !paused;
+            playing = !playing;
             break;
         case GLFW_KEY_KP_0:
             inCameraView = !inCameraView;

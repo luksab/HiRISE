@@ -1,9 +1,10 @@
 struct splinePoint {
     double time;
     glm::vec3 pos;
+    glm::vec3 rot;
     float& operator[](int i)
     {
-        return pos[i];
+        return i < 3 ? pos[i] : rot[i - 3];
     }
     bool operator<(splinePoint& l)
     {
@@ -37,27 +38,29 @@ class spline {
 
 public:
     vector<splinePoint> points;
-    
+
     void addPoint(splinePoint point)
     {
         const auto insert_pos = std::lower_bound(std::begin(points), std::end(points), point);
         points.insert(insert_pos, point);
     }
 
-    void addPoint(glm::vec3 pos, double time)
+    void addPoint(glm::vec3 pos, glm::vec3 rot, double time)
     {
         splinePoint point = {};
         point.time = time;
         point.pos = pos;
+        point.rot = rot;
         const auto insert_pos = std::lower_bound(std::begin(points), std::end(points), point);
         points.insert(insert_pos, point);
     }
 
-    void addPoint(double time, glm::vec3 pos)
+    void addPoint(double time, glm::vec3 pos, glm::vec3 rot)
     {
         splinePoint point = {};
         point.time = time;
         point.pos = pos;
+        point.rot = rot;
         const auto insert_pos = std::lower_bound(std::begin(points), std::end(points), point);
         points.insert(insert_pos, point);
     }
@@ -71,6 +74,12 @@ public:
         points.insert(insert_pos, point);
     }
 
+    void setCurrentPoint(uint i, glm::vec3 pos, glm::vec3 rot)
+    {
+        points[i].pos = pos;
+        points[i].rot = rot;
+    }
+
     double length()
     {
         return points.back().time;
@@ -81,7 +90,12 @@ public:
         points.erase(points.begin() + position);
     }
 
-    glm::vec3 eval(double t)
+    uint getIndex(double time)
+    {
+        return lowerBound(time);
+    }
+
+    splinePoint eval(double t)
     {
         int i = lowerBound(t) - 1;
         //uint i = lower_bound(points.begin(), points.end(), t) - points.begin();
@@ -92,7 +106,7 @@ public:
             return eval(t, points[i], points[i], points[i + 1], points[i + 2]);
         }
         if (i == points.size() - 1) {// Last element = stay there
-            return points[i].pos;
+            return points[i];
         }
         if (i == points.size() - 2) {
             return eval(t, points[i - 1], points[i], points[i + 1], points[i + 1]);
@@ -101,12 +115,13 @@ public:
     }
 
 private:
-    glm::vec3 eval(double t, splinePoint P0, splinePoint P1, splinePoint P2, splinePoint P3)
+    splinePoint eval(double t, splinePoint P0, splinePoint P1, splinePoint P2, splinePoint P3)
     {
-        glm::vec3 out;
+        splinePoint out;
+        out.time = t;
         t = (t - P1.time) / (P2.time - P1.time);
         printf("rel. time: %lf\n", t);
-        for (uint i = 0; i < 3; i++) {
+        for (uint i = 0; i < 6; i++) {
             out[i] = 0.5 * ((2 * P1[i]) + (-P0[i] + P2[i]) * t + (2 * P0[i] - 5 * P1[i] + 4 * P2[i] - P3[i]) * t * t + (-P0[i] + 3 * P1[i] - 3 * P2[i] + P3[i]) * t * t);
         }
         return out;

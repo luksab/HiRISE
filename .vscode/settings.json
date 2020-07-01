@@ -80,6 +80,7 @@
         "valarray": "cpp",
         "variant": "cpp",
         "slist": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "span": "cpp"
     }
 }
