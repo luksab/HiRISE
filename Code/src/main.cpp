@@ -26,6 +26,7 @@ const float NEAR_VALUE = 0.1f;
 const float FAR_VALUE = 100.f;
 GLFWmonitor* primary;
 const GLFWvidmode* mode;
+ImGuiIO* io;
 std::array<int, 2> windowPos { 0, 0 };
 std::array<int, 2> windowSize { 0, 0 };
 
@@ -332,9 +333,11 @@ int main(void)
 
     spline CamPosSpline;
     CamPosSpline.loadFrom(DATA_ROOT + "camPos");
-    CamPosSpline.print();
+    //CamPosSpline.print();
 
     init_imgui(window);
+    io = &ImGui::GetIO();
+    (void)io;
 
     printf("loading models\n");
     geometry model = loadMesh("hiresUV.obj", false, glm::vec4(0.f, 0.f, 0.f, 1.f));
@@ -552,7 +555,7 @@ int main(void)
         dt = glfwGetTime() - lastGLTime;
         lastGLTime = glfwGetTime();
         currentTime += dt * timeScale * playing;
-        currentTime = fmod(currentTime, CamPosSpline.length()+1e-3);
+        currentTime = fmod(currentTime, CamPosSpline.length() + 1e-3);
         nbFrames++;
         if (glfwGetTime() - lastTime >= 1.0) {// If last prinf() was more than 1 sec ago
             // reset timer
@@ -563,6 +566,7 @@ int main(void)
         }
 
         // define UI
+        glfwPollEvents();
         imgui_new_frame(400, 200);
         ImGui::Begin("General");
         ImGui::Checkbox("Framerate", &Framerate);
@@ -603,7 +607,7 @@ int main(void)
                     if (ImGui::Selectable(label, selected == i)) {
                         selected = i;
                         currentTime = CamPosSpline.points[i].time;
-                        printf("Clicked on %d t:%3.2lf\n", selected, currentTime);
+                        //printf("Clicked on %d t:%3.2lf\n", selected, currentTime);
                     }
                 }
                 ImGui::EndChild();
@@ -624,9 +628,9 @@ int main(void)
                     }
                     if (ImGui::BeginTabItem("Details")) {
                         ImGui::Text("ID: 0123456789");
-                        ImGui::DragFloat3("Camera Position", (float*)&(CamPosSpline.points[selected].pos), 0.1f, 0.f, 0.f, "%5.3f", 1.f);
-                        ImGui::DragFloat3("Camera Rotation", (float*)&(CamPosSpline.points[selected].rot), 0.1f, 0.f, 0.f, "%5.3f", 1.f);
-                        if (ImGui::DragFloat("Camera Time", (float*)&(CamPosSpline.points[selected].time), 0.1f, 0.f, 0.f, "%5.3f", 1.f)) {
+                        ImGui::DragFloat3("Camera Position", (float*)&(CamPosSpline.points[selected].pos), 0.1f, 0.f, 100.f, "%5.3f", 1.f);
+                        ImGui::DragFloat3("Camera Rotation", (float*)&(CamPosSpline.points[selected].rot), 0.1f, 0.f, 100.f, "%5.3f", 1.f);
+                        if (ImGui::DragFloat("Camera Time", (float*)&(CamPosSpline.points[selected].time), 0.1f, 0.f, 100.f, "%5.3f", 1.f)) {
                             double whatTime = CamPosSpline.points[selected].time;
                             CamPosSpline.sort();
                             selected = CamPosSpline.getIndex(whatTime);
@@ -724,7 +728,7 @@ int main(void)
         }
 
         if (inCameraView) {// animate the camera using keyframes
-            splinePoint current = CamPosSpline.eval(fmod(currentTime, CamPosSpline.length()+1e-3));
+            splinePoint current = CamPosSpline.eval(fmod(currentTime, CamPosSpline.length() + 1e-3));
             state->look_at = current.pos;//spline(fmod(currentTime, (cameraPositions.back().time + 1)), cameraPositions);
             state->phi = current.rot[0];
             state->theta = current.rot[1];
@@ -745,7 +749,6 @@ int main(void)
         glm::mat4 view_matrix = cam.view_matrix();
         glm::mat4 view_matrix_new;
 
-        glfwPollEvents();
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
         glStencilMask(0xFF);
@@ -875,6 +878,9 @@ bool IsFullscreen(GLFWwindow* window)
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+    if (io->WantCaptureKeyboard) {
+        return;
+    }
     if (action == GLFW_PRESS)
         switch (key) {
         case GLFW_KEY_ESCAPE:

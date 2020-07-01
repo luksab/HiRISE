@@ -108,7 +108,6 @@ public:
         std::ifstream infile(path);
         float point[7];
         while (infile >> point[0] >> point[1] >> point[2] >> point[3] >> point[4] >> point[5] >> point[6]) {
-            printf("%lf %lf %lf %lf %lf %lf %lf\n", point[0], point[1], point[2], point[3], point[4], point[5], point[6]);
             splinePoint Point = {};
             Point.time = point[0];
             for (uint i = 0; i < 6; i++) {
