@@ -1,9 +1,9 @@
-- [ ] Minimalistische Cinematic Engine
+- [x] Minimalistische Cinematic Engine
     - [x] Datenformat aus Blender exportieren, in Programm importieren
         - einfach dae/obj
-    - [o] protobuf oder json als Dateiformat?
+    - [x] protobuf oder json als Dateiformat? - Custom (floats in Datei, space-separated)
     - [x] Kameraposition, Skelettanimationen
-        - [ ] Kameraposionen speichen
+        - [x] Kameraposionen speichen
 - [x] Rigging für Charaktere
     - [x] muss sehr gut funktion, um realistische Bewegungen zu erlauben
 - [ ] Physikalische Simulation der Glassplitter
