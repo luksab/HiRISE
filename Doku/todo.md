@@ -1,20 +1,25 @@
 - [ ] Minimalistische Cinematic Engine
-    - [ ] Datenformat aus Blender exportieren, in Programm importieren
-    - [ ] protobuf oder json als Dateiformat?
-    - [ ] Kameraposition, Skelettanimationen
-- [ ] Rigging für Charaktere
-    - [ ] muss sehr gut funktion, um realistische Bewegungen zu erlauben
+    - [x] Datenformat aus Blender exportieren, in Programm importieren
+        - einfach dae/obj
+    - [o] protobuf oder json als Dateiformat?
+    - [x] Kameraposition, Skelettanimationen
+        - [ ] Kameraposionen speichen
+- [x] Rigging für Charaktere
+    - [x] muss sehr gut funktion, um realistische Bewegungen zu erlauben
 - [ ] Physikalische Simulation der Glassplitter
     - kann auch in Blender vorsimuliert werden, sollte es nicht in echtzeit möglich sein
-- [ ] Reflexion im Glas
-    - [ ] Zunächst bei intakter Scheibe durch duplikation der Szene unsetzbar
-    - [ ] Bei vielen Glassplittern andere Technik notwendig
-    - [ ] z.B. SS (unvollständig), Ray-tracing (zu teuer), Environment Map
+- [x] Reflexion im Glas
+    - [x] Zunächst bei intakter Scheibe durch duplikation der Szene unsetzbar
+    - [o] Bei vielen Glassplittern andere Technik notwendig
+        - [ ] Environment Map in realtime neu erzugen
+    - [x] z.B. SS (unvollständig), Ray-tracing (zu teuer), Environment Map
 - [x] Dispacement Mapping + PDS Parser
     - [x] Höhendaten und Bilder von Marsoberfläche aus PDS Daten laden
     - [x] Marsoberfläche von HiRISE-daten
-- [ ] Sound
+- [o] Sound
     - Etwas Musikunterlage
+    - [x] Code
+    - [ ] Musik selbst
 ###Optionale Features
 - [x] Dynamische Subdivision Surface der Marsoberfläche
     - Erhöht sowohl Performance, als auch Qualität
