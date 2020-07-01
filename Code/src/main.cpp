@@ -626,8 +626,7 @@ int main(void)
                         ImGui::Text("ID: 0123456789");
                         ImGui::DragFloat3("Camera Position", (float*)&(CamPosSpline.points[selected].pos), 0.1f, 0.f, 0.f, "%5.3f", 1.f);
                         ImGui::DragFloat3("Camera Rotation", (float*)&(CamPosSpline.points[selected].rot), 0.1f, 0.f, 0.f, "%5.3f", 1.f);
-                        //TODO: re-sort list
-                        if (ImGui::SliderFloat("Camera Time", (float*)&(CamPosSpline.points[selected].time), 0.0f, 10.0f)) {
+                        if (ImGui::DragFloat("Camera Time", (float*)&(CamPosSpline.points[selected].time), 0.1f, 0.f, 0.f, "%5.3f", 1.f)) {
                             double whatTime = CamPosSpline.points[selected].time;
                             CamPosSpline.sort();
                             selected = CamPosSpline.getIndex(whatTime);
