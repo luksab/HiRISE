@@ -552,7 +552,7 @@ int main(void)
         dt = glfwGetTime() - lastGLTime;
         lastGLTime = glfwGetTime();
         currentTime += dt * timeScale * playing;
-        currentTime = fmod(currentTime, CamPosSpline.length());
+        currentTime = fmod(currentTime, CamPosSpline.length()+1e-3);
         nbFrames++;
         if (glfwGetTime() - lastTime >= 1.0) {// If last prinf() was more than 1 sec ago
             // reset timer
@@ -655,6 +655,10 @@ int main(void)
                 if (ImGui::Button("Load from File")) {
                     CamPosSpline.loadFrom(DATA_ROOT + "camPos");
                 }
+                ImGui::SameLine();
+                if (ImGui::Button("Sort")) {
+                    CamPosSpline.sort();
+                }
                 ImGui::EndGroup();
             }
             if (ImGui::BeginPopup("sure")) {// Delete the current Keyframe
@@ -720,7 +724,7 @@ int main(void)
         }
 
         if (inCameraView) {// animate the camera using keyframes
-            splinePoint current = CamPosSpline.eval(fmod(currentTime, CamPosSpline.length()));
+            splinePoint current = CamPosSpline.eval(fmod(currentTime, CamPosSpline.length()+1e-3));
             state->look_at = current.pos;//spline(fmod(currentTime, (cameraPositions.back().time + 1)), cameraPositions);
             state->phi = current.rot[0];
             state->theta = current.rot[1];
