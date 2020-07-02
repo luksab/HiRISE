@@ -198,7 +198,7 @@ glm::mat4 animated::matrixAt(double time)
     uint PositionIndex = (uint)(time / timePerFrame) % transform.size();//FindPosition(AnimationTime, pNodeAnim);
     uint NextPositionIndex = (PositionIndex + 1) % transform.size();
     float DeltaTime = (float)(timePerFrame);
-    float Factor = timePerFrame / DeltaTime;
+    float Factor = fmod(time, timePerFrame) / DeltaTime;
     //assert(Factor >= 0.0f && Factor <= 1.0f);
     glm::mat4 Start = transform[PositionIndex];
     glm::mat4 End = transform[NextPositionIndex];

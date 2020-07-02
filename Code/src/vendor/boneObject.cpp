@@ -131,7 +131,7 @@ void boneObject::setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat)
 void boneObject::scale(float scale)
 {
     glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(scale, scale, scale));
-    objMat = scaleMat*objMat;
+    objMat = scaleMat * objMat;
 }
 
 void boneObject::move(float x, float y, float z)
@@ -147,13 +147,20 @@ void boneObject::render(double currentTime)
         glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &(*proj_matrix)[0][0]);
     }
 
-    uint index = (uint)(currentTime * 24.) % object->boneTransform.size();
-
     float* mats = (float*)malloc(sizeof(float) * 16 * object->NumBones);
     for (uint i = 0; i < object->NumBones; i++) {
+        uint PositionIndex = (uint)(currentTime / object->timePerFrame) % object->boneTransform.size();//FindPosition(AnimationTime, pNodeAnim);
+        uint NextPositionIndex = (PositionIndex + 1) % object->boneTransform.size();
+        float DeltaTime = (float)(object->timePerFrame);
+        float Factor = fmod(currentTime, object->timePerFrame) / DeltaTime;
+        assert(Factor >= 0.0f && Factor <= 1.0f);
+        glm::mat4 Start = object->boneTransform[PositionIndex][i];
+        glm::mat4 End = object->boneTransform[NextPositionIndex][i];
+        glm::mat4 Delta = End - Start;
+        glm::mat4 Out = Start + Factor * Delta;
         for (uint j = 0; j < 4; j++) {
             for (uint k = 0; k < 4; k++) {
-                mats[i * 16 + j * 4 + k] = object->boneTransform[index][i][j][k];
+                mats[i * 16 + j * 4 + k] = Out[j][k];//object->boneTransform[index][i][j][k];
             }
         }
     }
