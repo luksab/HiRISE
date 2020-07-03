@@ -5,7 +5,7 @@ Der gesamte code ist auf [GitHub.com/luksab/HiRISE](https://github.com/luksab/hi
 ### Storyboard
 ![](images/storyBoard1.jpg)
 
-###Story
+### Story
 Der Protagonist steht von seinem Schreibtisch auf und schaut sich um - es starten Sirenen und er fängt an zum Fenster zu laufen.
 Auf dem Weg dahin wird er von mehreren Personen verfolgt und macht etwas Parkour über Tische und andere Hindernisse.
 Er bricht durch das Fenster und man sieht das Gebäude von außen, welches sich auf einem Science-Fiction Mars befindet und springt auf ein gegenübergelegenes Haus und läuft weg.
