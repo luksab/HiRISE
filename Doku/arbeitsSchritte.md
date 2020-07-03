@@ -50,7 +50,7 @@ Um die animation des Charakters realistisch zu gestalten wurden Referenzvideos a
 Die Referenzvideos sind mit der expliziten Erlaubnis von Ben Karcher aufgenommen und verwendet.
 ![](images/BenKarcherErlaubnis.jpg)
 
-###Marsoberfläche
+### Marsoberfläche
 Da als Umgebung eine Marsoberfläche gewünscht wurde, werden Höhendaten und ein Schwarz-Weiß Bild vom High Resolution Imaging Science Experiment (HiRISE, daher stammt auch der Projektname) benutzt.
 Der genaue Datensatz lässt sich unter https://www.uahirise.org/dtm/dtm.php?ID=ESP_048136_1725 finden.
 
