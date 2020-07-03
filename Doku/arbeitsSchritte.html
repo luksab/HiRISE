@@ -266,6 +266,7 @@ video {
       <div class="mume markdown-preview  ">
       <div><h1 class="mume-header" id="arbeitsschritte-f%C3%BCr-hirise">Arbeitsschritte f&#xFC;r HiRISE</h1>
 
+<p>Der gesamte code ist auf <a href="https://github.com/luksab/hirise">GitHub.com/luksab/HiRISE</a> zu finden</p>
 <h1 class="mume-header" id="planung">Planung</h1>
 
 <h3 class="mume-header" id="storyboard">Storyboard</h3>
@@ -354,15 +355,15 @@ Er bricht durch das Fenster und man sieht das Geb&#xE4;ude von au&#xDF;en, welch
 </ul>
 </li>
 </ul>
-<h2 class="mume-header" id="praktisches">Praktisches</h2>
+<h1 class="mume-header" id="durchf%C3%BChrung">Durchf&#xFC;hrung</h1>
 
-<h3 class="mume-header" id="charakteranimation">Charakteranimation</h3>
+<h2 class="mume-header" id="charakteranimation">Charakteranimation</h2>
 
 <p>Um die animation des Charakters realistisch zu gestalten wurden Referenzvideos aufgenommen, die dann in Blender als Hintergrund benutzt wurden, um dann mithilfe von inverse kinematics zu animieren.<br>
 <img src="images/blender_animation_setup.jpg" alt><br>
 Die Referenzvideos sind mit der expliziten Erlaubnis von Ben Karcher aufgenommen und verwendet.<br>
 <img src="images/BenKarcherErlaubnis.jpg" alt></p>
-<h3 class="mume-header" id="marsoberfl%C3%A4che">Marsoberfl&#xE4;che</h3>
+<h2 class="mume-header" id="marsoberfl%C3%A4che">Marsoberfl&#xE4;che</h2>
 
 <p>Da als Umgebung eine Marsoberfl&#xE4;che gew&#xFC;nscht wurde, werden H&#xF6;hendaten und ein Schwarz-Wei&#xDF; Bild vom High Resolution Imaging Science Experiment (HiRISE, daher stammt auch der Projektname) benutzt.<br>
 Der genaue Datensatz l&#xE4;sst sich unter <a href="https://www.uahirise.org/dtm/dtm.php?ID=ESP_048136_1725">https://www.uahirise.org/dtm/dtm.php?ID=ESP_048136_1725</a> finden.</p>
@@ -379,7 +380,7 @@ In Blender lassen sich in Echtzeit Parameter und Zusammenh&#xE4;nge ausprobieren
 <img src="images/Screenshot_UI_demo.jpg" alt><br>
 Zur Entwicklung des Benutzerinterfaces wurde dear imgui benutzt. Dies erlaubt schnell relativ komlexe Bedienelemente einzubinden.<br>
 Die einzelnen Elemente lassen sich deaktivieren, um Platz zu sparen.</p>
-<h3 class="mume-header" id="kamerafahrt">Kamerafahrt</h3>
+<h2 class="mume-header" id="kamerafahrt">Kamerafahrt</h2>
 
 <p>Diese wird mithilfe von Splines, welche durch Punkte, durch die die Kamera gehen soll definiert werden.<br>
 Hier ist die erste Kamerafahrt. Bei dieser sind die Tangenten noch nicht korrekt gesetzt, weswegen sie etwas abgehackt erscheint.</p>
@@ -390,7 +391,8 @@ Hier ist die erste Kamerafahrt. Bei dieser sind die Tangenten noch nicht korrekt
 </figure>
 <h2 class="mume-header" id="pbr-hdri">PBR &amp; HDRI</h2>
 
-<p>Au&#xDF;erhalb des Geb&#xE4;ude wird zur beleuchtung ein HDRI nach dem Vorbild von <a href="https://learnopengl.com/PBR/IBL/Specular-IBL">https://learnopengl.com/PBR/IBL/Specular-IBL</a> benutzt.</p>
+<p>Au&#xDF;erhalb des Geb&#xE4;ude wird zur beleuchtung ein HDRI nach dem Vorbild von <a href="https://learnopengl.com/PBR/IBL/Specular-IBL">https://learnopengl.com/PBR/IBL/Specular-IBL</a> benutzt.<br>
+Au&#xDF;erdem werden die dort beschriebenen shader leicht ver&#xE4;ndert f&#xFC;r die PBR-Objekte verwendet.</p>
 <h2 class="mume-header" id="skeletal-animation">Skeletal animation</h2>
 
 <p>Das importieren von Skeletal Animationen hat sich als recht fragil herausgestellt und bei Exporteinstellungen, die von denen abweichen, die in <a href="blenderExport.md">blenderExport</a> beschrieben werden, geht das Modell fast sicher kaputt.</p>
@@ -406,6 +408,20 @@ Es werden die einzelnen Knochen rekursiv von der H&#xFC;fte aus importiert, inde
     <source src="./videos/animationFromScratch.mp4" type="video/mp4">
   </video>
 </figure>
+<h2 class="mume-header" id="spiegelung">Spiegelung</h2>
+
+<p>F&#xFC;r den gro&#xDF;en Spiegel mit Echtzeitreflexionen wird die Szene zwei mal gerendert. Ein mal normal und ein mal gespiegelt und mit einem Stencil auf die richtige Form zurechtgeschnitten. Dies geschieht in der main datei um Zeile <a href="https://github.com/luksab/HiRISE/blob/master/Code/src/main.cpp#L832">832</a>.</p>
+<p>F&#xFC;r die vielen kleinen Glasscherben wird lediglich die Environment Map reflektiert abgebildet. Dies geschieht vollst&#xE4;ndig im <a href="https://github.com/luksab/HiRISE/blob/master/Code/shaders/glass/glass.frag">shader code</a>.</p>
+<h2 class="mume-header" id="modelle">Modelle</h2>
+
+<h3 class="mume-header" id="mars">Mars</h3>
+
+<p>Da die Marsoberfl&#xE4;che vollst&#xE4;ndig aus Texturen entsteht, muss nur ein relativ hochaufgel&#xF6;stes Quadrat eingeladen werden.<br>
+Diese muss bereits einiges an Aufl&#xF6;sung aufweisen, da meine Nvidia gtx 1070 ti leider nur 64 Tessellation levels unterst&#xFC;tzt, was nicht ausreicht, um aus einem einzelnen Rechteck genug Detail herauszuhohlen.</p>
+<h3 class="mume-header" id="tisch-stuhl-bildschirm-usb-stick">Tisch, Stuhl, Bildschirm, USB-Stick</h3>
+
+<p>Diese Objekte wurden alle von mir in Blender modelliert, in dem Primitive zu einem Mesh zusammengef&#xFC;gt und dann teilweise leicht ver&#xE4;ndert wurden.<br>
+<img src="images/modelling.jpg" alt></p>
 </div>
       </div>
       
