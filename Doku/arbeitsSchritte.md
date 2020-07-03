@@ -43,14 +43,14 @@ Er bricht durch das Fenster und man sieht das Gebäude von außen, welches sich 
 - [ ] HDR-Effekte, Bewegungsunschärfe, Fokusunschärfe
     - [ ] Qualität erhöhen, wenn noch Zeit und Performace über ist (Priorität absteigend)
 
-## Praktisches
-### Charakteranimation
+# Durchführung
+## Charakteranimation
 Um die animation des Charakters realistisch zu gestalten wurden Referenzvideos aufgenommen, die dann in Blender als Hintergrund benutzt wurden, um dann mithilfe von inverse kinematics zu animieren.
 ![](images/blender_animation_setup.jpg)
 Die Referenzvideos sind mit der expliziten Erlaubnis von Ben Karcher aufgenommen und verwendet.
 ![](images/BenKarcherErlaubnis.jpg)
 
-### Marsoberfläche
+## Marsoberfläche
 Da als Umgebung eine Marsoberfläche gewünscht wurde, werden Höhendaten und ein Schwarz-Weiß Bild vom High Resolution Imaging Science Experiment (HiRISE, daher stammt auch der Projektname) benutzt.
 Der genaue Datensatz lässt sich unter https://www.uahirise.org/dtm/dtm.php?ID=ESP_048136_1725 finden.
 
@@ -67,7 +67,7 @@ Hier ist die Entwicklungsumgebung mit allen UI-Elementen aktiviert:
 Zur Entwicklung des Benutzerinterfaces wurde dear imgui benutzt. Dies erlaubt schnell relativ komlexe Bedienelemente einzubinden.
 Die einzelnen Elemente lassen sich deaktivieren, um Platz zu sparen.
 
-### Kamerafahrt
+## Kamerafahrt
 Diese wird mithilfe von Splines, welche durch Punkte, durch die die Kamera gehen soll definiert werden.
 Hier ist die erste Kamerafahrt. Bei dieser sind die Tangenten noch nicht korrekt gesetzt, weswegen sie etwas abgehackt erscheint.
 <figure class="video_container">
@@ -78,6 +78,7 @@ Hier ist die erste Kamerafahrt. Bei dieser sind die Tangenten noch nicht korrekt
 
 ## PBR & HDRI
 Außerhalb des Gebäude wird zur beleuchtung ein HDRI nach dem Vorbild von https://learnopengl.com/PBR/IBL/Specular-IBL benutzt.
+Außerdem werden die dort beschriebenen shader leicht verändert für die PBR-Objekte verwendet.
 
 ## Skeletal animation
 Das importieren von Skeletal Animationen hat sich als recht fragil herausgestellt und bei Exporteinstellungen, die von denen abweichen, die in [blenderExport](blenderExport.md) beschrieben werden, geht das Modell fast sicher kaputt.
@@ -94,3 +95,17 @@ Hier ist der Anfang in Blender Animiert:
     <source src="./videos/animationFromScratch.mp4" type="video/mp4">
   </video>
 </figure>
+
+## Spiegelung
+Für den großen Spiegel mit Echtzeitreflexionen wird die Szene zwei mal gerendert. Ein mal normal und ein mal gespiegelt und mit einem Stencil auf die richtige Form zurechtgeschnitten. Dies geschieht in der main datei um Zeile [832](https://github.com/luksab/HiRISE/blob/master/Code/src/main.cpp#L832).
+
+Für die vielen kleinen Glasscherben wird lediglich die Environment Map reflektiert abgebildet. Dies geschieht vollständig im [shader code](https://github.com/luksab/HiRISE/blob/master/Code/shaders/glass/glass.frag).
+
+## Modelle
+### Mars
+Da die Marsoberfläche vollständig aus Texturen entsteht, muss nur ein relativ hochaufgelöstes Quadrat eingeladen werden.
+Diese muss bereits einiges an Auflösung aufweisen, da meine Nvidia gtx 1070 ti leider nur 64 Tessellation levels unterstützt, was nicht ausreicht, um aus einem einzelnen Rechteck genug Detail herauszuhohlen.
+
+### Tisch, Stuhl, Bildschirm, USB-Stick
+Diese Objekte wurden alle von mir in Blender modelliert, in dem Primitive zu einem Mesh zusammengefügt und dann teilweise leicht verändert wurden.
+![](images/modelling.jpg)
