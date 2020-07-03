@@ -359,7 +359,7 @@ int main(void)
     renderCube.defaultMat = true;
     renderCube.setInt("environmentMap", 0);
 
-    bones human = loadMeshBone("Lowpolymesh_Eliber.dae", false);
+    bones human = loadMeshBone("Lowpolymesh_Eliber_VideoReference.dae", false);
     boneObject humanObj = {};
     humanObj.setup(&human, false);
     humanObj.use();
