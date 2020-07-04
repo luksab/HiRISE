@@ -42,6 +42,7 @@ class spline {
 
 public:
     vector<splinePoint> points;
+    float maxTime;
 
     void print()
     {
@@ -99,6 +100,7 @@ public:
         // the important part
         for (const auto& e : points)
             outFile << e.time << " " << e.pos[0] << " " << e.pos[1] << " " << e.pos[2] << " " << e.rot[0] << " " << e.rot[1] << " " << e.rot[2] << "\n";
+        outFile << maxTime << "\n";
     }
 
     void loadFrom(std::string path)
@@ -115,11 +117,12 @@ public:
             }
             points.insert(std::begin(points) + lowerBound(point[0]), Point);
         }
+        maxTime = point[0];
     }
 
     double length()
     {
-        return points.back().time;
+        return maxTime;
     }
 
     void removePoint(uint position)

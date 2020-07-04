@@ -359,7 +359,7 @@ int main(void)
     renderCube.defaultMat = true;
     renderCube.setInt("environmentMap", 0);
 
-    bones human = loadMeshBone("Lowpolymesh_Eliber_scaled.dae", false);
+    bones human = loadMeshBone("Lowpolymesh_Eliber_start.dae", false);
     boneObject humanObj = {};
     humanObj.setup(&human, false);
     humanObj.use();
@@ -598,6 +598,10 @@ int main(void)
             ImGui::Checkbox("ViewCam", &inCameraView);
             ImGui::SameLine();
             ImGui::SliderFloat("Camera Time", &currentTime, 0.0f, CamPosSpline.length());
+            ImGui::SameLine();
+            ImGui::PushItemWidth(100);
+            ImGui::DragFloat("end", &CamPosSpline.maxTime, 1.f, 0.f, 100.f, "%5.3f", 1.f);
+            
             static uint selected = 0;
             {
                 ImGui::BeginChild("left pane", ImVec2(150, 0), true);
@@ -628,8 +632,8 @@ int main(void)
                     }
                     if (ImGui::BeginTabItem("Details")) {
                         ImGui::Text("ID: 0123456789");
-                        ImGui::DragFloat3("Camera Position", (float*)&(CamPosSpline.points[selected].pos), 0.1f, 0.f, 100.f, "%5.3f", 1.f);
-                        ImGui::DragFloat3("Camera Rotation", (float*)&(CamPosSpline.points[selected].rot), 0.1f, 0.f, 100.f, "%5.3f", 1.f);
+                        ImGui::DragFloat3("Camera Position", (float*)&(CamPosSpline.points[selected].pos), 0.1f, -100.f, 100.f, "%5.3f", 1.f);
+                        ImGui::DragFloat3("Camera Rotation", (float*)&(CamPosSpline.points[selected].rot), 0.1f, -100.f, 100.f, "%5.3f", 1.f);
                         if (ImGui::DragFloat("Camera Time", (float*)&(CamPosSpline.points[selected].time), 0.1f, 0.f, 100.f, "%5.3f", 1.f)) {
                             double whatTime = CamPosSpline.points[selected].time;
                             CamPosSpline.sort();
