@@ -152,14 +152,38 @@ public:
     }
 
 private:
+    double extrap(double t, double p1, double p2)
+    {
+        return p1 + t * (p2 - p1);
+    }
+
     splinePoint eval(double t, splinePoint P0, splinePoint P1, splinePoint P2, splinePoint P3)
     {
         splinePoint out;
         out.time = t;
         t = (t - P1.time) / (P2.time - P1.time);
-        //printf("rel. time: %lf\n", t);
+        //printf("eval at %lf: %1.0lf %1.0lf %1.0lf %1.0lf\n", t, P0.time, P1.time, P2.time, P3.time);
         for (uint i = 0; i < 6; i++) {
-            out[i] = 0.5 * ((2 * P1[i]) + (-P0[i] + P2[i]) * t + (2 * P0[i] - 5 * P1[i] + 4 * P2[i] - P3[i]) * t * t + (-P0[i] + 3 * P1[i] - 3 * P2[i] + P3[i]) * t * t);
+            double slope1 = 0;
+            if ((P0[i] - P1[i]) * (P1[i] - P2[i]) > 0) {// if p1 between p0 and p2
+                slope1 = (P2[i] - P0[i]) / (P2.time - P0.time);
+                if (fabs(slope1 * (P0.time - P1.time) / 3.) > fabs(P1[i] - P0[i]))
+                    slope1 = 3 * (P1[i] - P0[i]) / (P1.time - P0.time);
+                if (fabs(slope1 * (P2.time - P1.time) / 3.) > fabs(P1[i] - P2[i]))
+                    slope1 = 3 * (P1[i] - P2[i]) / (P1.time - P2.time);
+            }
+            double slope2 = 0;
+            if ((P1[i] - P2[i]) * (P2[i] - P3[i]) > 0) {// if p2 between p1 and p3
+                slope2 = (P3[i] - P1[i]) / (P3.time - P1.time);
+                if (fabs(slope2 * (P1.time - P2.time) / 3.) > fabs(P2[i] - P1[i]))
+                    slope2 = 3 * (P2[i] - P1[i]) / (P2.time - P1.time);
+                if (fabs(slope2 * (P3.time - P2.time) / 3.) > fabs(P2[i] - P3[i]))
+                    slope2 = 3 * (P2[i] - P3[i]) / (P2.time - P3.time);
+            }
+            double ct1 = (P2.time - P1.time) / 3;
+            double cx1 = P1[i] + slope1 * ct1;
+            double cx2 = P2[i] - slope2 * ct1;
+            out[i] = extrap(t, extrap(t, extrap(t, P1[i], cx1), extrap(t, cx1, cx2)), extrap(t, extrap(t, cx1, cx2), extrap(t, cx2, P2[i])));
         }
         return out;
     }
