@@ -331,8 +331,12 @@ int main(void)
     camera cam(window);
     camera_state* state = cam.getState();
 
-    spline CamPosSpline;
-    CamPosSpline.loadFrom(DATA_ROOT + "camPos");
+    spline<glm::vec3> CamPosSpline(3);
+    spline<glm::vec3> CamRotSpline(3);
+    spline<glm::vec1> CamRadSpline(1);
+    spline<glm::vec1> CamTimeSpline(1);
+    vector<float> keyFrames;
+    //CamPosSpline.loadFrom(DATA_ROOT + "camPos");
     //CamPosSpline.print();
 
     init_imgui(window);
@@ -601,29 +605,29 @@ int main(void)
             ImGui::SameLine();
             ImGui::PushItemWidth(100);
             ImGui::DragFloat("end", &CamPosSpline.maxTime, 1.f, 0.f, 100.f, "%5.3f", 1.f);
-            
-            static uint selected = 0;
+
+            static uint selectedPos = 0;
             {
                 ImGui::BeginChild("left pane", ImVec2(150, 0), true);
                 for (uint i = 0; i < CamPosSpline.points.size(); i++) {
                     char label[128];
                     sprintf(label, "Keyframe %d", i);
-                    if (ImGui::Selectable(label, selected == i)) {
-                        selected = i;
-                        currentTime = CamPosSpline.points[i].time;
-                        //printf("Clicked on %d t:%3.2lf\n", selected, currentTime);
+                    if (ImGui::Selectable(label, selectedPos == i)) {
+                        selectedPos = i;
+                        currentTime = CamPosSpline.points[i].first;
+                        //printf("Clicked on %d t:%3.2lf\n", selectedPos, currentTime);
                     }
                 }
                 ImGui::EndChild();
             }
             if (playing) {
-                selected = CamPosSpline.getIndex(currentTime);
+                selectedPos = CamPosSpline.getIndex(currentTime);
             }
             ImGui::SameLine();
             {
                 ImGui::BeginGroup();
                 ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));// Leave room for 1 line below us
-                ImGui::Text("Keyframe: %d", selected);
+                ImGui::Text("Keyframe: %d", selectedPos);
                 ImGui::Separator();
                 if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None)) {
                     if (ImGui::BeginTabItem("Description")) {
@@ -632,12 +636,13 @@ int main(void)
                     }
                     if (ImGui::BeginTabItem("Details")) {
                         ImGui::Text("ID: 0123456789");
-                        ImGui::DragFloat3("Camera Position", (float*)&(CamPosSpline.points[selected].pos), 0.1f, -100.f, 100.f, "%5.3f", 1.f);
-                        ImGui::DragFloat3("Camera Rotation", (float*)&(CamPosSpline.points[selected].rot), 0.1f, -100.f, 100.f, "%5.3f", 1.f);
-                        if (ImGui::DragFloat("Camera Time", (float*)&(CamPosSpline.points[selected].time), 0.1f, 0.f, 100.f, "%5.3f", 1.f)) {
-                            double whatTime = CamPosSpline.points[selected].time;
+                        ImGui::DragFloat3("Camera Position", (float*)&(CamPosSpline.points[CamPosSpline.getIndex(currentTime)].second), 0.1f, -100.f, 100.f, "%5.3f", 1.f);
+                        ImGui::DragFloat2("Camera Rotation", (float*)&(CamRotSpline.points[CamPosSpline.getIndex(currentTime)].second), 0.1f, -100.f, 100.f, "%5.3f", 1.f);
+                        ImGui::DragFloat("Camera Radius", (float*)&(CamRadSpline.points[CamPosSpline.getIndex(currentTime)].second), 0.1f, -100.f, 100.f, "%5.3f", 1.f);
+                        if (ImGui::DragFloat("Camera Time", (float*)&(CamTimeSpline.points[CamPosSpline.getIndex(currentTime)].second), 0.1f, 0.f, 100.f, "%5.3f", 1.f)) {
+                            double whatTime = CamPosSpline.points[CamPosSpline.getIndex(currentTime)].first;
                             CamPosSpline.sort();
-                            selected = CamPosSpline.getIndex(whatTime);
+                            selectedPos = CamPosSpline.getIndex(whatTime);
                         }
                         ImGui::EndTabItem();
                     }
@@ -649,11 +654,15 @@ int main(void)
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Add new")) {
-                    CamPosSpline.addPoint(currentTime, cam.position(), glm::vec3(state->phi, state->theta, state->radius));
+                    CamPosSpline.addPoint(currentTime, cam.position());
+                    CamRotSpline.addPoint(currentTime, glm::vec3(state->phi, state->theta, 0.));
+                    CamRadSpline.addPoint(currentTime, glm::vec1(state->radius));
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Set to current")) {
-                    CamPosSpline.setCurrentPoint(selected, cam.position(), glm::vec3(state->phi, state->theta, state->radius));
+                    CamPosSpline.setCurrentPoint(selectedPos, cam.position());
+                    CamRotSpline.setCurrentPoint(selectedPos, glm::vec3(state->phi, state->theta, 0.));
+                    CamRadSpline.setCurrentPoint(selectedPos, glm::vec1(currentTime));
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Save to File")) {
@@ -661,7 +670,7 @@ int main(void)
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Load from File")) {
-                    CamPosSpline.loadFrom(DATA_ROOT + "camPos");
+                    //CamPosSpline.loadFrom(DATA_ROOT + "camPos");
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Sort")) {
@@ -672,7 +681,7 @@ int main(void)
             if (ImGui::BeginPopup("sure")) {// Delete the current Keyframe
                 ImGui::Text("Are you sure?");
                 if (ImGui::Button("yes!")) {
-                    CamPosSpline.removePoint(selected);
+                    CamPosSpline.removePoint(selectedPos);
                     ImGui::CloseCurrentPopup();
                 }
                 ImGui::SameLine();
@@ -732,11 +741,12 @@ int main(void)
         }
 
         if (inCameraView) {// animate the camera using keyframes
-            splinePoint current = CamPosSpline.eval(fmod(currentTime, CamPosSpline.length() + 1e-3));
-            state->look_at = current.pos;//spline(fmod(currentTime, (cameraPositions.back().time + 1)), cameraPositions);
-            state->phi = current.rot[0];
-            state->theta = current.rot[1];
-            state->radius = current.rot[2];
+            glm::vec3 current = CamPosSpline.eval(fmod(currentTime, CamPosSpline.length() + 1e-3));
+            state->look_at = current;
+            current = CamRotSpline.eval(fmod(currentTime, CamPosSpline.length() + 1e-3));
+            state->phi = current[0];
+            state->theta = current[1];
+            state->radius = CamRadSpline.eval(fmod(currentTime, CamPosSpline.length() + 1e-3))[0];
             //printf("vec3(%lf,%lf,%lf)\n", state->look_at[0], state->look_at[1], state->look_at[2]);
             cam.update();
         }

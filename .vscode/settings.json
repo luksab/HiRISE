@@ -81,6 +81,7 @@
         "variant": "cpp",
         "slist": "cpp",
         "*.ipp": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "*.inc": "cpp"
     }
 }
