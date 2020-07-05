@@ -110,12 +110,11 @@ public:
                 return extrap((t - points[0].first) / (points[1].first - points[0].first), points[0].second, points[1].second);
                 break;
             default:
-                //TODO: propper extrap
                 if (t > points[2].first)
                     return points[2].second;
                 if (t > points[1].first)
-                    return extrap((t - points[1].first) / (points[2].first - points[1].first), points[1].second, points[2].second);
-                return extrap((t - points[0].first) / (points[1].first - points[0].first), points[0].second, points[1].second);
+                    return eval(t, points[1], points[1], points[2], points[2]);// just force tangents to 0
+                return eval(t, points[0], points[0], points[1], points[1]);
                 break;
             }
         }
