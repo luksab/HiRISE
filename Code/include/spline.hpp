@@ -52,22 +52,29 @@ public:
         }
     }
 
-    // void loadFrom(std::string path)
-    // {
-    //     printf("loading from file\n");
-    //     points.clear();// TODO: delete individual points
-    //     std::ifstream infile(path);
-    //     float point[7];
-    //     while (infile >> point[0] >> point[1] >> point[2] >> point[3] >> point[4] >> point[5] >> point[6]) {
-    //         T Point = {};
-    //         Point.time = point[0];
-    //         for (uint i = 0; i < 6; i++) {
-    //             Point[i] = point[i + 1];
-    //         }
-    //         points.insert(std::begin(points) + lowerBound(point[0]), Point);
-    //     }
-    //     maxTime = point[0];
-    // }
+    void loadFrom(std::string path)
+    {
+        printf("loading from file\n");
+        points.clear();// TODO: delete individual points
+        std::ifstream infile(path);
+        float point[size + 1];
+        bool read = true;
+        while (read) {
+            for (size_t i = 0; i < size + 1; i++) {
+                infile >> point[i];
+            }
+            read = !!infile;
+            if (read) {
+                T Point = {};
+                for (uint i = 0; i < size; i++) {
+                    Point.push_back(point[i + 1]);
+                    //Point[i] = point[i + 1];
+                }
+                pair<float, T> p(point[0], Point);
+                points.insert(std::begin(points) + lowerBound(point[0]), p);
+            }
+        }
+    }
 
     double length()
     {
@@ -103,7 +110,12 @@ public:
                 return extrap((t - points[0].first) / (points[1].first - points[0].first), points[0].second, points[1].second);
                 break;
             default:
-                return T(0.);
+                //TODO: propper extrap
+                if (t > points[2].first)
+                    return points[2].second;
+                if (t > points[1].first)
+                    return extrap((t - points[1].first) / (points[2].first - points[1].first), points[1].second, points[2].second);
+                return extrap((t - points[0].first) / (points[1].first - points[0].first), points[0].second, points[1].second);
                 break;
             }
         }
@@ -141,7 +153,7 @@ private:
         T out;
         t = (t - P1.first) / (P2.first - P1.first);
         //printf("eval at %lf: %1.0lf %1.0lf %1.0lf %1.0lf\n", t, P0.first, P1.first, P2.first, P3.first);
-        for (uint i = 0; i < 6; i++) {
+        for (uint i = 0; i < size; i++) {
             double slope1 = 0;
             if ((P0.second[i] - P1.second[i]) * (P1.second[i] - P2.second[i]) > 0) {// if p1 between p0 and p2
                 slope1 = (P2.second[i] - P0.second[i]) / (P2.first - P0.first);
@@ -161,7 +173,8 @@ private:
             double ct1 = (P2.first - P1.first) / 3;
             double cx1 = P1.second[i] + slope1 * ct1;
             double cx2 = P2.second[i] - slope2 * ct1;
-            out[i] = extrap(t, extrap(t, extrap(t, P1.second[i], cx1), extrap(t, cx1, cx2)), extrap(t, extrap(t, cx1, cx2), extrap(t, cx2, P2.second[i])));
+            out.push_back(extrap(t, extrap(t, extrap(t, P1.second[i], cx1), extrap(t, cx1, cx2)), extrap(t, extrap(t, cx1, cx2), extrap(t, cx2, P2.second[i]))));
+            //out[i] = extrap(t, extrap(t, extrap(t, P1.second[i], cx1), extrap(t, cx1, cx2)), extrap(t, extrap(t, cx1, cx2), extrap(t, cx2, P2.second[i])));
         }
         return out;
     }

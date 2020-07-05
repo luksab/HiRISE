@@ -345,7 +345,7 @@ int main(void)
     }
     vector<float> keyFrames;
     keyFrames.push_back(0.);
-    //CamPosSpline.loadFrom(DATA_ROOT + "camPos");
+    CamPosSpline.loadFrom(DATA_ROOT + "camPos");
     //CamPosSpline.print();
 
     init_imgui(window);
@@ -561,6 +561,7 @@ int main(void)
     double dt = 0;
     float currentTime = 0;
     float timeScale = 1.0;
+    float playbackRate = 1.;
     float maxTime = 1.;
     playing = false;
     cout << "Total loading time: " << glfwGetTime() << "s" << endl;
@@ -568,7 +569,7 @@ int main(void)
     while (glfwWindowShouldClose(window) == false) {
         dt = glfwGetTime() - lastGLTime;
         lastGLTime = glfwGetTime();
-        currentTime += dt * timeScale * playing;
+        currentTime += dt * timeScale * playbackRate * playing;
         maxTime = max(maxTime, CamPosSpline.points.back().first);
         currentTime = fmod(currentTime, maxTime + 1e-3);
         nbFrames++;
@@ -649,8 +650,8 @@ int main(void)
                         ImGui::Text("ID: 0123456789");
 
                         ImGui::DragFloat4("Camera Position", (float*)&(CamPosSpline.points[selectedPos].second[0]), 0.1f, -100.f, 100.f, "%5.3f", 1.f);
-                        ImGui::DragFloat2("Camera Rotation", (float*)&(CamPosSpline.points[selectedPos].second[0]) + 4, 0.1f, -100.f, 100.f, "%5.3f", 1.f);
-                        ImGui::DragFloat("Ingame Time", (float*)&(CamPosSpline.points[selectedPos].second[0]) + 6, 0.1f, 0.f, 100.f, "%5.3f", 1.f);
+                        ImGui::DragFloat2("Camera Rotation", (float*)&(CamPosSpline.points[selectedPos].second[4]), 0.1f, -100.f, 100.f, "%5.3f", 1.f);
+                        ImGui::DragFloat("Ingame TimeScale", (float*)&(CamPosSpline.points[selectedPos].second[6]), 0.1f, 0.f, 100.f, "%5.3f", 1.f);
                         if (ImGui::DragFloat("Camera Time", (float*)&(CamPosSpline.points[selectedPos].first), 0.1f, 0.f, 100.f, "%5.3f", 1.f)) {
                             double whatTime = CamPosSpline.points[selectedPos].first;
                             CamPosSpline.sort();
@@ -673,7 +674,7 @@ int main(void)
                     pos.push_back(state->radius);
                     pos.push_back(state->phi);
                     pos.push_back(state->theta);
-                    pos.push_back(1.);
+                    pos.push_back(playbackRate);
                     CamPosSpline.addPoint(currentTime, pos);
                 }
                 ImGui::SameLine();
@@ -685,7 +686,7 @@ int main(void)
                     pos.push_back(state->radius);
                     pos.push_back(state->phi);
                     pos.push_back(state->theta);
-                    pos.push_back(1.);
+                    pos.push_back(playbackRate);
                     CamPosSpline.setCurrentPoint(selectedPos, pos);
                 }
                 ImGui::SameLine();
@@ -770,7 +771,7 @@ int main(void)
             state->radius = current[3];
             state->phi = current[4];
             state->theta = current[5];
-            //printf("vec3(%lf,%lf,%lf)\n", state->look_at[0], state->look_at[1], state->look_at[2]);
+            playbackRate = current[6];
             cam.update();
         }
 
