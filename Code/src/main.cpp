@@ -331,11 +331,20 @@ int main(void)
     camera cam(window);
     camera_state* state = cam.getState();
 
-    spline<glm::vec3> CamPosSpline(3);
-    spline<glm::vec3> CamRotSpline(3);
-    spline<glm::vec1> CamRadSpline(1);
-    spline<glm::vec1> CamTimeSpline(1);
+    spline<vector<float>> CamPosSpline(7);
+    {
+        vector<float> pos;
+        pos.push_back(cam.position()[0]);
+        pos.push_back(cam.position()[1]);
+        pos.push_back(cam.position()[2]);
+        pos.push_back(state->radius);
+        pos.push_back(state->phi);
+        pos.push_back(state->theta);
+        pos.push_back(1.);
+        CamPosSpline.addPoint(0., pos);
+    }
     vector<float> keyFrames;
+    keyFrames.push_back(0.);
     //CamPosSpline.loadFrom(DATA_ROOT + "camPos");
     //CamPosSpline.print();
 
@@ -552,6 +561,7 @@ int main(void)
     double dt = 0;
     float currentTime = 0;
     float timeScale = 1.0;
+    float maxTime = 1.;
     playing = false;
     cout << "Total loading time: " << glfwGetTime() << "s" << endl;
     // rendering loop
@@ -559,7 +569,8 @@ int main(void)
         dt = glfwGetTime() - lastGLTime;
         lastGLTime = glfwGetTime();
         currentTime += dt * timeScale * playing;
-        currentTime = fmod(currentTime, CamPosSpline.length() + 1e-3);
+        maxTime = max(maxTime, CamPosSpline.points.back().first);
+        currentTime = fmod(currentTime, maxTime + 1e-3);
         nbFrames++;
         if (glfwGetTime() - lastTime >= 1.0) {// If last prinf() was more than 1 sec ago
             // reset timer
@@ -601,10 +612,10 @@ int main(void)
             ImGui::Begin("Camera Keyframes");
             ImGui::Checkbox("ViewCam", &inCameraView);
             ImGui::SameLine();
-            ImGui::SliderFloat("Camera Time", &currentTime, 0.0f, CamPosSpline.length());
+            ImGui::SliderFloat("Camera Time", &currentTime, 0.0f, maxTime);
             ImGui::SameLine();
             ImGui::PushItemWidth(100);
-            ImGui::DragFloat("end", &CamPosSpline.maxTime, 1.f, 0.f, 100.f, "%5.3f", 1.f);
+            ImGui::DragFloat("end", &maxTime, 1.f, 0.f, 100.f, "%5.3f", 1.f);
 
             static uint selectedPos = 0;
             {
@@ -636,11 +647,12 @@ int main(void)
                     }
                     if (ImGui::BeginTabItem("Details")) {
                         ImGui::Text("ID: 0123456789");
-                        ImGui::DragFloat3("Camera Position", (float*)&(CamPosSpline.points[CamPosSpline.getIndex(currentTime)].second), 0.1f, -100.f, 100.f, "%5.3f", 1.f);
-                        ImGui::DragFloat2("Camera Rotation", (float*)&(CamRotSpline.points[CamPosSpline.getIndex(currentTime)].second), 0.1f, -100.f, 100.f, "%5.3f", 1.f);
-                        ImGui::DragFloat("Camera Radius", (float*)&(CamRadSpline.points[CamPosSpline.getIndex(currentTime)].second), 0.1f, -100.f, 100.f, "%5.3f", 1.f);
-                        if (ImGui::DragFloat("Camera Time", (float*)&(CamTimeSpline.points[CamPosSpline.getIndex(currentTime)].second), 0.1f, 0.f, 100.f, "%5.3f", 1.f)) {
-                            double whatTime = CamPosSpline.points[CamPosSpline.getIndex(currentTime)].first;
+
+                        ImGui::DragFloat4("Camera Position", (float*)&(CamPosSpline.points[selectedPos].second[0]), 0.1f, -100.f, 100.f, "%5.3f", 1.f);
+                        ImGui::DragFloat2("Camera Rotation", (float*)&(CamPosSpline.points[selectedPos].second[0]) + 4, 0.1f, -100.f, 100.f, "%5.3f", 1.f);
+                        ImGui::DragFloat("Ingame Time", (float*)&(CamPosSpline.points[selectedPos].second[0]) + 6, 0.1f, 0.f, 100.f, "%5.3f", 1.f);
+                        if (ImGui::DragFloat("Camera Time", (float*)&(CamPosSpline.points[selectedPos].first), 0.1f, 0.f, 100.f, "%5.3f", 1.f)) {
+                            double whatTime = CamPosSpline.points[selectedPos].first;
                             CamPosSpline.sort();
                             selectedPos = CamPosSpline.getIndex(whatTime);
                         }
@@ -654,15 +666,27 @@ int main(void)
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Add new")) {
-                    CamPosSpline.addPoint(currentTime, cam.position());
-                    CamRotSpline.addPoint(currentTime, glm::vec3(state->phi, state->theta, 0.));
-                    CamRadSpline.addPoint(currentTime, glm::vec1(state->radius));
+                    vector<float> pos;
+                    pos.push_back(cam.position()[0]);
+                    pos.push_back(cam.position()[1]);
+                    pos.push_back(cam.position()[2]);
+                    pos.push_back(state->radius);
+                    pos.push_back(state->phi);
+                    pos.push_back(state->theta);
+                    pos.push_back(1.);
+                    CamPosSpline.addPoint(currentTime, pos);
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Set to current")) {
-                    CamPosSpline.setCurrentPoint(selectedPos, cam.position());
-                    CamRotSpline.setCurrentPoint(selectedPos, glm::vec3(state->phi, state->theta, 0.));
-                    CamRadSpline.setCurrentPoint(selectedPos, glm::vec1(currentTime));
+                    vector<float> pos;
+                    pos.push_back(cam.position()[0]);
+                    pos.push_back(cam.position()[1]);
+                    pos.push_back(cam.position()[2]);
+                    pos.push_back(state->radius);
+                    pos.push_back(state->phi);
+                    pos.push_back(state->theta);
+                    pos.push_back(1.);
+                    CamPosSpline.setCurrentPoint(selectedPos, pos);
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Save to File")) {
@@ -741,12 +765,11 @@ int main(void)
         }
 
         if (inCameraView) {// animate the camera using keyframes
-            glm::vec3 current = CamPosSpline.eval(fmod(currentTime, CamPosSpline.length() + 1e-3));
-            state->look_at = current;
-            current = CamRotSpline.eval(fmod(currentTime, CamPosSpline.length() + 1e-3));
-            state->phi = current[0];
-            state->theta = current[1];
-            state->radius = CamRadSpline.eval(fmod(currentTime, CamPosSpline.length() + 1e-3))[0];
+            vector<float> current = CamPosSpline.eval(fmod(currentTime, maxTime + 1e-3));
+            state->look_at = glm::vec3(current[0], current[1], current[2]);
+            state->radius = current[3];
+            state->phi = current[4];
+            state->theta = current[5];
             //printf("vec3(%lf,%lf,%lf)\n", state->look_at[0], state->look_at[1], state->look_at[2]);
             cam.update();
         }

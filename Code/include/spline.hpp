@@ -7,13 +7,11 @@ class spline {
 
 public:
     vector<pair<float, T>> points;
-    float maxTime;
     uint size;
 
     spline(uint Size)
     {
         size = Size;
-        points.push_back(pair<float, T>(0, T(0)));
     }
 
     void print()
@@ -52,7 +50,6 @@ public:
             }
             outFile << "\n";
         }
-        outFile << maxTime << "\n";
     }
 
     // void loadFrom(std::string path)
@@ -74,7 +71,7 @@ public:
 
     double length()
     {
-        return maxTime;
+        return points.back().first;
     }
 
     void removePoint(uint position)
@@ -84,7 +81,7 @@ public:
 
     uint getIndex(double time)
     {
-        return lowerBound(time);
+        return min(lowerBound(time), static_cast<unsigned int>(points.size() - 1));
     }
 
     T get(double time)
@@ -129,18 +126,11 @@ private:
         return p1 + t * (p2 - p1);
     }
 
-    glm::vec1 extrap(double t, glm::vec1 p1, glm::vec1 p2)
+    T extrap(double t, T p1, T p2)
     {
-        glm::vec1 out;
-        out[0] = p1[0] + t * (p2[0] - p1[0]);
-        return out;
-    }
-
-    glm::vec3 extrap(double t, glm::vec3 p1, glm::vec3 p2)
-    {
-        glm::vec3 out;
-        for (uint i = 0; i < 3; i++) {
-            out[i] = p1[i] + t * (p2[i] - p1[i]);
+        T out;
+        for (uint i = 0; i < size; i++) {
+            out.push_back(p1[i] + t * (p2[i] - p1[i]));
         }
 
         return out;
