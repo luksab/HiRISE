@@ -365,6 +365,14 @@ int main(void)
     glassObj.setup(&glass, "glass/glass.vert", "glass/glass.frag");
     glassObj.defaultMat = true;
 
+    animated chair = loadMeshAnim("tableChairMonitor.dae", true);//toAnimated(loadMesh("chair.dae", false, glm::vec4(0.f, 0.f, 0.f, 1.f)));
+    pbrObject chairObj = {};
+    // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.26, 0.26, 0.26));
+    // scaleMat = glm::translate(scaleMat, glm::vec3(0., 0.49, -0.12));
+    // chair.transform[0] = scaleMat;
+    chairObj.setup(&chair, "simple/simple.vert", "simple/simple.frag");
+    chairObj.defaultMat = true;
+
     animated pbr = loadMeshAnim("cube.dae", true);
 
     pbrObject renderCube = {};
@@ -376,14 +384,23 @@ int main(void)
     boneObject humanObj = {};
     humanObj.setup(&human, false);
     humanObj.use();
-    humanObj.scale(0.1);
-    humanObj.move(0., 7., 0.);
+    humanObj.scale(0.16);
+    humanObj.move(0., 5.96, -0.29);
 
-    animated table = loadMeshAnim("table.dae", true);
-    pbrObject tableObj = {};
-    tableObj.setup(&table, true);
-    tableObj.setInt("heightMap", 5);
-    tableObj.setFloat("displacementFactor", 0.);
+    // animated table = loadMeshAnim("table.dae", true);
+    // pbrObject tableObj = {};
+    // // scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.47, 0.47, 0.47));
+    // // scaleMat = glm::translate(scaleMat, glm::vec3(0.0, 0.25, 0.86));
+    // // table.transform[0] = scaleMat;
+    // tableObj.setup(&table, true);
+    // tableObj.setInt("heightMap", 5);
+    // tableObj.setFloat("displacementFactor", 0.);
+
+    std::vector<mapTexture> indoorTex;
+    indoorTex.resize(1);
+    indoorTex[0].type = GL_TEXTURE_2D;
+    indoorTex[0].spot = 0;
+    indoorTex[0].texture = loadTexture((DATA_ROOT + "Atlas.png").c_str());
 
     printf("loading model textures\n");
     auto start = glfwGetTime();
@@ -544,6 +561,9 @@ int main(void)
 
     bool drawObjs[5] = { false, false, true, false, false };
 
+    glm::vec3 translateVec(0., 0., 0.);
+    float scaleChair = 0;
+
     //for deferred rendering
     build_framebuffer(WINDOW_WIDTH, WINDOW_HEIGHT);
     unsigned int quad = setup_fullscreen_quad();
@@ -593,6 +613,8 @@ int main(void)
         ImGui::Checkbox("Color", &Color);
         ImGui::Checkbox("Draw", &Draw);
         ImGui::Checkbox("Music", &Music);
+        // ImGui::DragFloat3("translate", &(translateVec[0]));
+        // ImGui::DragFloat("Scale", &scaleChair);
         ImGui::End();
         if (Framerate) {
             ImGui::Begin("Framerate");
@@ -808,22 +830,33 @@ int main(void)
             mars.render(0);
         }
 
-        if (drawObjs[0]) {// render human
+        if (drawObjs[0] || true) {// render human
             // bind pre-computed IBL data
             bindTextures(rockTex);
 
             glShadeModel(GL_SMOOTH);
+            // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(scaleChair, scaleChair, scaleChair));
+            // humanObj.objMat = glm::translate(scaleMat, translateVec);
             humanObj.setFloat("displacementFactor", 0.);
             humanObj.setMaticies(&view_matrix, &proj_matrix);
             humanObj.setVec3("camPos", cam.position());
             humanObj.render(currentTime);
         }
-        if (drawObjs[4]) {//render table
-            bindTextures(rockTex);
-            tableObj.setMaticies(&view_matrix, &proj_matrix);
-            tableObj.setVec3("camPos", cam.position());
-            tableObj.render(ident);
-        }
+        // if (drawObjs[4]) {//render table
+        //     bindTextures(rockTex);
+        //     tableObj.setMaticies(&view_matrix, &proj_matrix);
+        //     tableObj.setVec3("camPos", cam.position());
+        //     tableObj.render(ident);
+        // }
+
+        // bindTextures(rockTex);
+        // tableObj.setMaticies(&view_matrix, &proj_matrix);
+        // tableObj.setVec3("camPos", cam.position());
+        // tableObj.render(0);
+
+        bindTextures(indoorTex);
+        chairObj.setMaticies(&view_matrix, &proj_matrix);
+        chairObj.render(0);
 
         if (drawObjs[3]) {
             //Draw in stencil first
@@ -850,9 +883,9 @@ int main(void)
             mars.render(0);
 
             bindTextures(rockTex);
-            tableObj.setMaticies(&view_matrix_new, &proj_matrix);
-            tableObj.setVec3("camPos", cam.position());
-            tableObj.render(ident);
+            // tableObj.setMaticies(&view_matrix_new, &proj_matrix);
+            // tableObj.setVec3("camPos", cam.position());
+            // tableObj.render(ident);
 
             humanObj.setMaticies(&view_matrix_new, &proj_matrix);
             humanObj.setVec3("camPos", cam.position());
