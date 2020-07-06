@@ -64,8 +64,9 @@ In Blender lassen sich in Echtzeit Parameter und Zusammenhänge ausprobieren um 
 ## Kamera und UI
 Hier ist die Entwicklungsumgebung mit allen UI-Elementen aktiviert:
 ![](images/Screenshot_UI_demo.jpg)
-Zur Entwicklung des Benutzerinterfaces wurde dear imgui benutzt. Dies erlaubt schnell relativ komlexe Bedienelemente einzubinden.
-Die einzelnen Elemente lassen sich deaktivieren, um Platz zu sparen.
+Zur Entwicklung des Benutzerinterfaces wurde dear ImGui benutzt. Dies erlaubt schnell relativ komlexe Bedienelemente einzubinden.
+Die Entwicklung der einzelnen Elemente fand zum Großteil dadurch statt, dass eine Variable im Programm in Echtzeit verändert werden sollte, wodurch dann genau ein Element nötig wurde.
+Da diese Element jeweils also genau einen Verwendungszweck habem , lassen sie sich jeweils deaktivieren, um Platz zu sparen.
 
 ## Kamerafahrt
 Diese wird mithilfe von Splines, welche durch Punkte, durch die die Kamera gehen soll definiert werden.
