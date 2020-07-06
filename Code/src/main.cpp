@@ -609,7 +609,12 @@ int main(void)
             ImGui::SliderFloat("tessFactor", &tessFactor, 0.0f, 20.0f);
             ImGui::Checkbox("render using lines", &lineRendering);
             ImGui::Checkbox("mirror", &mirror);
-            ImGui::Checkbox("record", &recordFrames);
+            if (ImGui::Checkbox("record", &recordFrames) && recordFrames) {
+                printf("record!\n");
+                currentTime = 0;
+                frameNumber = 0;
+            }
+
             ImGui::End();
         }
         if (CameraMove) {
