@@ -533,6 +533,8 @@ int main(void)
     bool rotate = false;
     bool Framerate = true;
     bool lineRendering = false;
+    bool recordFrames = false;
+    uint frameNumber = 0;
     bool Camera = false;
     bool CameraMove = false;
     bool Color = false;
@@ -569,7 +571,7 @@ int main(void)
     while (glfwWindowShouldClose(window) == false) {
         dt = glfwGetTime() - lastGLTime;
         lastGLTime = glfwGetTime();
-        currentTime += dt * timeScale * playbackRate * playing;
+        currentTime += (recordFrames ? 0.0166666666 : dt) * timeScale * playbackRate * playing;
         maxTime = max(maxTime, CamPosSpline.points.back().first);
         currentTime = fmod(currentTime, maxTime + 1e-3);
         nbFrames++;
@@ -607,6 +609,7 @@ int main(void)
             ImGui::SliderFloat("tessFactor", &tessFactor, 0.0f, 20.0f);
             ImGui::Checkbox("render using lines", &lineRendering);
             ImGui::Checkbox("mirror", &mirror);
+            ImGui::Checkbox("record", &recordFrames);
             ImGui::End();
         }
         if (CameraMove) {
@@ -882,6 +885,19 @@ int main(void)
         glBindTextureUnit(0, framebuffer_tex);
         glUniform1i(tex_loc, 0);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+
+        if (recordFrames) {
+            playing = true;
+            inCameraView = true;
+            if (currentTime > maxTime - 0.03) {
+                playing = false;
+                recordFrames = false;
+            }
+            frameNumber++;
+            char str[7];
+            snprintf(str, 7, "%06d", frameNumber);
+            screenShotPNG((DATA_ROOT + "screenshots/s" + str + ".png").c_str(), WINDOW_WIDTH, WINDOW_HEIGHT);
+        }
 
         // render UI
         imgui_render();

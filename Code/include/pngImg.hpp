@@ -90,9 +90,9 @@ int writeImage(const char* filename, int width, int height, char* buffer, char* 
     int x, y;
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
-            row[x * 3 + 0] = buffer[(height-y) * width * 3 + x * 3 + 2];
-            row[x * 3 + 1] = buffer[(height-y) * width * 3 + x * 3 + 1];
-            row[x * 3 + 2] = buffer[(height-y) * width * 3 + x * 3 + 0];
+            row[x * 3 + 0] = buffer[(height - y - 1) * width * 3 + x * 3 + 2];
+            row[x * 3 + 1] = buffer[(height - y - 1) * width * 3 + x * 3 + 1];
+            row[x * 3 + 2] = buffer[(height - y - 1) * width * 3 + x * 3 + 0];
         }
         png_write_row(png_ptr, row);
     }
