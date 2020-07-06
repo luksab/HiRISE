@@ -34,7 +34,7 @@ public:
 
     void sort()
     {
-        std::sort(points.rbegin(), points.rend(), [](auto& left, auto& right) {
+        std::sort(points.begin(), points.end(), [](auto& left, auto& right) {
             return left.first < right.first;
         });
     }

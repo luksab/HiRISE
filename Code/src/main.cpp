@@ -697,10 +697,6 @@ int main(void)
                 if (ImGui::Button("Load from File")) {
                     //CamPosSpline.loadFrom(DATA_ROOT + "camPos");
                 }
-                ImGui::SameLine();
-                if (ImGui::Button("Sort")) {
-                    CamPosSpline.sort();
-                }
                 ImGui::EndGroup();
             }
             if (ImGui::BeginPopup("sure")) {// Delete the current Keyframe
