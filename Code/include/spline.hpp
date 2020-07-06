@@ -151,7 +151,6 @@ private:
     {
         T out;
         t = (t - P1.first) / (P2.first - P1.first);
-        //printf("eval at %lf: %1.0lf %1.0lf %1.0lf %1.0lf\n", t, P0.first, P1.first, P2.first, P3.first);
         for (uint i = 0; i < size; i++) {
             double slope1 = 0;
             if ((P0.second[i] - P1.second[i]) * (P1.second[i] - P2.second[i]) > 0) {// if p1 between p0 and p2
@@ -173,7 +172,6 @@ private:
             double cx1 = P1.second[i] + slope1 * ct1;
             double cx2 = P2.second[i] - slope2 * ct1;
             out.push_back(extrap(t, extrap(t, extrap(t, P1.second[i], cx1), extrap(t, cx1, cx2)), extrap(t, extrap(t, cx1, cx2), extrap(t, cx2, P2.second[i]))));
-            //out[i] = extrap(t, extrap(t, extrap(t, P1.second[i], cx1), extrap(t, cx1, cx2)), extrap(t, extrap(t, cx1, cx2), extrap(t, cx2, P2.second[i])));
         }
         return out;
     }

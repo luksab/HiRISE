@@ -76,6 +76,11 @@ Hier ist die erste Kamerafahrt. Bei dieser sind die Tangenten noch nicht korrekt
   </video>
 </figure>
 
+Die Punkte, durch die die Kamera gehen soll, werden in einem nach dem ersten Element von dem std::pair sortierten std::vector<std::pair<float, std::vector\<float>>> gespeichert. Es wird, um zwischen dem iten und (i+1)ten Punkt eine Kurve auszurechnen werden die Punkte i-1, i, i+1 und i+2 mit der globalen Zeit an [eval](https://github.com/luksab/HiRISE/blob/486d4ef89b60513d377432117c05703218515664/Code/include/spline.hpp#L150) übergeben.
+Diese rechnet dann zunächst die Steigungen der Kontrollpunkte von den Punkten p1 und p2 aus aus, welche p2-p0 und p3-p1 normiert entsprechen, wenn p1 zwischen p0 und p2 und p2 zwischen p1 und p3 liegt. Sonst werden die Kontrollpunkte auf die x-Koordinate beschränkt.
+Dies wird gemacht, damit Maxima und Minima eine symmetrischere Extremstelle aufweisen.
+![spline code](images/spline.png)
+
 ## PBR & HDRI
 Außerhalb des Gebäude wird zur beleuchtung ein HDRI nach dem Vorbild von https://learnopengl.com/PBR/IBL/Specular-IBL benutzt.
 Außerdem werden die dort beschriebenen shader leicht verändert für die PBR-Objekte verwendet.
