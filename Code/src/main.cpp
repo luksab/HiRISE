@@ -695,7 +695,7 @@ int main(void)
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Load from File")) {
-                    //CamPosSpline.loadFrom(DATA_ROOT + "camPos");
+                    CamPosSpline.loadFrom(DATA_ROOT + "camPos");
                 }
                 ImGui::EndGroup();
             }
