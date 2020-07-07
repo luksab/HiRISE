@@ -40,6 +40,27 @@ void pbrObject::setup(animated* model, const char* vertex, const char* fragment)
     proj_mat_loc = glGetUniformLocation(shaderProgram, "proj_mat");
 }
 
+void pbrObject::setup(animated* model, const char* vertex, const char* fragment, const char* geometry)
+{
+    defaultMat = false;
+    object = model;
+    // load and compile shaders and link program
+    unsigned int vertexShader = compileShader(vertex, GL_VERTEX_SHADER);
+    unsigned int fragmentShader = compileShader(fragment, GL_FRAGMENT_SHADER);
+    unsigned int geometryShader = compileShader(geometry, GL_GEOMETRY_SHADER);
+    shaderProgram = linkProgram(vertexShader, fragmentShader, geometryShader);
+    //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
+    // after linking the program the shader objects are no longer needed
+    glDeleteShader(fragmentShader);
+    glDeleteShader(vertexShader);
+    glDeleteShader(geometryShader);
+
+    glUseProgram(shaderProgram);
+    model_mat_loc = glGetUniformLocation(shaderProgram, "model_mat");
+    view_mat_loc = glGetUniformLocation(shaderProgram, "view_mat");
+    proj_mat_loc = glGetUniformLocation(shaderProgram, "proj_mat");
+}
+
 void pbrObject::setup(animated* model, const char* vertex, const char* fragment, const char* tess, const char* tesse)
 {
     defaultMat = false;
@@ -108,6 +129,18 @@ void pbrObject::setup(animated* model, bool tessellation)
     proj_mat_loc = glGetUniformLocation(shaderProgram, "proj_mat");
 
     setFloat("displacementFactor", 0.);
+}
+
+void pbrObject::setup(animated* model, std::string vertex, std::string fragment){
+    setup(model, vertex.c_str(), fragment.c_str());
+}
+
+void pbrObject::setup(animated* model, std::string vertex, std::string fragment, std::string geometry){
+    setup(model, vertex.c_str(), fragment.c_str(), geometry.c_str());
+}
+
+void setup(animated* model, std::string vertex, std::string tess, std::string tesse, std::string fragment){
+    setup(model, vertex.c_str(), tess.c_str(), tesse.c_str(), fragment.c_str());
 }
 
 void pbrObject::use()

@@ -81,6 +81,26 @@ linkProgram(unsigned int vertexShader, unsigned int fragmentShader) {
 }
 
 unsigned int
+linkProgram(unsigned int vertexShader, unsigned int fragmentShader, unsigned int geometryShader) {
+    unsigned int shaderProgram;
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glAttachShader(shaderProgram, geometryShader);
+    glLinkProgram(shaderProgram);
+    int success;
+    char infoLog[512];
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if(!success) {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cerr << "Linking program failed\n" << infoLog << std::endl;
+        return 0;
+    }
+
+    return shaderProgram;
+}
+
+unsigned int
 linkProgram(unsigned int vertexShader, unsigned int fragmentShader, unsigned int tesselationShader, unsigned int tesselationEShader) {
     unsigned int shaderProgram;
     shaderProgram = glCreateProgram();

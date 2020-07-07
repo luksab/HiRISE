@@ -15,4 +15,6 @@ linkProgram(unsigned int computeShader);
 unsigned int
 linkProgram(unsigned int vertexShader, unsigned int fragmentShader);
 unsigned int
+linkProgram(unsigned int vertexShader, unsigned int fragmentShader, unsigned int geometryShader);
+unsigned int
 linkProgram(unsigned int vertexShader, unsigned int fragmentShader, unsigned int tesselationShader, unsigned int tesselationEShader);
