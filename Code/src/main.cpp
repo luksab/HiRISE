@@ -621,7 +621,7 @@ int main(void)
             ImGui::Text("FPs: %04d", fps);
             ImGui::Text("avg. frametime: %04f", frameTime);
             ImGui::Checkbox("V-Sync", &vSync);
-            ImGui::SliderFloat("timeScale", &timeScale, 0.0f, 2.0f);
+            ImGui::DragFloat("timeScale", &timeScale);
             ImGui::End();
         }
         if (Camera) {
