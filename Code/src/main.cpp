@@ -386,7 +386,7 @@ int main(void)
     // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.26, 0.26, 0.26));
     // scaleMat = glm::translate(scaleMat, glm::vec3(0., 0.49, -0.12));
     // chair.transform[0] = scaleMat;
-    // chairObj.setup(&chair, "simple/simple.vert", "simple/simple.frag"); 
+    // chairObj.setup(&chair, "simple/simple.vert", "simple/simple.frag");
     chairObj.setup(&chair, "shadowMap/point_shadows.vs", "shadowMap/point_shadows.fs");
     chairObj.setInt("diffuseTexture", 0);
     chairObj.setInt("depthMap", 1);
@@ -399,7 +399,7 @@ int main(void)
     // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.26, 0.26, 0.26));
     // scaleMat = glm::translate(scaleMat, glm::vec3(0., 0.49, -0.12));
     // chair.transform[0] = scaleMat;
-    monitorObj.setup(&monitor, "simple/simple.vert", "simple/simple.frag"); 
+    monitorObj.setup(&monitor, "simple/simple.vert", "simple/simple.frag");
     monitor.transform[0] = glm::mat4(1);
     monitorObj.defaultMat = true;
 
@@ -515,15 +515,15 @@ int main(void)
     cout << "loading textures to GPU took " << duration << "s" << endl;
 
     start = glfwGetTime();
-    pbrTex envtex = setupPBR(&pbr);
-    rockTex[6].type = GL_TEXTURE_2D;
+    pbrTex envtex = setupPBR(&pbr, "HDRI-II.hdr");
+    rockTex[6].type =  GL_TEXTURE_CUBE_MAP;
     rockTex[6].spot = 0;
     rockTex[6].texture = envtex.irradianceMap;
-    rockTex[7].type = GL_TEXTURE_2D;
-    rockTex[7].spot = 0;
+    rockTex[7].type =  GL_TEXTURE_CUBE_MAP;
+    rockTex[7].spot = 1;
     rockTex[7].texture = envtex.prefilterMap;
-    rockTex[8].type = GL_TEXTURE_2D;
-    rockTex[8].spot = 0;
+    rockTex[8].type =  GL_TEXTURE_CUBE_MAP;
+    rockTex[8].spot = 2;
     rockTex[8].texture = envtex.brdfLUTTexture;
     stop = glfwGetTime();
     duration = stop - start;
@@ -568,7 +568,7 @@ int main(void)
     skinningDepthShader.setup(&pbr, "shadowMap/pbrS.vs", "shadowMap/point_shadows_depth.fs", "shadowMap/point_shadows_depth.gs");
     // lighting info
     // -------------
-    glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
+    glm::vec3 lightPos(0.0f, 3.0f, 0.0f);
 
     glm::mat4 ident = glm::mat4(1.);
 
@@ -586,11 +586,13 @@ int main(void)
     unsigned int image_tex = create_texture_rgba32f(image_width, image_height, image_tex_data);
     set_texture_wrap_mode(image_tex, GL_CLAMP_TO_BORDER);
     unsigned int pds_tex = create_texture_r32f(pds_width, pds_height, pds_tex_data);
-    glGenerateMipmap(GL_TEXTURE_2D);
 
     glBindTextureUnit(0, image_tex);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTextureParameteri(image_tex, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
     glBindTextureUnit(1, pds_tex);
-    glTextureParameteri(image_tex, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTextureParameteri(pds_tex, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
     mars.setInt("height", 1);
     stop = glfwGetTime();
     duration = stop - start;
@@ -610,6 +612,11 @@ int main(void)
     float colbH = 0.162;
     float colbS = 0.122;
     float colbV = 0.606;
+
+    float irradianceR = 0.815;
+    float irradianceG = 1.;
+    float irradianceB = 1.;
+
     float tessFactor = 5;
     float discardFactor = 1.055;
     float h = 3.0;
@@ -823,6 +830,10 @@ int main(void)
             // ImGui::SliderFloat("colbH", &colbH, 0.0f, 1.0f);
             // ImGui::SliderFloat("colbS", &colbS, 0.0f, 1.0f);
             // ImGui::SliderFloat("colbV", &colbV, 0.0f, 1.0f);
+            ImGui::SliderFloat("irradianceR", &irradianceR, 0.0f, 1.0f);
+            ImGui::SliderFloat("irradianceG", &irradianceG, 0.0f, 1.0f);
+            ImGui::SliderFloat("irradianceB", &irradianceB, 0.0f, 1.0f);
+
             ImGui::SliderFloat("glass_power", &glass_power, 0.5f, 4.0f);
             ImGui::SliderFloat("glass_factor", &glass_factor, 0.0f, 5.0f);
             ImGui::SliderFloat("discardFactor", &discardFactor, 1.f, 1.1f);
@@ -847,6 +858,7 @@ int main(void)
 
         mars.setVec3("colorA", colaH, colaS, colaV);
         mars.setVec3("colorB", colbH, colbS, colbV);
+        mars.setVec3("irradiance", irradianceR, irradianceG, irradianceB);
 
         mars.setFloat("tessFactor", tessFactor);
         mars.setFloat("discardFactor", discardFactor);
@@ -928,7 +940,6 @@ int main(void)
         chairObj.render(currentTime, simpleDepthShader.shaderProgram);
         monitorObj.render(currentTime, simpleDepthShader.shaderProgram);
 
-
         skinningDepthShader.use();
         for (unsigned int i = 0; i < 6; ++i)
             skinningDepthShader.setMat4(("shadowMatrices[" + std::to_string(i) + "]").c_str(), &(shadowTransforms[i]));
@@ -942,14 +953,7 @@ int main(void)
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-        if (drawObjs[2]) {// render mars
-            glBindTextureUnit(0, image_tex);
-            glBindTextureUnit(1, pds_tex);
-            mars.setMaticies(&view_matrix, &proj_matrix);
-            mars.render(0);
-        }
-
-        if (drawObjs[0] || true) {// render human
+        if (drawObjs[0]) {// render human
             // bind pre-computed IBL data
             bindTextures(rockTex);
 
@@ -998,6 +1002,13 @@ int main(void)
         monitorObj.setMaticies(&view_matrix, &proj_matrix);
         monitorObj.render(ident);
 
+        if (drawObjs[2]) {// render mars
+            glBindTextureUnit(0, image_tex);
+            glBindTextureUnit(1, pds_tex);
+            mars.setMaticies(&view_matrix, &proj_matrix);
+            mars.render(0);
+        }
+
         if (drawObjs[3]) {
             //Draw in stencil first
             glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);// Do not draw any pixels on the back buffer
@@ -1036,7 +1047,7 @@ int main(void)
         glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);// dont change stencil
 
         // render Background
-        //glDisable(GL_CULL_FACE);
+        glDisable(GL_CULL_FACE);
         glDepthFunc(GL_LEQUAL);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
@@ -1044,7 +1055,7 @@ int main(void)
         renderCube.setMaticies(&view_matrix, &proj_matrix);
         renderCube.render(0);
         glDepthFunc(GL_LESS);
-        //glEnable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
 
         // render transparency last
         if (drawObjs[1]) {// render glass

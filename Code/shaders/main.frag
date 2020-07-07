@@ -11,6 +11,7 @@ out float gl_FragDepth;
 uniform sampler2D tex;
 uniform sampler2D height;
 
+uniform vec3 irradiance;
 uniform vec3 colorA;
 uniform vec3 colorB;
 uniform float discardFactor;
@@ -81,7 +82,7 @@ void main() {
         frag_color = vec4(0.,0.,0.,0.);
     }else{
         gl_FragDepth = gl_FragCoord.z;
-        frag_color = col;
+        frag_color = vec4(col.rgb*irradiance, 1.0);
     }
 
     //frag_color = vec4(factor_FS_in/16,factor_FS_in/16,factor_FS_in/16,1.0);

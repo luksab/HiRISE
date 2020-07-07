@@ -117,7 +117,7 @@ std::vector<unsigned int> loadPBR(char const* path)
     return ret;
 }
 
-pbrTex setupPBR(animated* pbr)
+pbrTex setupPBR(animated* pbr, char const* path)
 {
     pbrObject hdrCube = {};
     hdrCube.setup(pbr, "equirectangular/main.vert", "equirectangular/main.frag");
@@ -141,7 +141,7 @@ pbrTex setupPBR(animated* pbr)
     printf("loading hdri\n");
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrComponents;
-    float* data = stbi_loadf((DATA_ROOT + "construction_yard_8k.hdr").c_str(), &width, &height, &nrComponents, 0);
+    float* data = stbi_loadf((DATA_ROOT + path).c_str(), &width, &height, &nrComponents, 0);
     unsigned int hdrTexture;
     if (data) {
         glGenTextures(1, &hdrTexture);
