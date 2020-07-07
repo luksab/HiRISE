@@ -182,13 +182,11 @@ void boneObject::render(double currentTime)
     }
 }
 
-void boneObject::render(double currentTime, unsigned int shaderProg)
+void boneObject::render(double currentTime, pbrObject shaderProg)
 {
-    glUseProgram(shaderProg);
-    if (defaultMat) {
-        glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, &(*view_matrix)[0][0]);
-        glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &(*proj_matrix)[0][0]);
-    }
+    glUseProgram(shaderProg.shaderProgram);
+    // shaderProg.setMat4("view_mat", view_matrix);
+    // shaderProg.setMat4("proj_mat", proj_matrix);
 
     float* mats = (float*)malloc(sizeof(float) * 16 * object->NumBones);
     for (uint i = 0; i < object->NumBones; i++) {
@@ -208,11 +206,11 @@ void boneObject::render(double currentTime, unsigned int shaderProg)
         }
     }
 
-    glUniformMatrix4fv(boneMats, object->NumBones, GL_FALSE, mats);
+    unsigned int boneMs = glGetUniformLocation(shaderProg.shaderProgram, "Bone");
+    glUniformMatrix4fv(boneMs, object->NumBones, GL_FALSE, mats);
     free(mats);
 
-    //setMat4("model_mat",&objMat);
-    glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(objMat)[0][0]);
+    shaderProg.setMat4("model_mat",&objMat);
     //glUniformMatrix4fv(boneMats, object->NumBones, GL_FALSE, &(object->boneTransform[index][0][0][0]));
 
     //glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(*object).matrixAt(currentTime)[0][0]);

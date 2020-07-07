@@ -23,7 +23,7 @@ int WINDOW_WIDTH = 1920;
 int WINDOW_HEIGHT = 1080;
 float FOV = 45.;
 const float NEAR_VALUE = 0.1f;
-const float FAR_VALUE = 100.f;
+const float FAR_VALUE = 1000.f;
 GLFWmonitor* primary;
 const GLFWvidmode* mode;
 ImGuiIO* io;
@@ -374,19 +374,34 @@ int main(void)
     hiriseObj.setup(&hirise, "shadowMap/point_shadows.vs", "shadowMap/point_shadows.fs");
     hiriseObj.setInt("diffuseTexture", 0);
     hiriseObj.setInt("depthMap", 1);
+    hiriseObj.setInt("levels", 5);
     scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(3.3, 3.3, 3.3));
     scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -8.41, 0.0));
     scaleMat = glm::rotate(scaleMat, (float)M_PI, glm::vec3(0., 1., 0.));
     hirise.transform[0] = scaleMat;
     hiriseObj.defaultMat = true;
 
-    animated chair = loadMeshAnim("tableChairMonitor.dae", true);//toAnimated(loadMesh("chair.dae", false, glm::vec4(0.f, 0.f, 0.f, 1.f)));
+    animated chair = loadMeshAnim("HiRISE/chair.dae", true);//toAnimated(loadMesh("chair.dae", false, glm::vec4(0.f, 0.f, 0.f, 1.f)));
     pbrObject chairObj = {};
     // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.26, 0.26, 0.26));
     // scaleMat = glm::translate(scaleMat, glm::vec3(0., 0.49, -0.12));
     // chair.transform[0] = scaleMat;
-    chairObj.setup(&chair, "simple/simple.vert", "simple/simple.frag");
+    // chairObj.setup(&chair, "simple/simple.vert", "simple/simple.frag"); 
+    chairObj.setup(&chair, "shadowMap/point_shadows.vs", "shadowMap/point_shadows.fs");
+    chairObj.setInt("diffuseTexture", 0);
+    chairObj.setInt("depthMap", 1);
+    chairObj.setInt("levels", 5);
+    chair.transform[0] = glm::mat4(1);
     chairObj.defaultMat = true;
+
+    animated monitor = loadMeshAnim("HiRISE/monitor.dae", true);//toAnimated(loadMesh("chair.dae", false, glm::vec4(0.f, 0.f, 0.f, 1.f)));
+    pbrObject monitorObj = {};
+    // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.26, 0.26, 0.26));
+    // scaleMat = glm::translate(scaleMat, glm::vec3(0., 0.49, -0.12));
+    // chair.transform[0] = scaleMat;
+    monitorObj.setup(&monitor, "simple/simple.vert", "simple/simple.frag"); 
+    monitor.transform[0] = glm::mat4(1);
+    monitorObj.defaultMat = true;
 
     animated pbr = loadMeshAnim("cube.dae", true);
 
@@ -549,6 +564,8 @@ int main(void)
     shader.setInt("depthMap", 1);
     pbrObject simpleDepthShader = {};
     simpleDepthShader.setup(&pbr, "shadowMap/point_shadows_depth.vs", "shadowMap/point_shadows_depth.fs", "shadowMap/point_shadows_depth.gs");
+    pbrObject skinningDepthShader = {};
+    skinningDepthShader.setup(&pbr, "shadowMap/pbrS.vs", "shadowMap/point_shadows_depth.fs", "shadowMap/point_shadows_depth.gs");
     // lighting info
     // -------------
     glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
@@ -909,6 +926,18 @@ int main(void)
         simpleDepthShader.setMat4("model_mat", &(ident));
         simpleDepthShader.setVec3("camPos", cam.position());
         chairObj.render(currentTime, simpleDepthShader.shaderProgram);
+        monitorObj.render(currentTime, simpleDepthShader.shaderProgram);
+
+
+        skinningDepthShader.use();
+        for (unsigned int i = 0; i < 6; ++i)
+            skinningDepthShader.setMat4(("shadowMatrices[" + std::to_string(i) + "]").c_str(), &(shadowTransforms[i]));
+        skinningDepthShader.setFloat("far_plane", far_plane);
+        skinningDepthShader.setVec3("lightPos", lightPos);
+        //renderScene(skinningDepthShader);
+        skinningDepthShader.setMat4("model_mat", &(ident));
+        skinningDepthShader.setVec3("camPos", cam.position());
+        humanObj.render(currentTime, skinningDepthShader);
 
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -950,7 +979,6 @@ int main(void)
         // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(scaleChair, scaleChair, scaleChair));
         // scaleMat = glm::translate(scaleMat, translateVec);
         hiriseObj.setMaticies(&view_matrix, &proj_matrix);
-        hiriseObj.setMaticies(&view_matrix, &proj_matrix);
         hiriseObj.setVec3("lightPos", lightPos);
         hiriseObj.setVec3("viewPos", cam.position());
         hiriseObj.setFloat("far_plane", far_plane);
@@ -958,8 +986,17 @@ int main(void)
         //hiriseObj.render(0, humanObj.shaderProgram);
 
         bindTextures(indoorTex);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
         chairObj.setMaticies(&view_matrix, &proj_matrix);
+        chairObj.setVec3("lightPos", lightPos);
+        chairObj.setVec3("viewPos", cam.position());
+        chairObj.setFloat("far_plane", far_plane);
         chairObj.render(0);
+
+        bindTextures(indoorTex);
+        monitorObj.setMaticies(&view_matrix, &proj_matrix);
+        monitorObj.render(ident);
 
         if (drawObjs[3]) {
             //Draw in stencil first

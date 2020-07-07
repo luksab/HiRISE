@@ -7,8 +7,6 @@ uniform mat4 model_mat;
 uniform mat4 view_mat;
 uniform mat4 proj_mat;
 
-uniform sampler2D height;
-
 //out vec3 interp_pos;
 out vec2 TexCoord_FS_in;
 
