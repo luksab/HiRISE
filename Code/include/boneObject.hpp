@@ -7,6 +7,7 @@
 
 struct boneObject {
     void render(double currentTime);
+    void render(double currentTime, unsigned int shaderProg);
     void setup(bones* model, bool tessellation);
     void setup(bones *model, const char* vertex, const char* fragment);
     void setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat);

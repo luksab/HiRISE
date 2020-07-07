@@ -181,3 +181,46 @@ void boneObject::render(double currentTime)
         glDrawElements(GL_TRIANGLES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
     }
 }
+
+void boneObject::render(double currentTime, unsigned int shaderProg)
+{
+    glUseProgram(shaderProg);
+    if (defaultMat) {
+        glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, &(*view_matrix)[0][0]);
+        glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &(*proj_matrix)[0][0]);
+    }
+
+    float* mats = (float*)malloc(sizeof(float) * 16 * object->NumBones);
+    for (uint i = 0; i < object->NumBones; i++) {
+        uint PositionIndex = (uint)(currentTime / object->timePerFrame) % object->boneTransform.size();//FindPosition(AnimationTime, pNodeAnim);
+        uint NextPositionIndex = (PositionIndex + 1) % object->boneTransform.size();
+        float DeltaTime = (float)(object->timePerFrame);
+        float Factor = fmod(currentTime, object->timePerFrame) / DeltaTime;
+        assert(Factor >= 0.0f && Factor <= 1.0f);
+        glm::mat4 Start = object->boneTransform[PositionIndex][i];
+        glm::mat4 End = object->boneTransform[NextPositionIndex][i];
+        glm::mat4 Delta = End - Start;
+        glm::mat4 Out = Start + Factor * Delta;
+        for (uint j = 0; j < 4; j++) {
+            for (uint k = 0; k < 4; k++) {
+                mats[i * 16 + j * 4 + k] = Out[j][k];//object->boneTransform[index][i][j][k];
+            }
+        }
+    }
+
+    glUniformMatrix4fv(boneMats, object->NumBones, GL_FALSE, mats);
+    free(mats);
+
+    //setMat4("model_mat",&objMat);
+    glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(objMat)[0][0]);
+    //glUniformMatrix4fv(boneMats, object->NumBones, GL_FALSE, &(object->boneTransform[index][0][0][0]));
+
+    //glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(*object).matrixAt(currentTime)[0][0]);
+
+    (*object).bind();
+    if (useTessellation) {
+        glDrawElements(GL_PATCHES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
+    } else {
+        glDrawElements(GL_TRIANGLES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
+    }
+}

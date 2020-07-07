@@ -357,6 +357,9 @@ int main(void)
     pbrObject mars = {};
     animated marsAnim = toAnimated(model);
     mars.setup(&marsAnim, "main.vert", "main.frag", "main.tess", "main.tesse");
+    glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(1000., 1000., 1000.));
+    scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -0.13, 0.0));
+    marsAnim.transform[0] = scaleMat;
     mars.defaultMat = true;
     mars.useTessellation = true;
 
@@ -364,6 +367,18 @@ int main(void)
     pbrObject glassObj = {};
     glassObj.setup(&glass, "glass/glass.vert", "glass/glass.frag");
     glassObj.defaultMat = true;
+
+    animated hirise = loadMeshAnim("HiRISE/HiRISE.dae", 1., true);
+    pbrObject hiriseObj = {};
+    //hiriseObj.setup(&hirise, "simple/simple.vert", "simple/simple.frag");
+    hiriseObj.setup(&hirise, "shadowMap/point_shadows.vs", "shadowMap/point_shadows.fs");
+    hiriseObj.setInt("diffuseTexture", 0);
+    hiriseObj.setInt("depthMap", 1);
+    scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(3.3, 3.3, 3.3));
+    scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -8.41, 0.0));
+    scaleMat = glm::rotate(scaleMat, (float)M_PI, glm::vec3(0., 1., 0.));
+    hirise.transform[0] = scaleMat;
+    hiriseObj.defaultMat = true;
 
     animated chair = loadMeshAnim("tableChairMonitor.dae", true);//toAnimated(loadMesh("chair.dae", false, glm::vec4(0.f, 0.f, 0.f, 1.f)));
     pbrObject chairObj = {};
@@ -395,6 +410,11 @@ int main(void)
     // tableObj.setup(&table, true);
     // tableObj.setInt("heightMap", 5);
     // tableObj.setFloat("displacementFactor", 0.);
+    std::vector<mapTexture> hiriseTex;
+    hiriseTex.resize(1);
+    hiriseTex[0].type = GL_TEXTURE_2D;
+    hiriseTex[0].spot = 0;
+    hiriseTex[0].texture = loadTexture((DATA_ROOT + "hirise.png").c_str());
 
     std::vector<mapTexture> indoorTex;
     indoorTex.resize(1);
@@ -495,7 +515,43 @@ int main(void)
     cout << "loading hdri textures took " << duration << "s" << endl;
 
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+    //glEnable(GL_CULL_FACE);
     proj_matrix = glm::perspective(FOV, static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT, NEAR_VALUE, FAR_VALUE);
+
+    // configure depth map FBO
+    // -----------------------
+    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+    unsigned int depthMapFBO;
+    glGenFramebuffers(1, &depthMapFBO);
+    // create depth cubemap texture
+    unsigned int depthCubemap;
+    glGenTextures(1, &depthCubemap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+    for (unsigned int i = 0; i < 6; ++i)
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    // attach depth texture as FBO's depth buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // build and compile shaders
+    // -------------------------
+    pbrObject shader = {};
+    shader.setup(&pbr, "shadowMap/point_shadows.vs", "shadowMap/point_shadows.fs");
+    shader.setInt("diffuseTexture", 0);
+    shader.setInt("depthMap", 1);
+    pbrObject simpleDepthShader = {};
+    simpleDepthShader.setup(&pbr, "shadowMap/point_shadows_depth.vs", "shadowMap/point_shadows_depth.fs", "shadowMap/point_shadows_depth.gs");
+    // lighting info
+    // -------------
+    glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
 
     glm::mat4 ident = glm::mat4(1.);
 
@@ -613,7 +669,7 @@ int main(void)
         ImGui::Checkbox("Color", &Color);
         ImGui::Checkbox("Draw", &Draw);
         ImGui::Checkbox("Music", &Music);
-        // ImGui::DragFloat3("translate", &(translateVec[0]));
+        ImGui::DragFloat3("translate", &(lightPos[0]));
         // ImGui::DragFloat("Scale", &scaleChair);
         ImGui::End();
         if (Framerate) {
@@ -823,6 +879,40 @@ int main(void)
         //Draw normal scene
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);// Do draw any pixels on the back buffer
 
+        // move light position over time
+        // lightPos.z = sin(glfwGetTime() * 0.5) * 3.0;
+
+        // 0. create depth cubemap transformation matrices
+        // -----------------------------------------------
+        float near_plane = NEAR_VALUE;
+        float far_plane = FAR_VALUE;
+        glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, near_plane, far_plane);
+        std::vector<glm::mat4> shadowTransforms;
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+
+        // 1. render scene to depth cubemap
+        // --------------------------------
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        simpleDepthShader.use();
+        for (unsigned int i = 0; i < 6; ++i)
+            simpleDepthShader.setMat4(("shadowMatrices[" + std::to_string(i) + "]").c_str(), &(shadowTransforms[i]));
+        simpleDepthShader.setFloat("far_plane", far_plane);
+        simpleDepthShader.setVec3("lightPos", lightPos);
+        //renderScene(simpleDepthShader);
+        simpleDepthShader.setMat4("model_mat", &(ident));
+        simpleDepthShader.setVec3("camPos", cam.position());
+        chairObj.render(currentTime, simpleDepthShader.shaderProgram);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+
         if (drawObjs[2]) {// render mars
             glBindTextureUnit(0, image_tex);
             glBindTextureUnit(1, pds_tex);
@@ -853,6 +943,19 @@ int main(void)
         // tableObj.setMaticies(&view_matrix, &proj_matrix);
         // tableObj.setVec3("camPos", cam.position());
         // tableObj.render(0);
+
+        bindTextures(hiriseTex);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+        // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(scaleChair, scaleChair, scaleChair));
+        // scaleMat = glm::translate(scaleMat, translateVec);
+        hiriseObj.setMaticies(&view_matrix, &proj_matrix);
+        hiriseObj.setMaticies(&view_matrix, &proj_matrix);
+        hiriseObj.setVec3("lightPos", lightPos);
+        hiriseObj.setVec3("viewPos", cam.position());
+        hiriseObj.setFloat("far_plane", far_plane);
+        hiriseObj.render(0);
+        //hiriseObj.render(0, humanObj.shaderProgram);
 
         bindTextures(indoorTex);
         chairObj.setMaticies(&view_matrix, &proj_matrix);
@@ -896,6 +999,7 @@ int main(void)
         glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);// dont change stencil
 
         // render Background
+        //glDisable(GL_CULL_FACE);
         glDepthFunc(GL_LEQUAL);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
@@ -903,6 +1007,7 @@ int main(void)
         renderCube.setMaticies(&view_matrix, &proj_matrix);
         renderCube.render(0);
         glDepthFunc(GL_LESS);
+        //glEnable(GL_CULL_FACE);
 
         // render transparency last
         if (drawObjs[1]) {// render glass

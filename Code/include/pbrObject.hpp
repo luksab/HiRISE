@@ -8,6 +8,7 @@
 struct pbrObject {
     void render(double currentTime);
     void render(glm::mat4& matrix);
+    void render(double currentTime, unsigned int shaderProg);
     void renderRotated(float rotation, float time);
     void setup(animated* model, bool tessellation);
     void setup(animated* model, const char* vertex, const char* fragment);

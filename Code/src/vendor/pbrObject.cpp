@@ -208,6 +208,18 @@ void pbrObject::render(double currentTime)
     }
 }
 
+void pbrObject::render(double currentTime, unsigned int shaderProg)
+{
+    glUseProgram(shaderProg);
+
+    (*object).bind();
+    if (useTessellation) {
+        glDrawElements(GL_PATCHES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
+    } else {
+        glDrawElements(GL_TRIANGLES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
+    }
+}
+
 void pbrObject::render(glm::mat4& matrix)
 {
     glUseProgram(shaderProgram);
