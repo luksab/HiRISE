@@ -13,14 +13,16 @@ void main()
 {
     vec4 tex_value = texture2D(tex, interp_uv);
 
-    // vec4 sum = vec4(0.0);
-    // for (int x = -4; x <= 4; x++)
-    //     for (int y = -4; y <= 4; y++)
-    //         sum += texture(
-    //             tex,
-    //             vec2(interp_uv.x + x * blurSizeH, interp_uv.y + y * blurSizeV)
-    //         ) / 81.0;
-    // frag_color = sum;
-
-    frag_color = vec4(tex_value.rgb, 1.);
+    if(length(tex_value.rgb) > 2.){
+        vec4 sum = vec4(0.0);
+        for (int x = -4; x <= 4; x++)
+            for (int y = -4; y <= 4; y++)
+                sum += texture(
+                    tex,
+                    vec2(interp_uv.x + x * blurSizeH, interp_uv.y + y * blurSizeV)
+                ) / 81.0;
+        frag_color = sum;
+    }else{
+        frag_color = vec4(tex_value.rgb, 1.);
+    }    
 }

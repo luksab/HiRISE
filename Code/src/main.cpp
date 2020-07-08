@@ -624,7 +624,7 @@ int main(void)
     glBindTexture(GL_TEXTURE_2D, tex_output);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT,
         NULL);
@@ -666,7 +666,7 @@ int main(void)
     float colbS = 0.122;
     float colbV = 0.606;
 
-    glm::vec4 textColor = glm::vec4(0.72,1.,0.926,1.0);
+    glm::vec4 textColor = glm::vec4(1.11,1.26,1.68,1.0);
     textObj.setVec4("color", textColor);
 
     float irradianceR = 0.815;
@@ -881,7 +881,7 @@ int main(void)
         if (Color) {
             ImGui::Begin("Color");
             ImGui::DragFloat("bias", &bias);
-            ImGui::SliderFloat4("textColor", &(textColor[0]), 0.,1.);
+            ImGui::DragFloat4("textColor", &(textColor[0]));
             textObj.setVec4("color", textColor);
             // ImGui::SliderFloat("colaH", &colaH, 0.0f, 1.0f);
             // ImGui::SliderFloat("colaS", &colaS, 0.0f, 1.0f);
