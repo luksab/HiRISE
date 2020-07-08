@@ -183,6 +183,13 @@ void pbrObject::setVec3(char const* name, float x, float y, float z)
     glUniform3f(loc, x, y, z);
 }
 
+void pbrObject::setVec4(char const* name, glm::vec4 value)
+{
+    glUseProgram(shaderProgram);
+    unsigned int loc = glGetUniformLocation(shaderProgram, name);
+    glUniform4f(loc, value[0], value[1], value[2], value[3]);
+}
+
 void pbrObject::setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat)
 {
     glUseProgram(shaderProgram);

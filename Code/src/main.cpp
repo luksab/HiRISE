@@ -382,6 +382,15 @@ int main(void)
     glass.transform[0] = scaleMat;
     glassObj.defaultMat = true;
 
+    animated textModel = loadMeshAnim("HiRISE/text.dae", 1., true);
+    pbrObject textObj = {};
+    textObj.setup(&textModel, "text/text.vert", "text/text.frag");
+    scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(3.3, 3.3, 3.3));
+    scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -8.41, 0.0));
+    scaleMat = glm::rotate(scaleMat, (float)-M_PI_2, glm::vec3(0., 1., 0.));
+    textModel.transform[0] = scaleMat;
+    textObj.defaultMat = true;
+
     animated hirise = loadMeshAnim("HiRISE/HiRISE.dae", 1., true);
     pbrObject hiriseObj = {};
     //hiriseObj.setup(&hirise, "simple/simple.vert", "simple/simple.frag");
@@ -657,6 +666,9 @@ int main(void)
     float colbS = 0.122;
     float colbV = 0.606;
 
+    glm::vec4 textColor = glm::vec4(0.72,1.,0.926,1.0);
+    textObj.setVec4("color", textColor);
+
     float irradianceR = 0.815;
     float irradianceG = 1.;
     float irradianceB = 1.;
@@ -869,6 +881,8 @@ int main(void)
         if (Color) {
             ImGui::Begin("Color");
             ImGui::DragFloat("bias", &bias);
+            ImGui::SliderFloat4("textColor", &(textColor[0]), 0.,1.);
+            textObj.setVec4("color", textColor);
             // ImGui::SliderFloat("colaH", &colaH, 0.0f, 1.0f);
             // ImGui::SliderFloat("colaS", &colaS, 0.0f, 1.0f);
             // ImGui::SliderFloat("colaV", &colaV, 0.0f, 1.0f);
@@ -1063,7 +1077,7 @@ int main(void)
             glStencilFunc(GL_ALWAYS, 1, 0xFF);        // Set any stencil to 1
             glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);// Only write when both tests pass
             glDepthMask(GL_FALSE);                    // Don't write to depth buffer
-            glFrontFace(GL_CW);//invert normals
+            glFrontFace(GL_CW);                       //invert normals
             glassObj.setMaticies(&view_matrix, &proj_matrix);
             glassObj.render(currentTime);
 
@@ -1134,6 +1148,12 @@ int main(void)
             glassObj.setFloat("power", glass_power);
             glassObj.render(currentTime);
         }
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
+        textObj.setMaticies(&view_matrix, &proj_matrix);
+        textObj.setFloat("factor", glass_factor);
+        textObj.setFloat("power", glass_power);
+        textObj.render(currentTime);
 
         // COMPOSE PASS
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

@@ -22,6 +22,7 @@ struct pbrObject {
     void setInt(char const* name, int value);
     void setFloat(char const* name, float value);
     void setVec3(char const* name, glm::vec3 value);
+    void setVec4(char const* name, glm::vec4 value);
     void setVec3(char const* name, float x, float y, float z);
     void setMat4(char const* name, glm::mat4* value);
 
