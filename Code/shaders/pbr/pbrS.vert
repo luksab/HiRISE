@@ -45,11 +45,14 @@ void main()
         BoneTransform = mat4(1);
     }
 
+    vec4 wp = model_mat * BoneTransform * vec4(aPos, 1.0);
+    WorldPos = vec3(wp)/wp.w;
+
     newVertex = proj_mat * view_mat * model_mat * BoneTransform * vec4(aPos, 1.0);
 
     newNormal = normalize(BoneTransform * vec4(Normal, 0.));
 
-    WorldPos = newVertex.xyz;
+    //WorldPos = newVertex.xyz;
 
     gl_Position = newVertex;
     //gl_Position = proj_mat * view_mat * vec4(aPos, 1.0);

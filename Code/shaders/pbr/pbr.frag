@@ -24,6 +24,8 @@ uniform vec3 lightColors[4];
 
 uniform vec3 camPos;
 
+uniform float bias;
+
 const float PI = 3.14159265359;
 // ----------------------------------------------------------------------------
 // Easy trick to get tangent-normals to world-space to keep PBR code simplified.
@@ -174,4 +176,7 @@ void main()
     color = pow(color, vec3(1.0/2.2)); 
 
     FragColor = vec4(color , 1.0);
+    if(WorldPos.x>-1.){
+        FragColor = vec4(vec3(bias * texture(irradianceMap, Normal)),1.);//vec4(irradiance, 1.0);
+    }
 }

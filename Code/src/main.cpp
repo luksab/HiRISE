@@ -505,7 +505,7 @@ int main(void)
     cout << "loading textures took " << duration << "s" << endl;
     start = glfwGetTime();
     std::vector<mapTexture> rockTex;
-    rockTex.resize(9);
+    rockTex.resize(10);
     rockTex[0].type = GL_TEXTURE_2D;
     rockTex[0].spot = 3;
     rockTex[0].texture = loadTexture(diff.dataP, diff.width, diff.height, diff.nrComponents);
@@ -669,6 +669,8 @@ int main(void)
     float glass_factor = 1.0;
 
     float volume = 0.;
+
+    float bias = 3.460;
 
     bool vSync = true;
     bool rotate = false;
@@ -866,6 +868,7 @@ int main(void)
         }
         if (Color) {
             ImGui::Begin("Color");
+            ImGui::DragFloat("bias", &bias);
             // ImGui::SliderFloat("colaH", &colaH, 0.0f, 1.0f);
             // ImGui::SliderFloat("colaS", &colaS, 0.0f, 1.0f);
             // ImGui::SliderFloat("colaV", &colaV, 0.0f, 1.0f);
@@ -1002,7 +1005,9 @@ int main(void)
             glShadeModel(GL_SMOOTH);
             // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(scaleChair, scaleChair, scaleChair));
             // humanObj.objMat = glm::translate(scaleMat, translateVec);
+            humanObj.setVec3("lightPos", lightPos);
             humanObj.setFloat("displacementFactor", 0.);
+            humanObj.setFloat("bias", bias);
             humanObj.setMaticies(&view_matrix, &proj_matrix);
             humanObj.setVec3("camPos", cam.position());
             humanObj.render(currentTime);
