@@ -257,7 +257,7 @@ void Plane::FromTriangle(const glm::vec3& p0, const glm::vec3& p1, const glm::ve
 {
     norm = cross(p1 - p0, p2 - p0);
     norm = glm::normalize(norm);
-    d = -dot(norm, p0);
+    d = dot(norm, p0);
 }
 
 void Plane::Normalize()
@@ -324,7 +324,7 @@ int main(void)
     music->setVolume(0.);
 
     Plane p;
-    p.FromTriangle(glm::vec3(0, 0.5, 0), glm::vec3(1, 0.7, 0), glm::vec3(0, 7, 0));
+    p.FromTriangle(glm::vec3(5.2, 0, 0), glm::vec3(5.2, 1, 0), glm::vec3(5.2, 0, 1));
 
     glm::mat4 r = p.MakeReflectionMatrix();
 
@@ -373,9 +373,13 @@ int main(void)
     mars.defaultMat = true;
     mars.useTessellation = true;
 
-    animated glass = loadMeshAnim("shard.dae", 1., true);
+    animated glass = loadMeshAnim("HiRISE/oneGlass.dae", 1., true);
     pbrObject glassObj = {};
     glassObj.setup(&glass, "glass/glass.vert", "glass/glass.frag");
+    scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(3.3, 3.3, 3.3));
+    scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -8.41, 0.0));
+    scaleMat = glm::rotate(scaleMat, (float)M_PI, glm::vec3(0., 1., 0.));
+    glass.transform[0] = scaleMat;
     glassObj.defaultMat = true;
 
     animated hirise = loadMeshAnim("HiRISE/HiRISE.dae", 1., true);
@@ -582,7 +586,7 @@ int main(void)
 
     glm::mat4 ident = glm::mat4(1.);
 
-    printf("loading mars data");
+    printf("loading mars data\n");
     start = glfwGetTime();
     int image_width, image_height;
     float* image_tex_data = load_texture_data(DATA_ROOT + "ESP_041121_1725_RED_A_01_ORTHO_quarter.jpg", &image_width, &image_height);
@@ -628,7 +632,7 @@ int main(void)
 
     glUniform1i(computeImage_loc, 1);
     glUniform1i(computeHeight_loc, 2);
-    
+
     glDispatchCompute((GLuint)tex_w, (GLuint)tex_h, 1);
 
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -677,9 +681,8 @@ int main(void)
     bool Color = false;
     bool Music = false;
     bool Draw = false;
-    bool mirror = false;
 
-    bool drawObjs[5] = { false, false, true, false, false };
+    bool drawObjs[5] = { true, false, true, true, true };
 
     glm::vec3 translateVec(0., 0., 0.);
     float scaleChair = 0;
@@ -750,7 +753,6 @@ int main(void)
             ImGui::Checkbox("rotate", &rotate);
             ImGui::SliderFloat("tessFactor", &tessFactor, 0.0f, 20.0f);
             ImGui::Checkbox("render using lines", &lineRendering);
-            ImGui::Checkbox("mirror", &mirror);
             if (ImGui::Checkbox("record", &recordFrames) && recordFrames) {
                 printf("record!\n");
                 currentTime = 0;
@@ -1049,13 +1051,14 @@ int main(void)
             mars.render(0);
         }
 
-        if (drawObjs[3]) {
+        if (drawObjs[3]) {// reflexion
             //Draw in stencil first
             glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);// Do not draw any pixels on the back buffer
             glEnable(GL_STENCIL_TEST);
             glStencilFunc(GL_ALWAYS, 1, 0xFF);        // Set any stencil to 1
             glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);// Only write when both tests pass
             glDepthMask(GL_FALSE);                    // Don't write to depth buffer
+            glFrontFace(GL_CW);//invert normals
             glassObj.setMaticies(&view_matrix, &proj_matrix);
             glassObj.render(currentTime);
 
@@ -1066,12 +1069,20 @@ int main(void)
             glEnable(GL_DEPTH_TEST);
 
             glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);// draw pixels on the back buffer
-            view_matrix_new = view_matrix * (glass.matrixAt(currentTime)) * r;
+            view_matrix_new = view_matrix * r;
 
-            glBindTextureUnit(0, image_tex);
-            glBindTextureUnit(1, pds_tex);
-            mars.setMaticies(&view_matrix_new, &proj_matrix);
-            mars.render(0);
+            bindTextures(indoorTex);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+            chairObj.setMaticies(&view_matrix_new, &proj_matrix);
+            chairObj.setVec3("lightPos", lightPos);
+            chairObj.setVec3("viewPos", cam.position());
+            chairObj.setFloat("far_plane", far_plane);
+            chairObj.render(0);
+
+            bindTextures(indoorTex);
+            monitorObj.setMaticies(&view_matrix_new, &proj_matrix);
+            monitorObj.render(ident);
 
             bindTextures(rockTex);
             // tableObj.setMaticies(&view_matrix_new, &proj_matrix);
@@ -1081,6 +1092,18 @@ int main(void)
             humanObj.setMaticies(&view_matrix_new, &proj_matrix);
             humanObj.setVec3("camPos", cam.position());
             humanObj.render(currentTime);
+
+            bindTextures(hiriseTex);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+            // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(scaleChair, scaleChair, scaleChair));
+            // scaleMat = glm::translate(scaleMat, translateVec);
+            hiriseObj.setMaticies(&view_matrix_new, &proj_matrix);
+            hiriseObj.setVec3("lightPos", lightPos);
+            hiriseObj.setVec3("viewPos", cam.position());
+            hiriseObj.setFloat("far_plane", far_plane);
+            hiriseObj.render(0);
+            glFrontFace(GL_CCW);//uninvert normals
         }
 
         glStencilFunc(GL_ALWAYS, 1, 0x00);     // Always pass stencil
