@@ -32,6 +32,6 @@ vec4 hsv2rgb(vec4 c)
 
 void main() {
     vec2 tc;
-    tc = interp_pos.xy/2+0.5;
+    tc = interp_pos.xz/2+0.5;
     frag_color = texture2D(tex,tc);//vec4(1.,1.,1.,1.);
 }

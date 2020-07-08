@@ -153,6 +153,16 @@ create_texture_rgba32f(int width, int height)
     return handle;
 }
 
+unsigned int setupComputeShader()
+{
+    // load and compile shaders and link program
+    unsigned int computeShader = compileShader("compute/computeMars.cs", GL_COMPUTE_SHADER);
+    unsigned int shaderProgram = linkProgram(computeShader);
+    // after linking the program the shader objects are no longer needed
+    glDeleteShader(computeShader);
+    return shaderProgram;
+}
+
 void build_framebuffer(int width, int height)
 {
     if (framebuffer_tex) {
@@ -356,7 +366,7 @@ int main(void)
     geometry model = loadMesh("hiresUV.obj", false, glm::vec4(0.f, 0.f, 0.f, 1.f));
     pbrObject mars = {};
     animated marsAnim = toAnimated(model);
-    mars.setup(&marsAnim, "main.vert", "main.frag", "main.tess", "main.tesse");
+    mars.setup(&marsAnim, "main.vert", "mainSimple.frag", "main.tess", "main.tesse");
     glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(1000., 1000., 1000.));
     scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -0.13, 0.0));
     marsAnim.transform[0] = scaleMat;
@@ -516,13 +526,13 @@ int main(void)
 
     start = glfwGetTime();
     pbrTex envtex = setupPBR(&pbr, "HDRI-II.hdr");
-    rockTex[6].type =  GL_TEXTURE_CUBE_MAP;
+    rockTex[6].type = GL_TEXTURE_CUBE_MAP;
     rockTex[6].spot = 0;
     rockTex[6].texture = envtex.irradianceMap;
-    rockTex[7].type =  GL_TEXTURE_CUBE_MAP;
+    rockTex[7].type = GL_TEXTURE_CUBE_MAP;
     rockTex[7].spot = 1;
     rockTex[7].texture = envtex.prefilterMap;
-    rockTex[8].type =  GL_TEXTURE_CUBE_MAP;
+    rockTex[8].type = GL_TEXTURE_CUBE_MAP;
     rockTex[8].spot = 2;
     rockTex[8].texture = envtex.brdfLUTTexture;
     stop = glfwGetTime();
@@ -593,6 +603,36 @@ int main(void)
     glBindTextureUnit(1, pds_tex);
     glGenerateMipmap(GL_TEXTURE_2D);
     glTextureParameteri(pds_tex, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+
+    int tex_w = pds_width, tex_h = pds_height;
+    GLuint tex_output;
+    glGenTextures(1, &tex_output);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex_output);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT,
+        NULL);
+    glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+
+    glBindTextureUnit(1, image_tex);
+    glBindTextureUnit(2, pds_tex);
+
+    unsigned int computeProgram = setupComputeShader();
+    glUseProgram(computeProgram);
+
+    int computeImage_loc = glGetUniformLocation(computeProgram, "tex");
+    int computeHeight_loc = glGetUniformLocation(computeProgram, "height");
+
+    glUniform1i(computeImage_loc, 1);
+    glUniform1i(computeHeight_loc, 2);
+    
+    glDispatchCompute((GLuint)tex_w, (GLuint)tex_h, 1);
+
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
     mars.setInt("height", 1);
     stop = glfwGetTime();
     duration = stop - start;
@@ -1003,7 +1043,7 @@ int main(void)
         monitorObj.render(ident);
 
         if (drawObjs[2]) {// render mars
-            glBindTextureUnit(0, image_tex);
+            glBindTextureUnit(0, tex_output);
             glBindTextureUnit(1, pds_tex);
             mars.setMaticies(&view_matrix, &proj_matrix);
             mars.render(0);

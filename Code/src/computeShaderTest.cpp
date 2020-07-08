@@ -251,7 +251,7 @@ int main(int, char *argv[])
     unsigned int shaderProgram = setupShader();
     unsigned int computeProgram = setupComputeShader();
 
-    geometry model = loadMesh("HiresPlane.obj", false, glm::vec4(0.f, 0.f, 0.f, 1.f));
+    geometry model = loadMesh("hiresUV.obj", false, glm::vec4(0.f, 0.f, 0.f, 1.f));
     if (model.vertex_count == 0)
     {
         exit(1);
