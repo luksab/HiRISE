@@ -111,6 +111,7 @@ Für die vielen kleinen Glasscherben wird lediglich die Environment Map reflekti
 ### Mars
 Da die Marsoberfläche vollständig aus Texturen entsteht, muss nur ein relativ hochaufgelöstes Quadrat eingeladen werden.
 Diese muss bereits einiges an Auflösung aufweisen, da meine Nvidia gtx 1070 ti leider nur 64 Tessellation levels unterstützt, was nicht ausreicht, um aus einem einzelnen Rechteck genug Detail herauszuhohlen.
+Die Farbtextur wird in einem Computeshader vorberechnet um zur Laufzeit Rechenleistung zu sparen. Dadurch lässt sich in der Szene beim Zeitpunkt der [Implementation](https://github.com/luksab/HiRISE/commit/5c31de87f14faa08e156b4710158d1e16780ce2e) eine Performacesteigerung von nahezu 10x feststellen, da das berechnen der Farbinformationen sehr aufwendig ist.
 
 ### Tisch, Stuhl, Bildschirm, USB-Stick
 Diese Objekte wurden alle von mir in Blender modelliert, in dem Primitive zu einem Mesh zusammengefügt und dann teilweise leicht verändert wurden.
