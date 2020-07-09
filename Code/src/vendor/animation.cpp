@@ -74,7 +74,7 @@ loadSceneAnim(const char* filename, double scale, bool smooth)
                     aiNodeAnim* pNodeAnim;
                     bool foundAnim = false;
                     for (uint mAnimationsCounter = 0; mAnimationsCounter < scene->mAnimations[0]->mNumChannels; mAnimationsCounter++) {
-                        if (scene->mAnimations[0]->mChannels[mAnimationsCounter]->mNodeName == mesh->mName) {
+                        if (scene->mAnimations[0]->mChannels[mAnimationsCounter]->mNodeName == node->mName) {
                             pNodeAnim = scene->mAnimations[0]->mChannels[node->mMeshes[i]];
                             foundAnim = true;
                         }
@@ -130,7 +130,10 @@ loadSceneAnim(const char* filename, double scale, bool smooth)
                 unsigned int* ibo_data = new unsigned int[mesh->mNumFaces * 3];
                 for (uint32_t i = 0; i < mesh->mNumVertices; ++i) {
                     glm::vec3 pos(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+                    if (!mesh->HasNormals())
+                        return;
                     glm::vec3 nrm(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+
                     float u = 0;
                     float v = 0;
                     if (hasTexture) {

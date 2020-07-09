@@ -100,7 +100,7 @@ int main(int, char* argv[])
     // unsigned int metallic = loadTexture((DATA_ROOT + "rust/metallic.png").c_str());
     // unsigned int roughness = loadTexture((DATA_ROOT + "rust/roughness.png").c_str());
     // unsigned int ao = loadTexture((DATA_ROOT + "rust/ao.png").c_str());
-    pbrTex envtex = setupPBR(&pbr);
+    pbrTex envtex = setupPBR(&pbr, "HDRI-II.hdr");
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

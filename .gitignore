@@ -9,3 +9,4 @@ build
 Code/data/*
 Code/models/*
 !Code/models/tableChairMonitor.dae
+!Code/models/shards.dae

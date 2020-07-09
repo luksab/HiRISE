@@ -9,6 +9,7 @@
 #include "camera.hpp"
 #include "common.hpp"
 #include "mesh.hpp"
+#include "pbrMultiObject.hpp"
 #include "pbrObject.hpp"
 #include "pbrTex.hpp"
 #include "pngImg.hpp"
@@ -417,7 +418,7 @@ int main(void)
     chair.transform[0] = glm::mat4(1);
     chairObj.defaultMat = true;
 
-    animated monitor = loadMeshAnim("HiRISE/monitor.dae", true);//toAnimated(loadMesh("chair.dae", false, glm::vec4(0.f, 0.f, 0.f, 1.f)));
+    animated monitor = loadMeshAnim("HiRISE/monitor.dae", false);//toAnimated(loadMesh("chair.dae", false, glm::vec4(0.f, 0.f, 0.f, 1.f)));
     pbrObject monitorObj = {};
     // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.26, 0.26, 0.26));
     // scaleMat = glm::translate(scaleMat, glm::vec3(0., 0.49, -0.12));
@@ -439,6 +440,11 @@ int main(void)
     humanObj.use();
     humanObj.scale(0.16);
     humanObj.move(0., 5.96, -0.29);
+
+    std::vector<animated> glassAnim = loadSceneAnim("shards.dae", false);
+    pbrMultiObject glassAnimObj = {};
+    glassAnimObj.setup(glassAnim, "glass/glass.vert", "glass/glass.frag");
+    glassAnimObj.defaultMat = true;
 
     // animated table = loadMeshAnim("table.dae", true);
     // pbrObject tableObj = {};
@@ -666,7 +672,7 @@ int main(void)
     float colbS = 0.122;
     float colbV = 0.606;
 
-    glm::vec4 textColor = glm::vec4(1.11,1.26,1.68,1.0);
+    glm::vec4 textColor = glm::vec4(1.11, 1.26, 1.68, 1.0);
     textObj.setVec4("color", textColor);
 
     float irradianceR = 0.815;
@@ -696,7 +702,7 @@ int main(void)
     bool Music = false;
     bool Draw = false;
 
-    bool drawObjs[5] = { true, false, true, true, true };
+    bool drawObjs[6] = { true, false, true, true, true, true };
 
     glm::vec3 translateVec(0., 0., 0.);
     float scaleChair = 0;
@@ -906,6 +912,7 @@ int main(void)
             ImGui::Checkbox("mars", &(drawObjs[2]));
             ImGui::Checkbox("reflexion", &(drawObjs[3]));
             ImGui::Checkbox("table", &(drawObjs[4]));
+            ImGui::Checkbox("HiRISE", &(drawObjs[5]));
             ImGui::End();
         }
         if (Music) {
@@ -1038,30 +1045,32 @@ int main(void)
         // tableObj.setVec3("camPos", cam.position());
         // tableObj.render(0);
 
-        bindTextures(hiriseTex);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
-        // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(scaleChair, scaleChair, scaleChair));
-        // scaleMat = glm::translate(scaleMat, translateVec);
-        hiriseObj.setMaticies(&view_matrix, &proj_matrix);
-        hiriseObj.setVec3("lightPos", lightPos);
-        hiriseObj.setVec3("viewPos", cam.position());
-        hiriseObj.setFloat("far_plane", far_plane);
-        hiriseObj.render(0);
-        //hiriseObj.render(0, humanObj.shaderProgram);
+        if (drawObjs[5]) {
+            bindTextures(hiriseTex);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+            // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(scaleChair, scaleChair, scaleChair));
+            // scaleMat = glm::translate(scaleMat, translateVec);
+            hiriseObj.setMaticies(&view_matrix, &proj_matrix);
+            hiriseObj.setVec3("lightPos", lightPos);
+            hiriseObj.setVec3("viewPos", cam.position());
+            hiriseObj.setFloat("far_plane", far_plane);
+            hiriseObj.render(0);
+            //hiriseObj.render(0, humanObj.shaderProgram);
 
-        bindTextures(indoorTex);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
-        chairObj.setMaticies(&view_matrix, &proj_matrix);
-        chairObj.setVec3("lightPos", lightPos);
-        chairObj.setVec3("viewPos", cam.position());
-        chairObj.setFloat("far_plane", far_plane);
-        chairObj.render(0);
+            bindTextures(indoorTex);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+            chairObj.setMaticies(&view_matrix, &proj_matrix);
+            chairObj.setVec3("lightPos", lightPos);
+            chairObj.setVec3("viewPos", cam.position());
+            chairObj.setFloat("far_plane", far_plane);
+            chairObj.render(0);
 
-        bindTextures(indoorTex);
-        monitorObj.setMaticies(&view_matrix, &proj_matrix);
-        monitorObj.render(ident);
+            bindTextures(indoorTex);
+            monitorObj.setMaticies(&view_matrix, &proj_matrix);
+            monitorObj.render(ident);
+        }
 
         if (drawObjs[2]) {// render mars
             glBindTextureUnit(0, tex_output);
@@ -1147,6 +1156,13 @@ int main(void)
             glassObj.setFloat("factor", glass_factor);
             glassObj.setFloat("power", glass_power);
             glassObj.render(currentTime);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
+            glassAnimObj.setMaticies(&view_matrix, &proj_matrix);
+            glassAnimObj.setFloat("factor", glass_factor);
+            glassAnimObj.setFloat("power", glass_power);
+            glassAnimObj.render(currentTime);
         }
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
