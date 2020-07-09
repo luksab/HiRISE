@@ -378,8 +378,9 @@ In Blender lassen sich in Echtzeit Parameter und Zusammenh&#xE4;nge ausprobieren
 
 <p>Hier ist die Entwicklungsumgebung mit allen UI-Elementen aktiviert:<br>
 <img src="images/Screenshot_UI_demo.jpg" alt><br>
-Zur Entwicklung des Benutzerinterfaces wurde dear imgui benutzt. Dies erlaubt schnell relativ komlexe Bedienelemente einzubinden.<br>
-Die einzelnen Elemente lassen sich deaktivieren, um Platz zu sparen.</p>
+Zur Entwicklung des Benutzerinterfaces wurde dear ImGui benutzt. Dies erlaubt schnell relativ komlexe Bedienelemente einzubinden.<br>
+Die Entwicklung der einzelnen Elemente fand zum Gro&#xDF;teil dadurch statt, dass eine Variable im Programm in Echtzeit ver&#xE4;ndert werden sollte, wodurch dann genau ein Element n&#xF6;tig wurde.<br>
+Da diese Element jeweils also genau einen Verwendungszweck habem , lassen sie sich jeweils deaktivieren, um Platz zu sparen.</p>
 <h2 class="mume-header" id="kamerafahrt">Kamerafahrt</h2>
 
 <p>Diese wird mithilfe von Splines, welche durch Punkte, durch die die Kamera gehen soll definiert werden.<br>
@@ -389,6 +390,10 @@ Hier ist die erste Kamerafahrt. Bei dieser sind die Tangenten noch nicht korrekt
     <source src="./videos/first Cam.mp4" type="video/mp4">
   </video>
 </figure>
+<p>Die Punkte, durch die die Kamera gehen soll, werden in einem nach dem ersten Element von dem std::pair sortierten std::vector&lt;std::pair&lt;float, std::vector&lt;float&gt;&gt;&gt; gespeichert. Es wird, um zwischen dem iten und (i+1)ten Punkt eine Kurve auszurechnen werden die Punkte i-1, i, i+1 und i+2 mit der globalen Zeit an <a href="https://github.com/luksab/HiRISE/blob/486d4ef89b60513d377432117c05703218515664/Code/include/spline.hpp#L150">eval</a> &#xFC;bergeben.<br>
+Diese rechnet dann zun&#xE4;chst die Steigungen der Kontrollpunkte von den Punkten p1 und p2 aus aus, welche p2-p0 und p3-p1 normiert entsprechen, wenn p1 zwischen p0 und p2 und p2 zwischen p1 und p3 liegt. Sonst werden die Kontrollpunkte auf die x-Koordinate beschr&#xE4;nkt.<br>
+Dies wird gemacht, damit Maxima und Minima eine symmetrischere Extremstelle aufweisen.<br>
+<img src="images/spline.png" alt="spline code"></p>
 <h2 class="mume-header" id="pbr-hdri">PBR &amp; HDRI</h2>
 
 <p>Au&#xDF;erhalb des Geb&#xE4;ude wird zur beleuchtung ein HDRI nach dem Vorbild von <a href="https://learnopengl.com/PBR/IBL/Specular-IBL">https://learnopengl.com/PBR/IBL/Specular-IBL</a> benutzt.<br>
@@ -417,11 +422,20 @@ Es werden die einzelnen Knochen rekursiv von der H&#xFC;fte aus importiert, inde
 <h3 class="mume-header" id="mars">Mars</h3>
 
 <p>Da die Marsoberfl&#xE4;che vollst&#xE4;ndig aus Texturen entsteht, muss nur ein relativ hochaufgel&#xF6;stes Quadrat eingeladen werden.<br>
-Diese muss bereits einiges an Aufl&#xF6;sung aufweisen, da meine Nvidia gtx 1070 ti leider nur 64 Tessellation levels unterst&#xFC;tzt, was nicht ausreicht, um aus einem einzelnen Rechteck genug Detail herauszuhohlen.</p>
+Diese muss bereits einiges an Aufl&#xF6;sung aufweisen, da meine Nvidia gtx 1070 ti leider nur 64 Tessellation levels unterst&#xFC;tzt, was nicht ausreicht, um aus einem einzelnen Rechteck genug Detail herauszuhohlen.<br>
+Die Farbtextur wird in einem Computeshader vorberechnet um zur Laufzeit Rechenleistung zu sparen. Dadurch l&#xE4;sst sich in der Szene beim Zeitpunkt der <a href="https://github.com/luksab/HiRISE/commit/5c31de87f14faa08e156b4710158d1e16780ce2e">Implementation</a> eine Performacesteigerung von nahezu 10x feststellen, da das berechnen der Farbinformationen sehr aufwendig ist.</p>
 <h3 class="mume-header" id="tisch-stuhl-bildschirm-usb-stick">Tisch, Stuhl, Bildschirm, USB-Stick</h3>
 
 <p>Diese Objekte wurden alle von mir in Blender modelliert, in dem Primitive zu einem Mesh zusammengef&#xFC;gt und dann teilweise leicht ver&#xE4;ndert wurden.<br>
 <img src="images/modelling.jpg" alt></p>
+<h3 class="mume-header" id="hirise-text">HiRISE Text</h3>
+
+<p>Der text wurde in Blender mithilfe des Text-Objektes ertellt. Dieses kann dann in Geometrie umgewandelt werden, die dann extrudiert wird, um ein dreidimensionales Objekt des urspr&#xFC;nglichen Textes zu erstellen.</p>
+<h2 class="mume-header" id="glasssplitter-simulation">Glasssplitter simulation</h2>
+
+<p>Der urspr&#xFC;ngliche Plan war es eine vollst&#xE4;ndige Simulation von Glass zu schreiben, die das Glas zersplittern und mit der Szene interagieren lassen sollte. Dies ist allerdings aus Zeitgr&#xFC;nden nicht gelungen und wird jetzt durch das Blender Add-on <a href="https://docs.blender.org/manual/en/2.83/addons/object/cell_fracture.html">Cell Fracture</a> und die Ridgid Body Simulation von Blender ersetzt.<br>
+Dort wird das Glas zun&#xE4;chst von Cell Fracture zersplittert und die einzelnen resultierenden Objekte interagieren dann miteinander und mit der Szene.<br>
+<img src="images/cellFracture.png" alt="eine Beispielkonfiguration von Cell Fracture"></p>
 </div>
       </div>
       
