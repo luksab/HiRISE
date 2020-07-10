@@ -13,3 +13,6 @@ Code/models/*
 !Code/models/HiRISE_new/
 !Code/data/camPos
 !Code/data/audio
+!Code/data/hirise.png
+!Code/data/Atlas.png
+!Code/data/rock_ground
