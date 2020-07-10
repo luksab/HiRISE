@@ -364,6 +364,7 @@ int main(void)
     (void)io;
 
     printf("loading models\n");
+    printf("mars\n");
     geometry model = loadMesh("hiresUV.obj", false, glm::vec4(0.f, 0.f, 0.f, 1.f));
     pbrObject mars = {};
     animated marsAnim = toAnimated(model);
@@ -374,6 +375,7 @@ int main(void)
     mars.defaultMat = true;
     mars.useTessellation = true;
 
+    printf("singleGlass\n");
     animated singleGlass = loadMeshAnim("HiRISE_new/singleGlass.dae", 1., true);
     pbrObject glassObj = {};
     glassObj.setup(&singleGlass, "glass/glass.vert", "glass/glass.frag");
@@ -383,6 +385,7 @@ int main(void)
     // glass.transform[0] = scaleMat;
     glassObj.defaultMat = true;
 
+    printf("glassOut\n");
     animated glass = loadMeshAnim("HiRISE_new/glass.dae", 1., true);
     pbrObject glassOutObj = {};
     glassOutObj.setup(&glass, "glass/glass.vert", "glass/glass.frag");
@@ -392,6 +395,7 @@ int main(void)
     // glass.transform[0] = scaleMat;
     glassOutObj.defaultMat = true;
 
+    printf("text\n");
     animated textModel = loadMeshAnim("HiRISE_new/text.dae", 1., true);
     pbrObject textObj = {};
     textObj.setup(&textModel, "text/text.vert", "text/text.frag");
@@ -401,6 +405,7 @@ int main(void)
     // textModel.transform[0] = scaleMat;
     textObj.defaultMat = true;
 
+    printf("HiRISE\n");
     animated hirise = loadMeshAnim("HiRISE_new/HiRISE.dae", 1., true);
     pbrObject hiriseObj = {};
     //hiriseObj.setup(&hirise, "simple/simple.vert", "simple/simple.frag");
@@ -414,6 +419,7 @@ int main(void)
     // hirise.transform[0] = scaleMat;
     hiriseObj.defaultMat = true;
 
+    printf("tables & chairs\n");
     animated chair = loadMeshAnim("HiRISE_new/tables.dae", true);//toAnimated(loadMesh("chair.dae", false, glm::vec4(0.f, 0.f, 0.f, 1.f)));
     pbrObject chairObj = {};
     // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.26, 0.26, 0.26));
@@ -427,6 +433,7 @@ int main(void)
     chair.transform[0] = glm::mat4(1);
     chairObj.defaultMat = true;
 
+    printf("monitors\n");
     animated monitor = loadMeshAnim("HiRISE_new/monitors.dae", false);//toAnimated(loadMesh("chair.dae", false, glm::vec4(0.f, 0.f, 0.f, 1.f)));
     pbrObject monitorObj = {};
     // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.26, 0.26, 0.26));
@@ -436,6 +443,7 @@ int main(void)
     monitor.transform[0] = glm::mat4(1);
     monitorObj.defaultMat = true;
 
+    printf("cube\n");
     animated pbr = loadMeshAnim("cube.dae", true);
 
     pbrObject renderCube = {};
@@ -443,6 +451,7 @@ int main(void)
     renderCube.defaultMat = true;
     renderCube.setInt("environmentMap", 0);
 
+    printf("human\n");
     bones human = loadMeshBone("HiRISE_new/human.dae", false);
     boneObject humanObj = {};
     humanObj.setup(&human, false);
@@ -450,6 +459,7 @@ int main(void)
     humanObj.scale(0.165);
     humanObj.move(0., 5.96, -0.29);
 
+    printf("glassAnim\n");
     std::vector<animated> glassAnim = loadSceneAnim("HiRISE_new/shards.dae", false);
     pbrMultiObject glassAnimObj = {};
     glassAnimObj.setup(glassAnim, "glass/glass.vert", "glass/glass.frag");
