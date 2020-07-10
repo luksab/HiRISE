@@ -1,6 +1,5 @@
 #version 330 core
 out vec4 FragColor;
-out float gl_FragDepth;
 in vec3 localPos;
 
 uniform samplerCube environmentMap;
