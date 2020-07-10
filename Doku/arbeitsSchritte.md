@@ -124,3 +124,4 @@ Der text wurde in Blender mithilfe des Text-Objektes ertellt. Dieses kann dann i
 Der ursprüngliche Plan war es eine vollständige Simulation von Glass zu schreiben, die das Glas zersplittern und mit der Szene interagieren lassen sollte. Dies ist allerdings aus Zeitgründen nicht gelungen und wird jetzt durch das Blender Add-on [Cell Fracture](https://docs.blender.org/manual/en/2.83/addons/object/cell_fracture.html) und die Ridgid Body Simulation von Blender ersetzt.
 Dort wird das Glas zunächst von Cell Fracture zersplittert und die einzelnen resultierenden Objekte interagieren dann miteinander und mit der Szene.
 ![eine Beispielkonfiguration von Cell Fracture](images/cellFracture.png)
+![shards](images/shards.png)
