@@ -10,3 +10,4 @@ Code/data/*
 Code/models/*
 !Code/models/tableChairMonitor.dae
 !Code/models/shards.dae
+!Code/models/HiRISE_new/

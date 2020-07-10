@@ -325,7 +325,7 @@ int main(void)
     music->setVolume(0.);
 
     Plane p;
-    p.FromTriangle(glm::vec3(5.2, 0, 0), glm::vec3(5.2, 1, 0), glm::vec3(5.2, 0, 1));
+    p.FromTriangle(glm::vec3(16.15, 0, 0), glm::vec3(16.15, 1, 0), glm::vec3(16.15, 0, 1));
 
     glm::mat4 r = p.MakeReflectionMatrix();
 
@@ -369,43 +369,52 @@ int main(void)
     animated marsAnim = toAnimated(model);
     mars.setup(&marsAnim, "main.vert", "mainSimple.frag", "main.tess", "main.tesse");
     glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(1000., 1000., 1000.));
-    scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -0.13, 0.0));
+    scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -0.15, 0.0));
     marsAnim.transform[0] = scaleMat;
     mars.defaultMat = true;
     mars.useTessellation = true;
 
-    animated glass = loadMeshAnim("HiRISE/oneGlass.dae", 1., true);
+    animated singleGlass = loadMeshAnim("HiRISE_new/singleGlass.dae", 1., true);
     pbrObject glassObj = {};
-    glassObj.setup(&glass, "glass/glass.vert", "glass/glass.frag");
-    scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(3.3, 3.3, 3.3));
-    scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -8.41, 0.0));
-    scaleMat = glm::rotate(scaleMat, (float)M_PI, glm::vec3(0., 1., 0.));
-    glass.transform[0] = scaleMat;
+    glassObj.setup(&singleGlass, "glass/glass.vert", "glass/glass.frag");
+    // scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(3.3, 3.3, 3.3));
+    // scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -8.41, 0.0));
+    // scaleMat = glm::rotate(scaleMat, (float)M_PI, glm::vec3(0., 1., 0.));
+    // glass.transform[0] = scaleMat;
     glassObj.defaultMat = true;
 
-    animated textModel = loadMeshAnim("HiRISE/text.dae", 1., true);
+    animated glass = loadMeshAnim("HiRISE_new/glass.dae", 1., true);
+    pbrObject glassOutObj = {};
+    glassOutObj.setup(&glass, "glass/glass.vert", "glass/glass.frag");
+    // scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(3.3, 3.3, 3.3));
+    // scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -8.41, 0.0));
+    // scaleMat = glm::rotate(scaleMat, (float)M_PI, glm::vec3(0., 1., 0.));
+    // glass.transform[0] = scaleMat;
+    glassOutObj.defaultMat = true;
+
+    animated textModel = loadMeshAnim("HiRISE_new/text.dae", 1., true);
     pbrObject textObj = {};
     textObj.setup(&textModel, "text/text.vert", "text/text.frag");
-    scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(3.3, 3.3, 3.3));
-    scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -8.41, 0.0));
-    scaleMat = glm::rotate(scaleMat, (float)-M_PI_2, glm::vec3(0., 1., 0.));
-    textModel.transform[0] = scaleMat;
+    // scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(3.3, 3.3, 3.3));
+    // scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -8.41, 0.0));
+    // scaleMat = glm::rotate(scaleMat, (float)-M_PI_2, glm::vec3(0., 1., 0.));
+    // textModel.transform[0] = scaleMat;
     textObj.defaultMat = true;
 
-    animated hirise = loadMeshAnim("HiRISE/HiRISE.dae", 1., true);
+    animated hirise = loadMeshAnim("HiRISE_new/HiRISE.dae", 1., true);
     pbrObject hiriseObj = {};
     //hiriseObj.setup(&hirise, "simple/simple.vert", "simple/simple.frag");
     hiriseObj.setup(&hirise, "shadowMap/point_shadows.vs", "shadowMap/point_shadows.fs");
     hiriseObj.setInt("diffuseTexture", 0);
     hiriseObj.setInt("depthMap", 1);
     hiriseObj.setInt("levels", 5);
-    scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(3.3, 3.3, 3.3));
-    scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -8.41, 0.0));
-    scaleMat = glm::rotate(scaleMat, (float)M_PI, glm::vec3(0., 1., 0.));
-    hirise.transform[0] = scaleMat;
+    // scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(3.3, 3.3, 3.3));
+    // scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -8.41, 0.0));
+    // scaleMat = glm::rotate(scaleMat, (float)M_PI, glm::vec3(0., 1., 0.));
+    // hirise.transform[0] = scaleMat;
     hiriseObj.defaultMat = true;
 
-    animated chair = loadMeshAnim("HiRISE/chair.dae", true);//toAnimated(loadMesh("chair.dae", false, glm::vec4(0.f, 0.f, 0.f, 1.f)));
+    animated chair = loadMeshAnim("HiRISE_new/tables.dae", true);//toAnimated(loadMesh("chair.dae", false, glm::vec4(0.f, 0.f, 0.f, 1.f)));
     pbrObject chairObj = {};
     // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.26, 0.26, 0.26));
     // scaleMat = glm::translate(scaleMat, glm::vec3(0., 0.49, -0.12));
@@ -418,7 +427,7 @@ int main(void)
     chair.transform[0] = glm::mat4(1);
     chairObj.defaultMat = true;
 
-    animated monitor = loadMeshAnim("HiRISE/monitor.dae", false);//toAnimated(loadMesh("chair.dae", false, glm::vec4(0.f, 0.f, 0.f, 1.f)));
+    animated monitor = loadMeshAnim("HiRISE_new/monitors.dae", false);//toAnimated(loadMesh("chair.dae", false, glm::vec4(0.f, 0.f, 0.f, 1.f)));
     pbrObject monitorObj = {};
     // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.26, 0.26, 0.26));
     // scaleMat = glm::translate(scaleMat, glm::vec3(0., 0.49, -0.12));
@@ -434,26 +443,18 @@ int main(void)
     renderCube.defaultMat = true;
     renderCube.setInt("environmentMap", 0);
 
-    bones human = loadMeshBone("Lowpolymesh_Eliber_start.dae", false);
+    bones human = loadMeshBone("HiRISE_new/human.dae", false);
     boneObject humanObj = {};
     humanObj.setup(&human, false);
     humanObj.use();
     humanObj.scale(0.16);
     humanObj.move(0., 5.96, -0.29);
 
-    std::vector<animated> glassAnim = loadSceneAnim("shards.dae", false);
+    std::vector<animated> glassAnim = loadSceneAnim("HiRISE_new/shards.dae", false);
     pbrMultiObject glassAnimObj = {};
     glassAnimObj.setup(glassAnim, "glass/glass.vert", "glass/glass.frag");
     glassAnimObj.defaultMat = true;
 
-    // animated table = loadMeshAnim("table.dae", true);
-    // pbrObject tableObj = {};
-    // // scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.47, 0.47, 0.47));
-    // // scaleMat = glm::translate(scaleMat, glm::vec3(0.0, 0.25, 0.86));
-    // // table.transform[0] = scaleMat;
-    // tableObj.setup(&table, true);
-    // tableObj.setInt("heightMap", 5);
-    // tableObj.setFloat("displacementFactor", 0.);
     std::vector<mapTexture> hiriseTex;
     hiriseTex.resize(1);
     hiriseTex[0].type = GL_TEXTURE_2D;
@@ -911,7 +912,7 @@ int main(void)
             ImGui::Checkbox("glass", &(drawObjs[1]));
             ImGui::Checkbox("mars", &(drawObjs[2]));
             ImGui::Checkbox("reflexion", &(drawObjs[3]));
-            ImGui::Checkbox("table", &(drawObjs[4]));
+            ImGui::Checkbox("shards", &(drawObjs[4]));
             ImGui::Checkbox("HiRISE", &(drawObjs[5]));
             ImGui::End();
         }
@@ -1040,11 +1041,6 @@ int main(void)
         //     tableObj.render(ident);
         // }
 
-        // bindTextures(rockTex);
-        // tableObj.setMaticies(&view_matrix, &proj_matrix);
-        // tableObj.setVec3("camPos", cam.position());
-        // tableObj.render(0);
-
         if (drawObjs[5]) {
             bindTextures(hiriseTex);
             glActiveTexture(GL_TEXTURE1);
@@ -1089,6 +1085,9 @@ int main(void)
             glFrontFace(GL_CW);                       //invert normals
             glassObj.setMaticies(&view_matrix, &proj_matrix);
             glassObj.render(currentTime);
+
+            // glassOutObj.setMaticies(&view_matrix, &proj_matrix);
+            // glassOutObj.render(currentTime);
 
             // render mirrored version
             glStencilFunc(GL_EQUAL, 1, 0xFF);      // only draw when there is reflection
@@ -1149,20 +1148,24 @@ int main(void)
         glEnable(GL_CULL_FACE);
 
         // render transparency last
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
         if (drawObjs[1]) {// render glass
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
-            glassObj.setMaticies(&view_matrix, &proj_matrix);
-            glassObj.setFloat("factor", glass_factor);
-            glassObj.setFloat("power", glass_power);
-            glassObj.render(currentTime);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
+            glassOutObj.setMaticies(&view_matrix, &proj_matrix);
+            glassOutObj.setFloat("factor", glass_factor);
+            glassOutObj.setFloat("power", glass_power);
+            glassOutObj.render(currentTime);
+        }
+        if (drawObjs[4]) {
             glassAnimObj.setMaticies(&view_matrix, &proj_matrix);
             glassAnimObj.setFloat("factor", glass_factor);
             glassAnimObj.setFloat("power", glass_power);
             glassAnimObj.render(currentTime);
+        } else {
+            glassObj.setMaticies(&view_matrix, &proj_matrix);
+            glassObj.setFloat("factor", glass_factor);
+            glassObj.setFloat("power", glass_power);
+            glassObj.render(currentTime);
         }
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
