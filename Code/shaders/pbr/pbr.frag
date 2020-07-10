@@ -175,8 +175,8 @@ void main()
     // gamma correct
     color = pow(color, vec3(1.0/2.2)); 
 
-    FragColor = vec4(color , 1.0);
+    FragColor = clamp(vec4(color , 1.0), 0., 1.);
     if(WorldPos.x>-16){
-        FragColor = vec4(vec3(bias * texture(irradianceMap, Normal)),1.);//vec4(irradiance, 1.0);
+        FragColor = vec4(vec3(bias * texture(irradianceMap, Normal)), 1.);//vec4(irradiance, 1.0);
     }
 }

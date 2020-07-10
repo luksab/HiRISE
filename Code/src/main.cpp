@@ -1034,7 +1034,6 @@ int main(void)
             // bind pre-computed IBL data
             bindTextures(rockTex);
 
-            glShadeModel(GL_SMOOTH);
             // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(scaleChair, scaleChair, scaleChair));
             // humanObj.objMat = glm::translate(scaleMat, translateVec);
             humanObj.setVec3("lightPos", lightPos);
@@ -1042,7 +1041,9 @@ int main(void)
             humanObj.setFloat("bias", bias);
             humanObj.setMaticies(&view_matrix, &proj_matrix);
             humanObj.setVec3("camPos", cam.position());
+            glDisable(GL_CULL_FACE);
             humanObj.render(currentTime);
+            glEnable(GL_CULL_FACE);
         }
         // if (drawObjs[4]) {//render table
         //     bindTextures(rockTex);
