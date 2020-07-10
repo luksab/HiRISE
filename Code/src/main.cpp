@@ -703,7 +703,7 @@ int main(void)
     bool Music = false;
     bool Draw = false;
 
-    bool drawObjs[6] = { true, false, true, true, true, true };
+    bool drawObjs[6] = { true, true, true, true, true, true };
 
     glm::vec3 translateVec(0., 0., 0.);
     float scaleChair = 0;
