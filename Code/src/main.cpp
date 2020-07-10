@@ -467,8 +467,64 @@ int main(void)
     indoorTex[0].spot = 0;
     indoorTex[0].texture = loadTexture((DATA_ROOT + "Atlas.png").c_str());
 
-    printf("loading model textures\n");
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    printf("loading mars data\n");
     auto start = glfwGetTime();
+    int image_width, image_height;
+    float* image_tex_data = load_texture_data(DATA_ROOT + "rock_ground/ESP_041121_1725_RED_A_01_ORTHO_quarter.jpg", &image_width, &image_height);
+    int pds_width;
+    int pds_height;
+    int pds_channels = 1;
+    float* pds_tex_data = load_pds_data(DATA_ROOT + "DTEEC_048136_1725_041121_1725_A01.img", &pds_width, &pds_height, &pds_channels);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    unsigned int image_tex = create_texture_rgba32f(image_width, image_height, image_tex_data);
+    set_texture_wrap_mode(image_tex, GL_CLAMP_TO_BORDER);
+    unsigned int pds_tex = create_texture_r32f(pds_width, pds_height, pds_tex_data);
+
+    glBindTextureUnit(0, image_tex);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTextureParameteri(image_tex, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+    glBindTextureUnit(1, pds_tex);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTextureParameteri(pds_tex, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+
+    int tex_w = pds_width, tex_h = pds_height;
+    GLuint tex_output;
+    glGenTextures(1, &tex_output);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex_output);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT,
+        NULL);
+    glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+
+    glBindTextureUnit(1, image_tex);
+    glBindTextureUnit(2, pds_tex);
+
+    unsigned int computeProgram = setupComputeShader();
+    glUseProgram(computeProgram);
+
+    int computeImage_loc = glGetUniformLocation(computeProgram, "tex");
+    int computeHeight_loc = glGetUniformLocation(computeProgram, "height");
+
+    glUniform1i(computeImage_loc, 1);
+    glUniform1i(computeHeight_loc, 2);
+
+    glDispatchCompute((GLuint)tex_w, (GLuint)tex_h, 1);
+
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+    mars.setInt("height", 1);
+
+    printf("loading model textures\n");
+    start = glfwGetTime();
     const char* path = "rock_ground";
 
     ImageThreadCall diff = {};
@@ -545,7 +601,7 @@ int main(void)
     cout << "loading textures to GPU took " << duration << "s" << endl;
 
     start = glfwGetTime();
-    pbrTex envtex = setupPBR(&pbr, "HDRI-II.hdr");
+    pbrTex envtex = setupPBR(&pbr, "HDRI-II.hdr", &mars, tex_output, pds_tex);
     rockTex[6].type = GL_TEXTURE_CUBE_MAP;
     rockTex[6].spot = 0;
     rockTex[6].texture = envtex.irradianceMap;
@@ -602,68 +658,12 @@ int main(void)
 
     glm::mat4 ident = glm::mat4(1.);
 
-    printf("loading mars data\n");
-    start = glfwGetTime();
-    int image_width, image_height;
-    float* image_tex_data = load_texture_data(DATA_ROOT + "rock_ground/ESP_041121_1725_RED_A_01_ORTHO_quarter.jpg", &image_width, &image_height);
-    int pds_width;
-    int pds_height;
-    int pds_channels = 1;
-    float* pds_tex_data = load_pds_data(DATA_ROOT + "DTEEC_048136_1725_041121_1725_A01.img", &pds_width, &pds_height, &pds_channels);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    unsigned int image_tex = create_texture_rgba32f(image_width, image_height, image_tex_data);
-    set_texture_wrap_mode(image_tex, GL_CLAMP_TO_BORDER);
-    unsigned int pds_tex = create_texture_r32f(pds_width, pds_height, pds_tex_data);
-
-    glBindTextureUnit(0, image_tex);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glTextureParameteri(image_tex, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-    glBindTextureUnit(1, pds_tex);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glTextureParameteri(pds_tex, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-
-    int tex_w = pds_width, tex_h = pds_height;
-    GLuint tex_output;
-    glGenTextures(1, &tex_output);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, tex_output);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT,
-        NULL);
-    glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-
-    glBindTextureUnit(1, image_tex);
-    glBindTextureUnit(2, pds_tex);
-
-    unsigned int computeProgram = setupComputeShader();
-    glUseProgram(computeProgram);
-
-    int computeImage_loc = glGetUniformLocation(computeProgram, "tex");
-    int computeHeight_loc = glGetUniformLocation(computeProgram, "height");
-
-    glUniform1i(computeImage_loc, 1);
-    glUniform1i(computeHeight_loc, 2);
-
-    glDispatchCompute((GLuint)tex_w, (GLuint)tex_h, 1);
-
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-    mars.setInt("height", 1);
     stop = glfwGetTime();
     duration = stop - start;
     cout << "loading hdri textures took " << duration << "s" << endl;
 
     delete[] image_tex_data;
     delete[] pds_tex_data;
-
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // UI variables
     float colaH = 0.094;
@@ -923,13 +923,13 @@ int main(void)
             ImGui::End();
         }
 
-        mars.setVec3("colorA", colaH, colaS, colaV);
-        mars.setVec3("colorB", colbH, colbS, colbV);
-        mars.setVec3("irradiance", irradianceR, irradianceG, irradianceB);
+        // mars.setVec3("colorA", colaH, colaS, colaV);
+        // mars.setVec3("colorB", colbH, colbS, colbV);
+        // mars.setVec3("irradiance", irradianceR, irradianceG, irradianceB);
 
-        mars.setFloat("tessFactor", tessFactor);
-        mars.setFloat("discardFactor", discardFactor);
-        mars.setFloat("h", pow(10., -h));
+        // mars.setFloat("tessFactor", tessFactor);
+        // mars.setFloat("discardFactor", discardFactor);
+        // mars.setFloat("h", pow(10., -h));
 
         if (lineRendering) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -1159,7 +1159,7 @@ int main(void)
             glassOutObj.setFloat("power", glass_power);
             glassOutObj.render(currentTime);
         }
-        if (currentTime > 12.2) { // drawObjs[4]
+        if (currentTime > 12.2) {// drawObjs[4]
             glassAnimObj.setMaticies(&view_matrix, &proj_matrix);
             glassAnimObj.setFloat("factor", glass_factor);
             glassAnimObj.setFloat("power", glass_power);

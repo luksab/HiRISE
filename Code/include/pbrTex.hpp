@@ -117,7 +117,7 @@ std::vector<unsigned int> loadPBR(char const* path)
     return ret;
 }
 
-pbrTex setupPBR(animated* pbr, char const* path)
+pbrTex setupPBR(animated* pbr, char const* path, pbrObject* mars, uint tex_output, uint pds_tex)
 {
     pbrObject hdrCube = {};
     hdrCube.setup(pbr, "equirectangular/main.vert", "equirectangular/main.frag");
@@ -183,7 +183,7 @@ pbrTex setupPBR(animated* pbr, char const* path)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+    glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.5f, 10000.0f);
     glm::mat4 captureViews[] = {
         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
@@ -204,13 +204,24 @@ pbrTex setupPBR(animated* pbr, char const* path)
 
     glViewport(0, 0, resolution, resolution);// don't forget to configure the viewport to the capture dimensions.
     glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(1000., 1000., 1000.));
+    scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -0.2, 0.0));
     for (unsigned int i = 0; i < 6; ++i) {
         hdrCube.view_matrix = &captureViews[i];
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
             GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, envCubemap, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, hdrTexture);
         hdrCube.render(0);// renders a 1x1 cube
+
+        glBindTextureUnit(0, tex_output);
+        glBindTextureUnit(1, pds_tex);
+        (*mars).setMaticies(&captureViews[i], &captureProjection);
+        (*mars).render(scaleMat);
     }
     glGenerateMipmap(envCubemap);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

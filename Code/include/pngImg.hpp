@@ -115,12 +115,13 @@ finalise:
 
 void screenShotPNG(const char* file, short W, short H)
 {
-    char pixel_data[3 * W * H];
+    char* pixel_data = (char*)malloc(3 * W * H * sizeof(char));
     glReadBuffer(GL_BACK);
     glReadPixels(0, 0, W, H, GL_BGR, GL_UNSIGNED_BYTE, pixel_data);
     std::string str = "title";
     char* cstr = new char[str.length() + 1];
     strcpy(cstr, str.c_str());
     writeImage(file, W, H, pixel_data, cstr);
+    free(pixel_data);
     delete[] cstr;
 }
