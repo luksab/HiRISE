@@ -325,7 +325,7 @@ int main(void)
     music->setVolume(0.);
 
     Plane p;
-    p.FromTriangle(glm::vec3(16.15, 0, 0), glm::vec3(16.15, 1, 0), glm::vec3(16.15, 0, 1));
+    p.FromTriangle(glm::vec3(15.9, 0, 0), glm::vec3(15.9, 1, 0), glm::vec3(15.9, 0, 1));
 
     glm::mat4 r = p.MakeReflectionMatrix();
 
@@ -1086,6 +1086,9 @@ int main(void)
             glassObj.setMaticies(&view_matrix, &proj_matrix);
             glassObj.render(currentTime);
 
+            glassOutObj.setMaticies(&view_matrix, &proj_matrix);
+            glassOutObj.render(currentTime);
+
             // glassOutObj.setMaticies(&view_matrix, &proj_matrix);
             // glassOutObj.render(currentTime);
 
@@ -1185,11 +1188,13 @@ int main(void)
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
         if (recordFrames) {
+            glfwSwapInterval(0);
             playing = true;
             inCameraView = true;
             if (currentTime > maxTime - 0.03) {
                 playing = false;
                 recordFrames = false;
+                glfwSwapInterval(1);
             }
             frameNumber++;
             char str[7];
