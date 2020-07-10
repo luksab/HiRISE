@@ -605,7 +605,7 @@ int main(void)
     printf("loading mars data\n");
     start = glfwGetTime();
     int image_width, image_height;
-    float* image_tex_data = load_texture_data(DATA_ROOT + "ESP_041121_1725_RED_A_01_ORTHO_quarter.jpg", &image_width, &image_height);
+    float* image_tex_data = load_texture_data(DATA_ROOT + "rock_ground/ESP_041121_1725_RED_A_01_ORTHO_quarter.jpg", &image_width, &image_height);
     int pds_width;
     int pds_height;
     int pds_channels = 1;
