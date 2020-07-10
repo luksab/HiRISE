@@ -447,7 +447,7 @@ int main(void)
     boneObject humanObj = {};
     humanObj.setup(&human, false);
     humanObj.use();
-    humanObj.scale(0.16);
+    humanObj.scale(0.165);
     humanObj.move(0., 5.96, -0.29);
 
     std::vector<animated> glassAnim = loadSceneAnim("HiRISE_new/shards.dae", false);
@@ -1075,7 +1075,7 @@ int main(void)
             mars.render(0);
         }
 
-        if (drawObjs[3]) {// reflexion
+        if (currentTime < 12.2) {// reflexion drawObjs[3]
             //Draw in stencil first
             glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);// Do not draw any pixels on the back buffer
             glEnable(GL_STENCIL_TEST);
@@ -1156,7 +1156,7 @@ int main(void)
             glassOutObj.setFloat("power", glass_power);
             glassOutObj.render(currentTime);
         }
-        if (drawObjs[4]) {
+        if (currentTime > 12.2) { // drawObjs[4]
             glassAnimObj.setMaticies(&view_matrix, &proj_matrix);
             glassAnimObj.setFloat("factor", glass_factor);
             glassAnimObj.setFloat("power", glass_power);
