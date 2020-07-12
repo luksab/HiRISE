@@ -76,6 +76,14 @@ void pbrObject::reload(){
     shaderProgram.reload();
 }
 
+void pbrObject::reloadCheck(){
+    shaderProgram.reloadCheck();
+}
+
+bool pbrObject::checkReload(){
+    return shaderProgram.checkReload();
+}
+
 void pbrObject::use()
 {
     shaderProgram.use();

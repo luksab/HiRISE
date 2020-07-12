@@ -557,6 +557,7 @@ int main(void)
     float bias = 3.460;
 
     bool vSync = true;
+    bool autoReload = true;
     bool rotate = false;
     bool Framerate = true;
     bool lineRendering = false;
@@ -772,8 +773,7 @@ int main(void)
             ImGui::SliderFloat("discardFactor", &discardFactor, 1.f, 1.1f);
             //ImGui::SliderFloat("gamma", &gamma, 1.f, 4.f);
             ImGui::SliderFloat("h", &h, 1.f, 7.f);
-            if (ImGui::Button("reload Mars Shader"))
-                mars.reload();
+            ImGui::Checkbox("Auto Reload Shaders", &autoReload);
             ImGui::End();
         }
         if (Draw) {
@@ -791,6 +791,16 @@ int main(void)
             ImGui::SliderFloat("Volume", &volume, 0.f, 1.0f);
             music->setVolume(volume);
             ImGui::End();
+        }
+
+        if(autoReload){
+            hiriseObj.reloadCheck();
+            mars.reloadCheck();
+            chairObj.reloadCheck();
+            monitorObj.reloadCheck();
+            glassObj.reloadCheck();
+            glassOutObj.reloadCheck();
+            textObj.reloadCheck();
         }
 
         mars.setVec4("factors", factor0);

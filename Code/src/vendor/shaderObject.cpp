@@ -1,6 +1,7 @@
 /*
 
 	Copyright 2011 Etay Meiri
+    2020 Lukas Sabatschus
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,6 +21,17 @@
 #include "common.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "shader.hpp"
+#include <sys/stat.h>
+
+time_t shader_getModTime(const char* file){
+    struct stat fileInfo;
+    std::string actualFile = SHADER_ROOT + file;
+    if (stat(actualFile.c_str(), &fileInfo) != 0) {// Use stat() to get the info
+        std::cerr << "Error: " << strerror(errno) << '\n';
+        abort();
+    }
+    return fileInfo.st_mtime;
+}
 
 void shaderObject::setup(const char* _vertex, const char* _fragment)
 {
@@ -27,6 +39,8 @@ void shaderObject::setup(const char* _vertex, const char* _fragment)
     vertex = strdup(_vertex);
     fragment = strdup(_fragment);
     std::cout << "new shader:" << vertex << "  " << fragment << "\n";
+    vertexFileTime = shader_getModTime(vertex);
+    fragmentFileTime = shader_getModTime(fragment);
     defaultMat = false;
     // load and compile shaders and link program
     unsigned int vertexShader = compileShader(vertex, GL_VERTEX_SHADER);
@@ -49,6 +63,9 @@ void shaderObject::setup(const char* _vertex, const char* _fragment, const char*
     vertex = strdup(_vertex);
     fragment = strdup(_fragment);
     geometry = strdup(_geometry);
+    vertexFileTime = shader_getModTime(vertex);
+    fragmentFileTime = shader_getModTime(fragment);
+    geometryFileTime = shader_getModTime(geometry);
     std::cout << "new shader:" << vertex << "  " << fragment << "  " << geometry << "\n";
     defaultMat = false;
     // load and compile shaders and link program
@@ -75,6 +92,10 @@ void shaderObject::setup(const char* _vertex, const char* _fragment, const char*
     fragment = strdup(_fragment);
     tess = strdup(_tess);
     tesse = strdup(_tesse);
+    vertexFileTime = shader_getModTime(vertex);
+    fragmentFileTime = shader_getModTime(fragment);
+    tessFileTime = shader_getModTime(tess);
+    tesseFileTime = shader_getModTime(tesse);
     std::cout << "new shader:" << vertex << "  " << fragment << "  " << tess << "  " << tesse << "\n";
     defaultMat = false;
     // load and compile shaders and link program
@@ -106,6 +127,10 @@ void shaderObject::setup(bool tessellation)
         fragment = "pbr/pbrT.frag";
         tess = "pbr/pbrT.tess";
         tesse = "pbr/pbrT.tesse";
+        vertexFileTime = shader_getModTime(vertex);
+        fragmentFileTime = shader_getModTime(fragment);
+        tessFileTime = shader_getModTime(tess);
+        tesseFileTime = shader_getModTime(tesse);
         std::cout << "new shader:" << vertex << "  " << fragment << "  " << tess << "  " << tesse << "\n";
         // load and compile shaders and link program
         unsigned int vertexShader = compileShader("pbr/pbrT.vert", GL_VERTEX_SHADER);
@@ -123,6 +148,8 @@ void shaderObject::setup(bool tessellation)
         type = 1;
         vertex = "pbr/pbr.vert";
         fragment = "pbr/pbr.frag";
+        vertexFileTime = shader_getModTime(vertex);
+        fragmentFileTime = shader_getModTime(fragment);
         std::cout << "new shader:" << vertex << "  " << fragment << "\n";
         // load and compile shaders and link program
         unsigned int vertexShader = compileShader("pbr/pbr.vert", GL_VERTEX_SHADER);
@@ -182,6 +209,8 @@ void shaderObject::reload()
         vertexShader = compileShader(vertex, GL_VERTEX_SHADER);
         fragmentShader = compileShader(fragment, GL_FRAGMENT_SHADER);
         shaderProgram = linkProgram(vertexShader, fragmentShader);
+        vertexFileTime = shader_getModTime(vertex);
+        fragmentFileTime = shader_getModTime(fragment);
         //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
         // after linking the program the shader objects are no longer needed
         glDeleteShader(fragmentShader);
@@ -198,6 +227,9 @@ void shaderObject::reload()
         vertexShader = compileShader(vertex, GL_VERTEX_SHADER);
         fragmentShader = compileShader(fragment, GL_FRAGMENT_SHADER);
         geometryShader = compileShader(geometry, GL_GEOMETRY_SHADER);
+        vertexFileTime = shader_getModTime(vertex);
+        fragmentFileTime = shader_getModTime(fragment);
+        geometryFileTime = shader_getModTime(geometry);
         shaderProgram = linkProgram(vertexShader, fragmentShader, geometryShader);
         //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
         // after linking the program the shader objects are no longer needed
@@ -217,6 +249,10 @@ void shaderObject::reload()
         fragmentShader = compileShader(fragment, GL_FRAGMENT_SHADER);
         tessellationShader = compileShader(tess, GL_TESS_CONTROL_SHADER);
         tessellationEShader = compileShader(tesse, GL_TESS_EVALUATION_SHADER);
+        vertexFileTime = shader_getModTime(vertex);
+        fragmentFileTime = shader_getModTime(fragment);
+        tessFileTime = shader_getModTime(tess);
+        tesseFileTime = shader_getModTime(tesse);
         shaderProgram = linkProgram(vertexShader, fragmentShader, tessellationShader, tessellationEShader);
         //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
         // after linking the program the shader objects are no longer needed
@@ -253,6 +289,55 @@ void shaderObject::reload()
     for (const auto& value : mat4s) {
         glm::mat4 val = value.second;
         setMat4(value.first, val);
+    }
+}
+
+bool shaderObject::checkReload(){
+    switch (type)
+    {
+    case 1:
+        if(shader_getModTime(vertex) > vertexFileTime){
+            return true;
+        }
+        if(shader_getModTime(fragment) > fragmentFileTime){
+            return true;
+        }
+        break;
+    case 2:
+        if(shader_getModTime(vertex) > vertexFileTime){
+            return true;
+        }
+        if(shader_getModTime(fragment) > fragmentFileTime){
+            return true;
+        }
+        if(shader_getModTime(geometry) > geometryFileTime){
+            return true;
+        }
+        break;
+    case 3:
+        if(shader_getModTime(vertex) > vertexFileTime){
+            return true;
+        }
+        if(shader_getModTime(fragment) > fragmentFileTime){
+            return true;
+        }
+        if(shader_getModTime(tess) > tessFileTime){
+            return true;
+        }
+        if(shader_getModTime(tesse) > tesseFileTime){
+            return true;
+        }
+        break;
+    default:
+        return false;
+        break;
+    }
+}
+
+void shaderObject::reloadCheck(){
+    bool rel = checkReload();
+    if(rel){
+        reload();
     }
 }
 

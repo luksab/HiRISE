@@ -19,6 +19,8 @@ struct pbrObject {
     void setup(animated* model, std::string vertex, std::string fragment, std::string geometry);
     void setup(animated* model, std::string vertex, std::string tess, std::string tesse, std::string fragment);
     void reload();
+    void reloadCheck();
+    bool checkReload();
     void setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat);
     void use();
     void setInt(char const* name, int value);

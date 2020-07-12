@@ -15,6 +15,8 @@ struct shaderObject {
     void setup(std::string vertex, std::string fragment, std::string geometry);
     void setup(std::string vertex, std::string tess, std::string tesse, std::string fragment);
     void reload();
+    void reloadCheck();
+    bool checkReload();
     void setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat);
     void use();
     void setInt(char const* name, int value);
@@ -25,10 +27,15 @@ struct shaderObject {
     void setMat4(char const* name, glm::mat4& value);
 
     char* vertex;
+    time_t vertexFileTime;
     char* tess;
+    time_t tessFileTime;
     char* tesse;
+    time_t tesseFileTime;
     char* fragment;
+    time_t fragmentFileTime;
     char* geometry;
+    time_t geometryFileTime;
 
     uint type;// 1=v,f; 2=v,g,f; 3=v,t,f
 
