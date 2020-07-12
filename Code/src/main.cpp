@@ -577,12 +577,9 @@ int main(void)
     //for deferred rendering
     build_framebuffer(WINDOW_WIDTH, WINDOW_HEIGHT);
     unsigned int quad = setup_fullscreen_quad();
-    unsigned int vertexShaderCompose = compileShader("deferred/deferred_compose.vert", GL_VERTEX_SHADER);
-    unsigned int fragmentShaderCompose = compileShader("deferred/deferred_compose.frag", GL_FRAGMENT_SHADER);
-    unsigned int shaderProgramCompose = linkProgram(vertexShaderCompose, fragmentShaderCompose);
-    glUseProgram(shaderProgramCompose);
-    // bind framebuffer texture to shader variable
-    int tex_loc = glGetUniformLocation(shaderProgramCompose, "tex");
+    shaderObject Compose;
+    Compose.setup("deferred/deferred_compose.vert", "deferred/deferred_compose.frag");
+    Compose.setInt("tex", 0);
 
     // timing variables
     double lastTime = glfwGetTime();
@@ -623,7 +620,7 @@ int main(void)
         ImGui::Checkbox("Color", &Color);
         ImGui::Checkbox("Draw", &Draw);
         ImGui::Checkbox("Music", &Music);
-        ImGui::DragFloat3("translate", &(lightPos[0]));
+        ImGui::DragFloat3("translate", &(translateVec[0]));
         // ImGui::DragFloat("Scale", &scaleChair);
         ImGui::End();
         if (Framerate) {
@@ -801,6 +798,7 @@ int main(void)
             glassObj.reloadCheck();
             glassOutObj.reloadCheck();
             textObj.reloadCheck();
+            Compose.reloadCheck();
         }
 
         mars.setVec4("factors", factor0);
@@ -1071,11 +1069,10 @@ int main(void)
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_STENCIL_TEST);
-        glUseProgram(shaderProgramCompose);
         glBindVertexArray(quad);
         glBindTextureUnit(0, framebuffer_tex);
-        glUniform1i(tex_loc, 0);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+        // Compose.setVec3("trans",translateVec);
+        Compose.render(6);
 
         if (recordFrames) {
             glfwSwapInterval(0);

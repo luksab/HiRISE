@@ -6,6 +6,7 @@
 #include "common.hpp"
 
 struct shaderObject {
+    void render(uint vertex_count);
     void render(glm::mat4& matrix, uint vertex_count);
     void setup(bool tessellation);
     void setup(const char* vertex, const char* fragment);

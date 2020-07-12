@@ -21,9 +21,12 @@
 #include "common.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "shader.hpp"
+#include <chrono>
 #include <sys/stat.h>
+#include <thread>
 
-time_t shader_getModTime(const char* file){
+time_t shader_getModTime(const char* file)
+{
     struct stat fileInfo;
     std::string actualFile = SHADER_ROOT + file;
     if (stat(actualFile.c_str(), &fileInfo) != 0) {// Use stat() to get the info
@@ -292,51 +295,52 @@ void shaderObject::reload()
     }
 }
 
-bool shaderObject::checkReload(){
-    switch (type)
-    {
+bool shaderObject::checkReload()
+{
+    switch (type) {
     case 1:
-        if(shader_getModTime(vertex) > vertexFileTime){
+        if (shader_getModTime(vertex) > vertexFileTime && loadShaderFile(vertex)[0] != '\0') {
             return true;
         }
-        if(shader_getModTime(fragment) > fragmentFileTime){
+        if (shader_getModTime(fragment) > fragmentFileTime && loadShaderFile(vertex)[0] != '\0') {
             return true;
         }
         break;
     case 2:
-        if(shader_getModTime(vertex) > vertexFileTime){
+        if (shader_getModTime(vertex) > vertexFileTime && loadShaderFile(vertex)[0] != '\0') {
             return true;
         }
-        if(shader_getModTime(fragment) > fragmentFileTime){
+        if (shader_getModTime(fragment) > fragmentFileTime && loadShaderFile(fragment)[0] != '\0') {
             return true;
         }
-        if(shader_getModTime(geometry) > geometryFileTime){
+        if (shader_getModTime(geometry) > geometryFileTime && loadShaderFile(geometry)[0] != '\0') {
             return true;
         }
         break;
     case 3:
-        if(shader_getModTime(vertex) > vertexFileTime){
+        if (shader_getModTime(vertex) > vertexFileTime && loadShaderFile(vertex)[0] != '\0') {
             return true;
         }
-        if(shader_getModTime(fragment) > fragmentFileTime){
+        if (shader_getModTime(fragment) > fragmentFileTime && loadShaderFile(fragment)[0] != '\0') {
             return true;
         }
-        if(shader_getModTime(tess) > tessFileTime){
+        if (shader_getModTime(tess) > tessFileTime && loadShaderFile(tess)[0] != '\0') {
             return true;
         }
-        if(shader_getModTime(tesse) > tesseFileTime){
+        if (shader_getModTime(tesse) > tesseFileTime && loadShaderFile(tesse)[0] != '\0') {
             return true;
         }
-        break;
-    default:
-        return false;
         break;
     }
+    return false;
 }
 
-void shaderObject::reloadCheck(){
+void shaderObject::reloadCheck()
+{
     bool rel = checkReload();
-    if(rel){
+    if (rel) {
+        std::chrono::milliseconds timespan(20);// or whatever
+        std::this_thread::sleep_for(timespan);
         reload();
     }
 }
@@ -410,6 +414,17 @@ void shaderObject::render(glm::mat4& matrix, uint vertex_count)
     }
 
     glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(matrix[0][0]));
+
+    if (useTessellation) {
+        glDrawElements(GL_PATCHES, vertex_count, GL_UNSIGNED_INT, (void*)0);
+    } else {
+        glDrawElements(GL_TRIANGLES, vertex_count, GL_UNSIGNED_INT, (void*)0);
+    }
+}
+
+void shaderObject::render(uint vertex_count)
+{
+    glUseProgram(shaderProgram);
 
     if (useTessellation) {
         glDrawElements(GL_PATCHES, vertex_count, GL_UNSIGNED_INT, (void*)0);
