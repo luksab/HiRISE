@@ -1166,7 +1166,7 @@ int main(void)
         // render transparency last
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
-        if (cam.position().x < -16.2) {// render glass
+        if (cam.position().x < -16.2 || currentTime > 12.2) {// render glass
             glassOutObj.setVec3("camPos", cam.position());
             glassOutObj.setMaticies(&view_matrix, &proj_matrix);
             // glassOutObj.setFloat("factor", glass_factor);
@@ -1181,7 +1181,7 @@ int main(void)
             glassAnimObj.setFloat("power", glass_power);
             // glassAnimObj.setFloat("gamma", gamma);
             glassAnimObj.render(currentTime);
-        } else if(cam.position().x < -16.2) {
+        } else if(cam.position().x < -16.2 || currentTime > 12.2) {
             glassObj.setVec3("camPos", cam.position());
             glassObj.setMaticies(&view_matrix, &proj_matrix);
             // glassObj.setFloat("factor", glass_factor);
