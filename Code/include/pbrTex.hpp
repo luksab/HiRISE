@@ -212,17 +212,18 @@ pbrTex setupPBR(animated* pbr, char const* path, pbrObject* mars, uint tex_outpu
             GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, envCubemap, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        
-
+        glDisable(GL_DEPTH_TEST);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, hdrTexture);
         hdrCube.render(0);// renders a 1x1 cube
 
+        glEnable(GL_DEPTH_TEST);
         glBindTextureUnit(0, tex_output);
         glBindTextureUnit(1, pds_tex);
         (*mars).setMaticies(&captureViews[i], &captureProjection);
         (*mars).render(scaleMat);
     }
+    glDisable(GL_DEPTH_TEST);
     glGenerateMipmap(envCubemap);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
