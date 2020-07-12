@@ -24,7 +24,7 @@ int WINDOW_WIDTH = 1920;
 int WINDOW_HEIGHT = 1080;
 float FOV = 45.;
 const float NEAR_VALUE = 0.1f;
-const float FAR_VALUE = 1000.f;
+const float FAR_VALUE = 1200.f;
 GLFWmonitor* primary;
 const GLFWvidmode* mode;
 ImGuiIO* io;
@@ -372,8 +372,8 @@ int main(void)
     glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(1000., 1000., 1000.));
     scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -0.15, 0.0));
     marsAnim.transform[0] = scaleMat;
-    mars.defaultMat = true;
-    mars.useTessellation = true;
+    mars.shaderProgram.defaultMat = true;
+    mars.shaderProgram.useTessellation = true;
 
     printf("singleGlass\n");
     animated singleGlass = loadMeshAnim("HiRISE_new/singleGlass.dae", 1., true);
@@ -383,7 +383,7 @@ int main(void)
     // scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -8.41, 0.0));
     // scaleMat = glm::rotate(scaleMat, (float)M_PI, glm::vec3(0., 1., 0.));
     // glass.transform[0] = scaleMat;
-    glassObj.defaultMat = true;
+    glassObj.shaderProgram.defaultMat = true;
 
     printf("glassOut\n");
     animated glass = loadMeshAnim("HiRISE_new/glass.dae", 1., true);
@@ -393,7 +393,7 @@ int main(void)
     // scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -8.41, 0.0));
     // scaleMat = glm::rotate(scaleMat, (float)M_PI, glm::vec3(0., 1., 0.));
     // glass.transform[0] = scaleMat;
-    glassOutObj.defaultMat = true;
+    glassOutObj.shaderProgram.defaultMat = true;
 
     printf("text\n");
     animated textModel = loadMeshAnim("HiRISE_new/text.dae", 1., true);
@@ -403,7 +403,7 @@ int main(void)
     // scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -8.41, 0.0));
     // scaleMat = glm::rotate(scaleMat, (float)-M_PI_2, glm::vec3(0., 1., 0.));
     // textModel.transform[0] = scaleMat;
-    textObj.defaultMat = true;
+    textObj.shaderProgram.defaultMat = true;
 
     printf("HiRISE\n");
     animated hirise = loadMeshAnim("HiRISE_new/HiRISE.dae", 1., true);
@@ -417,7 +417,7 @@ int main(void)
     // scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -8.41, 0.0));
     // scaleMat = glm::rotate(scaleMat, (float)M_PI, glm::vec3(0., 1., 0.));
     // hirise.transform[0] = scaleMat;
-    hiriseObj.defaultMat = true;
+    hiriseObj.shaderProgram.defaultMat = true;
 
     printf("tables & chairs\n");
     animated chair = loadMeshAnim("HiRISE_new/tables.dae", true);//toAnimated(loadMesh("chair.dae", false, glm::vec4(0.f, 0.f, 0.f, 1.f)));
@@ -431,7 +431,7 @@ int main(void)
     chairObj.setInt("depthMap", 1);
     chairObj.setInt("levels", 5);
     chair.transform[0] = glm::mat4(1);
-    chairObj.defaultMat = true;
+    chairObj.shaderProgram.defaultMat = true;
 
     printf("monitors\n");
     animated monitor = loadMeshAnim("HiRISE_new/monitors.dae", false);//toAnimated(loadMesh("chair.dae", false, glm::vec4(0.f, 0.f, 0.f, 1.f)));
@@ -441,14 +441,14 @@ int main(void)
     // chair.transform[0] = scaleMat;
     monitorObj.setup(&monitor, "simple/simple.vert", "simple/simple.frag");
     monitor.transform[0] = glm::mat4(1);
-    monitorObj.defaultMat = true;
+    monitorObj.shaderProgram.defaultMat = true;
 
     printf("cube\n");
     animated pbr = loadMeshAnim("cube.dae", true);
 
     pbrObject renderCube = {};
     renderCube.setup(&pbr, "cubeMap/hdr.vert", "cubeMap/hdr.frag");
-    renderCube.defaultMat = true;
+    renderCube.shaderProgram.defaultMat = true;
     renderCube.setInt("environmentMap", 0);
 
     printf("human\n");
@@ -612,6 +612,10 @@ int main(void)
 
     start = glfwGetTime();
     pbrTex envtex = setupPBR(&pbr, "HDRI-II.hdr", &mars, tex_output, pds_tex);
+    mars.setup(&marsAnim, "main.vert", "mainSimpleNoise.frag", "main.tess", "main.tesse");
+    mars.shaderProgram.defaultMat = true;
+    mars.shaderProgram.useTessellation = true;
+    mars.setInt("height", 1);
     rockTex[6].type = GL_TEXTURE_CUBE_MAP;
     rockTex[6].spot = 0;
     rockTex[6].texture = envtex.irradianceMap;
@@ -697,6 +701,9 @@ int main(void)
     float glass_power = 2.0;
     // float glass_factor = 1.0;
     // float gamma = 2.2;
+
+    glm::vec4 factor0 = glm::vec4(2500., 0.5, 20., -0.25);
+    glm::vec4 factor1 = glm::vec4(1., 1., 1., 1.);
 
     float volume = 0.;
 
@@ -898,6 +905,8 @@ int main(void)
         }
         if (Color) {
             ImGui::Begin("Color");
+            ImGui::DragFloat4("mars0", &(factor0[0]));
+            ImGui::DragFloat4("mars1", &(factor1[0]));
             ImGui::DragFloat("bias", &bias);
             ImGui::DragFloat4("textColor", &(textColor[0]));
             textObj.setVec4("color", textColor);
@@ -916,6 +925,8 @@ int main(void)
             ImGui::SliderFloat("discardFactor", &discardFactor, 1.f, 1.1f);
             //ImGui::SliderFloat("gamma", &gamma, 1.f, 4.f);
             ImGui::SliderFloat("h", &h, 1.f, 7.f);
+            if (ImGui::Button("reload Mars Shader"))
+                mars.reload();
             ImGui::End();
         }
         if (Draw) {
@@ -934,6 +945,9 @@ int main(void)
             music->setVolume(volume);
             ImGui::End();
         }
+
+        mars.setVec4("factors", factor0);
+        mars.setVec4("factors2", factor1);
 
         // mars.setVec3("colorA", colaH, colaS, colaV);
         // mars.setVec3("colorB", colbH, colbS, colbV);
@@ -1181,7 +1195,7 @@ int main(void)
             glassAnimObj.setFloat("power", glass_power);
             // glassAnimObj.setFloat("gamma", gamma);
             glassAnimObj.render(currentTime);
-        } else if(cam.position().x < -16.2 || currentTime > 12.2) {
+        } else if (cam.position().x < -16.2 || currentTime > 12.2) {
             glassObj.setVec3("camPos", cam.position());
             glassObj.setMaticies(&view_matrix, &proj_matrix);
             // glassObj.setFloat("factor", glass_factor);

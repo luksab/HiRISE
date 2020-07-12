@@ -4,11 +4,12 @@
 
 #include "animation.hpp"
 #include "common.hpp"
+#include "shaderObject.hpp"
 
 struct pbrObject {
     void render(double currentTime);
     void render(glm::mat4& matrix);
-    void render(double currentTime, unsigned int shaderProg);
+    void render(double currentTime, shaderObject shaderProg);
     void renderRotated(float rotation, float time);
     void setup(animated* model, bool tessellation);
     void setup(animated* model, const char* vertex, const char* fragment);
@@ -17,6 +18,7 @@ struct pbrObject {
     void setup(animated* model, std::string vertex, std::string fragment);
     void setup(animated* model, std::string vertex, std::string fragment, std::string geometry);
     void setup(animated* model, std::string vertex, std::string tess, std::string tesse, std::string fragment);
+    void reload();
     void setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat);
     void use();
     void setInt(char const* name, int value);
@@ -27,12 +29,5 @@ struct pbrObject {
     void setMat4(char const* name, glm::mat4* value);
 
     animated* object;
-    unsigned int shaderProgram;
-    int model_mat_loc;
-    int view_mat_loc;
-    glm::mat4* view_matrix;
-    int proj_mat_loc;
-    glm::mat4* proj_matrix;
-    bool useTessellation;
-    bool defaultMat;
+    shaderObject shaderProgram;
 };

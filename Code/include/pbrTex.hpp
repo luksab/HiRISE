@@ -121,17 +121,17 @@ pbrTex setupPBR(animated* pbr, char const* path, pbrObject* mars, uint tex_outpu
 {
     pbrObject hdrCube = {};
     hdrCube.setup(pbr, "equirectangular/main.vert", "equirectangular/main.frag");
-    hdrCube.defaultMat = true;
+    hdrCube.shaderProgram.defaultMat = true;
     unsigned int equirectangularMap_loc = glGetUniformLocation(hdrCube.shaderProgram, "equirectangularMap");
 
     pbrObject irradianceCube = {};
     irradianceCube.setup(pbr, "equirectangular/main.vert", "cubeMap/conv.frag");
-    irradianceCube.defaultMat = true;
+    irradianceCube.shaderProgram.defaultMat = true;
     unsigned int equirectangularMap_loc_irra = glGetUniformLocation(irradianceCube.shaderProgram, "environmentMap");
 
     pbrObject filterCube = {};
     filterCube.setup(pbr, "equirectangular/main.vert", "cubeMap/rough.frag");
-    filterCube.defaultMat = true;
+    filterCube.shaderProgram.defaultMat = true;
     unsigned int equirectangularMap_locF_irra = glGetUniformLocation(filterCube.shaderProgram, "environmentMap");
     filterCube.setInt("environmentMap", 0);
 
@@ -196,7 +196,7 @@ pbrTex setupPBR(animated* pbr, char const* path, pbrObject* mars, uint tex_outpu
     // convert HDR equirectangular environment map to cubemap equivalent
     glUseProgram(hdrCube.shaderProgram);
     //equirectangularToCubemapShader.setInt("equirectangularMap", 0);
-    hdrCube.proj_matrix = &captureProjection;
+    hdrCube.shaderProgram.proj_matrix = &captureProjection;
     glUniform1i(equirectangularMap_loc, 0);
     //equirectangularToCubemapShader.setMat4("projection", captureProjection);
     glActiveTexture(GL_TEXTURE0);
@@ -207,7 +207,7 @@ pbrTex setupPBR(animated* pbr, char const* path, pbrObject* mars, uint tex_outpu
     glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(1000., 1000., 1000.));
     scaleMat = glm::translate(scaleMat, glm::vec3(0.0, -0.2, 0.0));
     for (unsigned int i = 0; i < 6; ++i) {
-        hdrCube.view_matrix = &captureViews[i];
+        hdrCube.shaderProgram.view_matrix = &captureViews[i];
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
             GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, envCubemap, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -249,7 +249,7 @@ pbrTex setupPBR(animated* pbr, char const* path, pbrObject* mars, uint tex_outpu
     glUseProgram(irradianceCube.shaderProgram);
     //irradianceShader.setInt("environmentMap", 0);
     //irradianceShader.setMat4("projection", captureProjection);
-    irradianceCube.proj_matrix = &captureProjection;
+    irradianceCube.shaderProgram.proj_matrix = &captureProjection;
     glUniform1i(equirectangularMap_loc_irra, 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
@@ -257,7 +257,7 @@ pbrTex setupPBR(animated* pbr, char const* path, pbrObject* mars, uint tex_outpu
     glViewport(0, 0, resolution, resolution);// don't forget to configure the viewport to the capture dimensions.
     glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
     for (unsigned int i = 0; i < 6; ++i) {
-        irradianceCube.view_matrix = &captureViews[i];
+        irradianceCube.shaderProgram.view_matrix = &captureViews[i];
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
             GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -290,7 +290,7 @@ pbrTex setupPBR(animated* pbr, char const* path, pbrObject* mars, uint tex_outpu
     filterCube.use();
     glUseProgram(filterCube.shaderProgram);
     filterCube.setInt("environmentMap", 0);
-    filterCube.proj_matrix = &captureProjection;
+    filterCube.shaderProgram.proj_matrix = &captureProjection;
     glUniform1i(equirectangularMap_locF_irra, 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
@@ -309,7 +309,7 @@ pbrTex setupPBR(animated* pbr, char const* path, pbrObject* mars, uint tex_outpu
         float roughness = (float)mip / (float)(maxMipLevels - 1);
         filterCube.setFloat("roughness", roughness);
         for (unsigned int i = 0; i < 6; ++i) {
-            filterCube.view_matrix = &captureViews[i];
+            filterCube.shaderProgram.view_matrix = &captureViews[i];
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                 GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap, mip);
 

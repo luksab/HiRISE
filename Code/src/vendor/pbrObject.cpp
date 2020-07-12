@@ -23,95 +23,26 @@
 
 void pbrObject::setup(animated* model, const char* vertex, const char* fragment)
 {
-    defaultMat = false;
     object = model;
-    // load and compile shaders and link program
-    unsigned int vertexShader = compileShader(vertex, GL_VERTEX_SHADER);
-    unsigned int fragmentShader = compileShader(fragment, GL_FRAGMENT_SHADER);
-    shaderProgram = linkProgram(vertexShader, fragmentShader);
-    //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
-    // after linking the program the shader objects are no longer needed
-    glDeleteShader(fragmentShader);
-    glDeleteShader(vertexShader);
-
-    glUseProgram(shaderProgram);
-    model_mat_loc = glGetUniformLocation(shaderProgram, "model_mat");
-    view_mat_loc = glGetUniformLocation(shaderProgram, "view_mat");
-    proj_mat_loc = glGetUniformLocation(shaderProgram, "proj_mat");
+    shaderProgram.setup(vertex, fragment);
 }
 
 void pbrObject::setup(animated* model, const char* vertex, const char* fragment, const char* geometry)
 {
-    defaultMat = false;
     object = model;
-    // load and compile shaders and link program
-    unsigned int vertexShader = compileShader(vertex, GL_VERTEX_SHADER);
-    unsigned int fragmentShader = compileShader(fragment, GL_FRAGMENT_SHADER);
-    unsigned int geometryShader = compileShader(geometry, GL_GEOMETRY_SHADER);
-    shaderProgram = linkProgram(vertexShader, fragmentShader, geometryShader);
-    //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
-    // after linking the program the shader objects are no longer needed
-    glDeleteShader(fragmentShader);
-    glDeleteShader(vertexShader);
-    glDeleteShader(geometryShader);
-
-    glUseProgram(shaderProgram);
-    model_mat_loc = glGetUniformLocation(shaderProgram, "model_mat");
-    view_mat_loc = glGetUniformLocation(shaderProgram, "view_mat");
-    proj_mat_loc = glGetUniformLocation(shaderProgram, "proj_mat");
+    shaderProgram.setup(vertex, fragment, geometry);
 }
 
 void pbrObject::setup(animated* model, const char* vertex, const char* fragment, const char* tess, const char* tesse)
 {
-    defaultMat = false;
     object = model;
-    // load and compile shaders and link program
-    unsigned int vertexShader = compileShader(vertex, GL_VERTEX_SHADER);
-    unsigned int fragmentShader = compileShader(fragment, GL_FRAGMENT_SHADER);
-    unsigned int tessellationShader = compileShader(tess, GL_TESS_CONTROL_SHADER);
-    unsigned int tessellationEShader = compileShader(tesse, GL_TESS_EVALUATION_SHADER);
-    shaderProgram = linkProgram(vertexShader, fragmentShader, tessellationShader, tessellationEShader);
-    //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
-    // after linking the program the shader objects are no longer needed
-    glDeleteShader(fragmentShader);
-    glDeleteShader(vertexShader);
-    glDeleteShader(tessellationShader);
-    glDeleteShader(tessellationEShader);
-
-    glUseProgram(shaderProgram);
-    model_mat_loc = glGetUniformLocation(shaderProgram, "model_mat");
-    view_mat_loc = glGetUniformLocation(shaderProgram, "view_mat");
-    proj_mat_loc = glGetUniformLocation(shaderProgram, "proj_mat");
+    shaderProgram.setup(vertex, fragment, tess, tesse);
 }
 
 void pbrObject::setup(animated* model, bool tessellation)
 {
-    defaultMat = true;
     object = model;
-    useTessellation = tessellation;
-    if (tessellation) {
-        // load and compile shaders and link program
-        unsigned int vertexShader = compileShader("pbr/pbrT.vert", GL_VERTEX_SHADER);
-        unsigned int fragmentShader = compileShader("pbr/pbrT.frag", GL_FRAGMENT_SHADER);
-        unsigned int tessellationShader = compileShader("pbr/pbrT.tess", GL_TESS_CONTROL_SHADER);
-        unsigned int tessellationEShader = compileShader("pbr/pbrT.tesse", GL_TESS_EVALUATION_SHADER);
-        shaderProgram = linkProgram(vertexShader, fragmentShader, tessellationShader, tessellationEShader);
-        //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
-        // after linking the program the shader objects are no longer needed
-        glDeleteShader(fragmentShader);
-        glDeleteShader(vertexShader);
-        glDeleteShader(tessellationShader);
-        glDeleteShader(tessellationEShader);
-    } else {
-        // load and compile shaders and link program
-        unsigned int vertexShader = compileShader("pbr/pbr.vert", GL_VERTEX_SHADER);
-        unsigned int fragmentShader = compileShader("pbr/pbr.frag", GL_FRAGMENT_SHADER);
-        shaderProgram = linkProgram(vertexShader, fragmentShader);
-        //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
-        // after linking the program the shader objects are no longer needed
-        glDeleteShader(fragmentShader);
-        glDeleteShader(vertexShader);
-    }
+    shaderProgram.setup(tessellation);
 
     setInt("irradianceMap", 0);
     setInt("prefilterMap", 1);
@@ -123,136 +54,90 @@ void pbrObject::setup(animated* model, bool tessellation)
     setInt("aoMap", 7);
     setInt("heightMap", 8);
 
-    glUseProgram(shaderProgram);
-    model_mat_loc = glGetUniformLocation(shaderProgram, "model_mat");
-    view_mat_loc = glGetUniformLocation(shaderProgram, "view_mat");
-    proj_mat_loc = glGetUniformLocation(shaderProgram, "proj_mat");
-
     setFloat("displacementFactor", 0.);
 }
 
-void pbrObject::setup(animated* model, std::string vertex, std::string fragment){
+void pbrObject::setup(animated* model, std::string vertex, std::string fragment)
+{
     setup(model, vertex.c_str(), fragment.c_str());
 }
 
-void pbrObject::setup(animated* model, std::string vertex, std::string fragment, std::string geometry){
+void pbrObject::setup(animated* model, std::string vertex, std::string fragment, std::string geometry)
+{
     setup(model, vertex.c_str(), fragment.c_str(), geometry.c_str());
 }
 
-void setup(animated* model, std::string vertex, std::string tess, std::string tesse, std::string fragment){
+void setup(animated* model, std::string vertex, std::string tess, std::string tesse, std::string fragment)
+{
     setup(model, vertex.c_str(), tess.c_str(), tesse.c_str(), fragment.c_str());
+}
+
+void pbrObject::reload(){
+    shaderProgram.reload();
 }
 
 void pbrObject::use()
 {
-    glUseProgram(shaderProgram);
+    shaderProgram.use();
 }
 
 void pbrObject::setInt(char const* name, int value)
 {
-    glUseProgram(shaderProgram);
-    unsigned int loc = glGetUniformLocation(shaderProgram, name);
-    glUniform1i(loc, value);
+    shaderProgram.setInt(name, value);
 }
 
 void pbrObject::setFloat(char const* name, float value)
 {
-    glUseProgram(shaderProgram);
-    unsigned int loc = glGetUniformLocation(shaderProgram, name);
-    glUniform1f(loc, value);
+    shaderProgram.setFloat(name, value);
 }
 
 void pbrObject::setMat4(char const* name, glm::mat4* value)
 {
-    glUseProgram(shaderProgram);
-    unsigned int loc = glGetUniformLocation(shaderProgram, name);
-    glUniformMatrix4fv(loc, 1, GL_FALSE, &(*value)[0][0]);
+    shaderProgram.setMat4(name, *value);
 }
 
 void pbrObject::setVec3(char const* name, glm::vec3 value)
 {
-    glUseProgram(shaderProgram);
-    unsigned int loc = glGetUniformLocation(shaderProgram, name);
-    glUniform3f(loc, value[0], value[1], value[2]);
+    shaderProgram.setVec3(name, value);
 }
 
 void pbrObject::setVec3(char const* name, float x, float y, float z)
 {
-    glUseProgram(shaderProgram);
-    unsigned int loc = glGetUniformLocation(shaderProgram, name);
-    glUniform3f(loc, x, y, z);
+    shaderProgram.setVec3(name, x, y, z);
 }
 
 void pbrObject::setVec4(char const* name, glm::vec4 value)
 {
-    glUseProgram(shaderProgram);
-    unsigned int loc = glGetUniformLocation(shaderProgram, name);
-    glUniform4f(loc, value[0], value[1], value[2], value[3]);
+    shaderProgram.setVec4(name, value);
 }
 
 void pbrObject::setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat)
 {
-    glUseProgram(shaderProgram);
-    view_matrix = view_mat;
-    proj_matrix = proj_mat;
+    shaderProgram.setMaticies(view_mat, proj_mat);
 }
 
 void pbrObject::render(double currentTime)
 {
-    glUseProgram(shaderProgram);
-    if (defaultMat) {
-        glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, &(*view_matrix)[0][0]);
-        glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &(*proj_matrix)[0][0]);
-    }
-
-    glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &((*object).matrixAt(currentTime))[0][0]);
-
     (*object).bind();
-    if (useTessellation) {
-        glDrawElements(GL_PATCHES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
-    } else {
-        glDrawElements(GL_TRIANGLES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
-    }
+    glm::mat4 modelMat = (*object).matrixAt(currentTime);
+    shaderProgram.render(modelMat, object->vertex_count);
 }
 
-void pbrObject::render(double currentTime, unsigned int shaderProg)
+void pbrObject::render(double currentTime, shaderObject shaderProg)
 {
-    glUseProgram(shaderProg);
-
     (*object).bind();
-    if (useTessellation) {
-        glDrawElements(GL_PATCHES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
-    } else {
-        glDrawElements(GL_TRIANGLES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
-    }
+    glm::mat4 modelMat = (*object).matrixAt(currentTime);
+    shaderProg.render(modelMat, object->vertex_count);
 }
 
 void pbrObject::render(glm::mat4& matrix)
 {
-    glUseProgram(shaderProgram);
-    if (defaultMat) {
-        glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, &(*view_matrix)[0][0]);
-        glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &(*proj_matrix)[0][0]);
-    }
-
-    glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(matrix[0][0]));
-
     (*object).bind();
-    if (useTessellation) {
-        glDrawElements(GL_PATCHES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
-    } else {
-        glDrawElements(GL_TRIANGLES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
-    }
+    shaderProgram.render(matrix, object->vertex_count);
 }
 
 void pbrObject::renderRotated(float rotation, float t)
 {
-    glUseProgram(shaderProgram);
-    if (defaultMat) {
-        glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, &(*view_matrix)[0][0]);
-        glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &(*proj_matrix)[0][0]);
-    }
-
     glm::mat4 trans = (*object).matrixAt(t);
     trans = glm::rotate(trans, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
     double mat[4][4] = {
@@ -268,12 +153,6 @@ void pbrObject::renderRotated(float rotation, float t)
         }
     }
 
-    glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(trans)[0][0]);
-
     (*object).bind();
-    if (useTessellation) {
-        glDrawElements(GL_PATCHES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
-    } else {
-        glDrawElements(GL_TRIANGLES, (*object).vertex_count, GL_UNSIGNED_INT, (void*)0);
-    }
+    shaderProgram.render(trans, object->vertex_count);
 }

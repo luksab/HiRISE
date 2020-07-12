@@ -48,7 +48,7 @@ int main(int, char* argv[])
 
     pbrObject renderCube = {};
     renderCube.setup(&pbr, "cubeMap/hdr.vert", "cubeMap/hdr.frag");
-    renderCube.defaultMat = true;
+    renderCube.shaderProgram.defaultMat = true;
     renderCube.setInt("environmentMap", 0);
 
     //bones human = loadMeshBone("cylinderBones.dae", false);
