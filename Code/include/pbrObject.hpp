@@ -30,4 +30,5 @@ struct pbrObject {
 
     animated* object;
     shaderObject shaderProgram;
+    operator int() const { return shaderProgram; }
 };
