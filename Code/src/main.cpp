@@ -695,7 +695,8 @@ int main(void)
     float h = 3.0;
 
     float glass_power = 2.0;
-    float glass_factor = 1.0;
+    // float glass_factor = 1.0;
+    // float gamma = 2.2;
 
     float volume = 0.;
 
@@ -911,8 +912,9 @@ int main(void)
             ImGui::SliderFloat("irradianceB", &irradianceB, 0.0f, 1.0f);
 
             ImGui::SliderFloat("glass_power", &glass_power, 0.5f, 4.0f);
-            ImGui::SliderFloat("glass_factor", &glass_factor, 0.0f, 5.0f);
+            //ImGui::SliderFloat("glass_factor", &glass_factor, 0.0f, 5.0f);
             ImGui::SliderFloat("discardFactor", &discardFactor, 1.f, 1.1f);
+            //ImGui::SliderFloat("gamma", &gamma, 1.f, 4.f);
             ImGui::SliderFloat("h", &h, 1.f, 7.f);
             ImGui::End();
         }
@@ -1086,7 +1088,7 @@ int main(void)
             mars.render(0);
         }
 
-        if (currentTime < 12.2) {// reflexion drawObjs[3]
+        if (cam.position().x >= -16.2) {// reflexion drawObjs[3]
             //Draw in stencil first
             glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);// Do not draw any pixels on the back buffer
             glEnable(GL_STENCIL_TEST);
@@ -1164,27 +1166,33 @@ int main(void)
         // render transparency last
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
-        if (drawObjs[1]) {// render glass
+        if (cam.position().x < -16.2) {// render glass
+            glassOutObj.setVec3("camPos", cam.position());
             glassOutObj.setMaticies(&view_matrix, &proj_matrix);
-            glassOutObj.setFloat("factor", glass_factor);
+            // glassOutObj.setFloat("factor", glass_factor);
             glassOutObj.setFloat("power", glass_power);
+            // glassOutObj.setFloat("gamma", gamma);
             glassOutObj.render(currentTime);
         }
         if (currentTime > 12.2) {// drawObjs[4]
+            glassAnimObj.setVec3("camPos", cam.position());
             glassAnimObj.setMaticies(&view_matrix, &proj_matrix);
-            glassAnimObj.setFloat("factor", glass_factor);
+            // glassAnimObj.setFloat("factor", glass_factor);
             glassAnimObj.setFloat("power", glass_power);
+            // glassAnimObj.setFloat("gamma", gamma);
             glassAnimObj.render(currentTime);
-        } else {
+        } else if(cam.position().x < -16.2) {
+            glassObj.setVec3("camPos", cam.position());
             glassObj.setMaticies(&view_matrix, &proj_matrix);
-            glassObj.setFloat("factor", glass_factor);
+            // glassObj.setFloat("factor", glass_factor);
             glassObj.setFloat("power", glass_power);
+            // glassObj.setFloat("gamma", gamma);
             glassObj.render(currentTime);
         }
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, envtex.hdrTexture);
         textObj.setMaticies(&view_matrix, &proj_matrix);
-        textObj.setFloat("factor", glass_factor);
+        // textObj.setFloat("factor", glass_factor);
         textObj.setFloat("power", glass_power);
         textObj.render(currentTime);
 

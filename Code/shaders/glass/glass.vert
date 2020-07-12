@@ -17,9 +17,9 @@ void main()
 {
     //float offset = texture2D(height, position.xy/2+0.5).r;
     gl_Position = proj_mat * view_mat * model_mat * vec4(position.x, position.y, position.z, 1.0);
-    interpG_pos = (view_mat * model_mat * vec4(position.x, position.y, position.z, 1.0)).xyz;
+    interpG_pos = (model_mat * vec4(position.x, position.y, position.z, 1.0)).xyz;
     interp_pos = position.xyz;//normalize(vec3(position.x,position.y,position.z-offset));
-    normal_in = normal;
+    normal_in = (model_mat * vec4(normal, 0.0)).xzy;
     TexCoord_out = TexCoord_in;
     interp_normal = normalize((transpose(inverse(view_mat * model_mat)) * vec4(normal, 0.0)).xyz);
 }
