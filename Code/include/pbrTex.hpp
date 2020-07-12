@@ -399,3 +399,157 @@ void renderQuad()
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
 }
+
+
+float*
+load_texture_data(std::string filename, int* width, int* height)
+{
+    stbi_set_flip_vertically_on_load(false);
+    int channels;
+    unsigned char* file_data = stbi_load(filename.c_str(), width, height, &channels, 3);
+
+    int w = *width;
+    int h = *height;
+
+    float* data = new float[4 * w * h];
+    for (int j = 0; j < h; ++j) {
+        for (int i = 0; i < w; ++i) {
+            data[j * w * 4 + i * 4 + 0] = static_cast<float>(file_data[j * w * 3 + i * 3 + 0]) / 255;
+            data[j * w * 4 + i * 4 + 1] = static_cast<float>(file_data[j * w * 3 + i * 3 + 1]) / 255;
+            data[j * w * 4 + i * 4 + 2] = static_cast<float>(file_data[j * w * 3 + i * 3 + 2]) / 255;
+            data[j * w * 4 + i * 4 + 3] = 1.f;
+        }
+    }
+
+    stbi_image_free(file_data);
+
+    return data;
+}
+
+float*
+load_pds_data(std::string filename, int* width, int* height, int* channels)
+{
+    FILE* fp = fopen(filename.c_str(), "r");
+    char* line = NULL;
+    size_t len = 0;
+    int skipLen = 0;
+    ssize_t read;
+
+    if (fp == NULL)
+        exit(EXIT_FAILURE);
+
+    while ((read = getline(&line, &len, fp)) != -1) {
+        skipLen += read;
+        if (strncmp(line, "  LINES            = ", 21) == 0)// 21 = len("  LINES            = ")
+        {
+            *height = atoi(line + 21);
+        } else if (strncmp(line, "  LINE_SAMPLES     = ", 21) == 0) {
+            *width = atoi(line + 21);
+        } else if ((strncmp(line, "END\n", 4) == 0 || strncmp(line, "END\r", 4) == 0) && read < 6) {
+            break;
+        }
+    }
+
+    printf("height: %d\n", *height);
+    printf("width: %d\n", *width);
+
+    fclose(fp);
+    if (line)
+        free(line);
+
+    FILE* f = fopen(filename.c_str(), "rb");
+
+    int w = *width;
+    int h = *height;
+
+    float* data = new float[*channels * w * h];
+    long filelen = w * h * *channels;
+
+    float* buffer = (float*)malloc(filelen * sizeof(float));// Enough memory for the file
+    fread(buffer, sizeof(float), filelen, f);               // Read in the entire file
+    fclose(f);
+    for (int j = 0; j < h; ++j) {
+        for (int i = 0; i < w; ++i) {
+            for (int k = 0; k < *channels; k++) {
+                data[j * w * *channels + i * *channels + k] = buffer[j * w * *channels + i * *channels + k];
+                data[j * w * *channels + i * *channels + k] += 4185.03;
+                if (data[j * w * *channels + i * *channels + k] < -5000 || data[j * w * *channels + i * *channels + k] > 5000) {
+                    data[j * w * *channels + i * *channels + k] = -10000;
+                }
+
+                data[j * w * *channels + i * *channels + k] /= 1938.42;
+            }
+        }
+    }
+
+    free(buffer);
+
+    return data;
+}
+
+unsigned int
+create_texture_rgba32f(int width, int height, float* data)
+{
+    unsigned int handle;
+    glCreateTextures(GL_TEXTURE_2D, 1, &handle);
+    glTextureStorage2D(handle, 1, GL_RGBA32F, width, height);
+    glTextureSubImage2D(handle, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, data);
+
+    return handle;
+}
+
+unsigned int
+create_texture_rgba32f(int width, int height)
+{
+    unsigned int handle;
+    glCreateTextures(GL_TEXTURE_2D, 1, &handle);
+    glTextureStorage2D(handle, 1, GL_RGBA32F, width, height);
+
+    return handle;
+}
+
+unsigned int
+setup_fullscreen_quad()
+{
+    float vertices[] = {
+        -1.0f, -1.0f, 0.0f,
+        1.0f, -1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f,
+        -1.0f, 1.0f, 0.0f
+    };
+
+    unsigned int indices[] = {
+        0, 1, 2, 2, 3, 0
+    };
+
+    unsigned int VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    unsigned int VBO = makeBuffer(GL_ARRAY_BUFFER, GL_STATIC_DRAW, sizeof(vertices), vertices);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    unsigned int IBO = makeBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, sizeof(indices), indices);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+
+    return VAO;
+}
+
+unsigned int
+create_texture_r32f(int width, int height, float* data)
+{
+    unsigned int handle;
+    glCreateTextures(GL_TEXTURE_2D, 1, &handle);
+    glTextureStorage2D(handle, 1, GL_R32F, width, height);
+    glTextureSubImage2D(handle, 0, 0, 0, width, height, GL_RED, GL_FLOAT, data);
+
+    return handle;
+}
+
+void set_texture_wrap_mode(unsigned int texture, GLenum mode)
+{
+    glTextureParameteri(texture, GL_TEXTURE_WRAP_S, mode);
+    glTextureParameteri(texture, GL_TEXTURE_WRAP_T, mode);
+}
