@@ -304,7 +304,7 @@ Er bricht durch das Fenster und man sieht das Geb&#xE4;ude von au&#xDF;en, welch
 </li>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Physikalische Simulation der Glassplitter
 <ul>
-<li>kann auch in Blender vorsimuliert werden, sollte es nicht in echtzeit m&#xF6;glich sein</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> kann auch in Blender vorsimuliert werden, sollte es nicht in echtzeit m&#xF6;glich sein</li>
 </ul>
 </li>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Reflexion im Glas
@@ -379,7 +379,7 @@ In Blender lassen sich in Echtzeit Parameter und Zusammenh&#xE4;nge ausprobieren
 <p>Hier ist die Entwicklungsumgebung mit allen UI-Elementen aktiviert:<br>
 <img src="images/Screenshot_UI_demo.jpg" alt><br>
 Zur Entwicklung des Benutzerinterfaces wurde dear ImGui benutzt. Dies erlaubt schnell relativ komlexe Bedienelemente einzubinden.<br>
-Die Entwicklung der einzelnen Elemente fand zum Gro&#xDF;teil dadurch statt, dass eine Variable im Programm in Echtzeit ver&#xE4;ndert werden sollte, wodurch dann genau ein Element n&#xF6;tig wurde.<br>
+Die Entwicklung der einzelnen <a href="https://github.com/luksab/HiRISE/blob/master/Code/src/main.cpp#L615">Elemente</a> fand zum Gro&#xDF;teil dadurch statt, dass eine Variable im Programm in Echtzeit ver&#xE4;ndert werden sollte, wodurch dann genau ein Element n&#xF6;tig wurde.<br>
 Da diese Element jeweils also genau einen Verwendungszweck habem , lassen sie sich jeweils deaktivieren, um Platz zu sparen.</p>
 <h2 class="mume-header" id="kamerafahrt">Kamerafahrt</h2>
 
@@ -415,7 +415,7 @@ Es werden die einzelnen Knochen rekursiv von der H&#xFC;fte aus importiert, inde
 </figure>
 <h2 class="mume-header" id="spiegelung">Spiegelung</h2>
 
-<p>F&#xFC;r den gro&#xDF;en Spiegel mit Echtzeitreflexionen wird die Szene zwei mal gerendert. Ein mal normal und ein mal gespiegelt und mit einem Stencil auf die richtige Form zurechtgeschnitten. Dies geschieht in der main datei um Zeile <a href="https://github.com/luksab/HiRISE/blob/master/Code/src/main.cpp#L832">832</a>.</p>
+<p>F&#xFC;r den gro&#xDF;en Spiegel mit Echtzeitreflexionen wird die Szene zwei mal gerendert. Ein mal normal und ein mal gespiegelt und mit einem Stencil auf die richtige Form zurechtgeschnitten. Dies geschieht in der main datei um Zeile <a href="https://github.com/luksab/HiRISE/blob/master/Code/src/main.cpp#L960">960</a>.</p>
 <p>F&#xFC;r die vielen kleinen Glasscherben wird lediglich die Environment Map reflektiert abgebildet. Dies geschieht vollst&#xE4;ndig im <a href="https://github.com/luksab/HiRISE/blob/master/Code/shaders/glass/glass.frag">shader code</a>.</p>
 <h2 class="mume-header" id="modelle">Modelle</h2>
 
@@ -437,6 +437,19 @@ Die Farbtextur wird in einem Computeshader vorberechnet um zur Laufzeit Rechenle
 Dort wird das Glas zun&#xE4;chst von Cell Fracture zersplittert und die einzelnen resultierenden Objekte interagieren dann miteinander und mit der Szene.<br>
 <img src="images/cellFracture.png" alt="eine Beispielkonfiguration von Cell Fracture"><br>
 <img src="images/shards.png" alt="shards"></p>
+<h2 class="mume-header" id="extras">Extras</h2>
+
+<h3 class="mume-header" id="shader-auto-reload">Shader auto-reload</h3>
+
+<p>Zum beschleunigen der Entwicklung von Shadercode wurde die <a href="https://github.com/luksab/HiRISE/blob/master/Code/src/vendor/shaderObject.cpp">Shaderklasse</a> mit der Funktion <a href="https://github.com/luksab/HiRISE/blob/master/Code/src/vendor/shaderObject.cpp#L200">reload</a>, welche den Shadercode neul&#xE4;d und <a href="https://github.com/luksab/HiRISE/blob/master/Code/src/vendor/shaderObject.cpp#L298">checkReload</a>, welche &#xFC;berpr&#xFC;ft, ob die Datei seit dem letzten Laden/ Neuladen ver&#xE4;ndert wurde.<br>
+Damit L&#xE4;sst sich jeden Frame &#xFC;berpr&#xFC;fen, ob eine Datei ver&#xE4;ndert wurde, und wenn dies der Fall ist den zugeh&#xF6;renden Shader neuzuladen.<br>
+Diese Schritte m&#xFC;ssen allerdings mit einem Delay versehen werden, da das scheiben des neuen Shadercodes in die Datei etwas Zeit in anspruch nimmt.<br>
+Die Funktion <a href="https://github.com/luksab/HiRISE/blob/master/Code/src/vendor/shaderObject.cpp#L338">reloadCheck</a> &#xFC;bernimmt diese Aufgabe und wartet 20ms, bevor der n&#xE4;chste Shader geladen wird. Das sorgt zwar daf&#xFC;r, dass die Frametime f&#xFC;r einen Frame deutlich ansteigt, da aber nur in der Entwicklung und auch da im Vergleich zu der Gesamtzahl der gerenderten Bilder sehr selten die Shader neugeladen werden m&#xFC;ssen, ist das ein Kompromiss, der sicherlich zu vertreten ist.</p>
+<h3 class="mume-header" id="prozedurale-texturen-f%C3%BCr-mars-oberfl%C3%A4che">Prozedurale Texturen f&#xFC;r Mars-oberfl&#xE4;che</h3>
+
+<p>Um die niedrige Piixeldichte auf der Mars-oberfl&#xE4;che zu mitigieren, wurde mithilfe des Shaderreloads mit Verschiedenen Typen von Noise experimentiert.<br>
+<img src="images/MarsNoise.png" alt="Noise"><br>
+Die Ergebnisse lassen leider zu w&#xFC;nschen &#xFC;brig.</p>
 </div>
       </div>
       

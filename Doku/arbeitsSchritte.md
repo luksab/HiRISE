@@ -1,5 +1,5 @@
 # Arbeitsschritte für HiRISE
-Der gesamte code ist auf [GitHub.com/luksab/HiRISE](https://github.com/luksab/hirise) zu finden
+Der gesamte code ist auf [GitHub.com/luksab/HiRISE](https://github.com/luksab/hirise) zu finden.
 # Planung
 
 ### Storyboard
@@ -7,27 +7,27 @@ Der gesamte code ist auf [GitHub.com/luksab/HiRISE](https://github.com/luksab/hi
 
 ### Story
 Der Protagonist steht von seinem Schreibtisch auf und schaut sich um - es starten Sirenen und er fängt an zum Fenster zu laufen.
-Auf dem Weg dahin wird er von mehreren Personen verfolgt und macht etwas Parkour über Tische und andere Hindernisse.
-Er bricht durch das Fenster und man sieht das Gebäude von außen, welches sich auf einem Science-Fiction Mars befindet und springt auf ein gegenübergelegenes Haus und läuft weg.
+Auf dem Weg dahin <del> wird er von mehreren Personen verfolgt und </del> macht etwas Parkour über Tische und andere Hindernisse.
+Er bricht durch das Fenster und man sieht das Gebäude von außen, welches sich auf einem Science-Fiction Mars befindet und <del> springt auf ein gegenübergelegenes Haus und läuft weg</del> <span style="color: darkred;">fällt in immer langsamer werdender Slow-Motion während die Kamera sich weiter bewegt</span>.
 
 ### Technisches
-#### Features zu implementieren
+#### Features zu implementieren - in rot revidiert
 - [x] Minimalistische Cinematic Engine
     - [x] Datenformat aus Blender exportieren, in Programm importieren
         - einfach dae/obj
-    - [x] protobuf oder json als Dateiformat? - Custom (floats in Datei, space-separated)
+    - [x] protobuf oder json als Dateiformat? <span style="color:darkred;"> - Custom (floats in Datei, space-separated)</span>
     - [x] Kameraposition, Skelettanimationen
-        - [x] Kameraposionen speichen
+        - [x] Kamerapositionen speichen
 - [x] Rigging für Charaktere
     - [x] muss sehr gut funktion, um realistische Bewegungen zu erlauben
 - [ ] Physikalische Simulation der Glassplitter
-    - [x] kann auch in Blender vorsimuliert werden, sollte es nicht in echtzeit möglich sein
+    - [x] <del>kann auch</del> <span style="color: darkred;"> wurde </span> in Blender vorsimuliert werden, <del>sollte es nicht in echtzeit möglich sein</del> <span style="color:darkred;">da es aus Zeitgründen nicht möglich war</span>.
 - [x] Reflexion im Glas
     - [x] Zunächst bei intakter Scheibe durch duplikation der Szene unsetzbar
     - [ ] Bei vielen Glassplittern andere Technik notwendig
         - [x] Environment Map reflektieren
-        - [ ] Environment Map in realtime neu erzugen
-    - [x] z.B. SS (unvollständig), Ray-tracing (zu teuer), Environment Map
+        - [ ] Environment Map in realtime neu erzugen <span style="color:darkred;"> - hier nicht notwendig, um gute Ergebnisse zu erzeugen.
+    - [x] z.B. SS (unvollständig), Ray-tracing (zu teuer), <u>Environment Map</u>
 - [x] Dispacement Mapping + PDS Parser
     - [x] Höhendaten und Bilder von Marsoberfläche aus PDS Daten laden
     - [x] Marsoberfläche von HiRISE-daten
@@ -40,6 +40,7 @@ Er bricht durch das Fenster und man sieht das Gebäude von außen, welches sich 
     - Erhöht sowohl Performance, als auch Qualität
 - [ ] Prozedurale Texturen für Mars-oberfläche
     - [x] Farben für Flächen, auf denen die HiRISE Kamera keine Farbinformationen erhalten hat
+    - [x] <span style="color:darkred;">ist nicht gut gelungen
 - [ ] HDR-Effekte, Bewegungsunschärfe, Fokusunschärfe
     - [ ] Qualität erhöhen, wenn noch Zeit und Performace über ist (Priorität absteigend)
 
@@ -65,7 +66,7 @@ In Blender lassen sich in Echtzeit Parameter und Zusammenhänge ausprobieren um 
 Hier ist die Entwicklungsumgebung mit allen UI-Elementen aktiviert:
 ![](images/Screenshot_UI_demo.jpg)
 Zur Entwicklung des Benutzerinterfaces wurde dear ImGui benutzt. Dies erlaubt schnell relativ komlexe Bedienelemente einzubinden.
-Die Entwicklung der einzelnen Elemente fand zum Großteil dadurch statt, dass eine Variable im Programm in Echtzeit verändert werden sollte, wodurch dann genau ein Element nötig wurde.
+Die Entwicklung der einzelnen [Elemente](https://github.com/luksab/HiRISE/blob/master/Code/src/main.cpp#L615) fand zum Großteil dadurch statt, dass eine Variable im Programm in Echtzeit verändert werden sollte, wodurch dann genau ein Element nötig wurde.
 Da diese Element jeweils also genau einen Verwendungszweck habem , lassen sie sich jeweils deaktivieren, um Platz zu sparen.
 
 ## Kamerafahrt
@@ -103,7 +104,7 @@ Hier ist der Anfang in Blender Animiert:
 </figure>
 
 ## Spiegelung
-Für den großen Spiegel mit Echtzeitreflexionen wird die Szene zwei mal gerendert. Ein mal normal und ein mal gespiegelt und mit einem Stencil auf die richtige Form zurechtgeschnitten. Dies geschieht in der main datei um Zeile [832](https://github.com/luksab/HiRISE/blob/master/Code/src/main.cpp#L832).
+Für den großen Spiegel mit Echtzeitreflexionen wird die Szene zwei mal gerendert. Ein mal normal und ein mal gespiegelt und mit einem Stencil auf die richtige Form zurechtgeschnitten. Dies geschieht in der main datei um Zeile [960](https://github.com/luksab/HiRISE/blob/master/Code/src/main.cpp#L960).
 
 Für die vielen kleinen Glasscherben wird lediglich die Environment Map reflektiert abgebildet. Dies geschieht vollständig im [shader code](https://github.com/luksab/HiRISE/blob/master/Code/shaders/glass/glass.frag).
 
@@ -125,3 +126,15 @@ Der ursprüngliche Plan war es eine vollständige Simulation von Glass zu schrei
 Dort wird das Glas zunächst von Cell Fracture zersplittert und die einzelnen resultierenden Objekte interagieren dann miteinander und mit der Szene.
 ![eine Beispielkonfiguration von Cell Fracture](images/cellFracture.png)
 ![shards](images/shards.png)
+
+## Extras
+### Shader auto-reload
+Zum beschleunigen der Entwicklung von Shadercode wurde die [Shaderklasse](https://github.com/luksab/HiRISE/blob/master/Code/src/vendor/shaderObject.cpp) mit der Funktion [reload](https://github.com/luksab/HiRISE/blob/master/Code/src/vendor/shaderObject.cpp#L200), welche den Shadercode neuläd und [checkReload](https://github.com/luksab/HiRISE/blob/master/Code/src/vendor/shaderObject.cpp#L298), welche überprüft, ob die Datei seit dem letzten Laden/ Neuladen verändert wurde.
+Damit Lässt sich jeden Frame überprüfen, ob eine Datei verändert wurde, und wenn dies der Fall ist den zugehörenden Shader neuzuladen.
+Diese Schritte müssen allerdings mit einem Delay versehen werden, da das scheiben des neuen Shadercodes in die Datei etwas Zeit in anspruch nimmt.
+Die Funktion [reloadCheck](https://github.com/luksab/HiRISE/blob/master/Code/src/vendor/shaderObject.cpp#L338) übernimmt diese Aufgabe und wartet 20ms, bevor der nächste Shader geladen wird. Das sorgt zwar dafür, dass die Frametime für einen Frame deutlich ansteigt, da aber nur in der Entwicklung und auch da im Vergleich zu der Gesamtzahl der gerenderten Bilder sehr selten die Shader neugeladen werden müssen, ist das ein Kompromiss, der sicherlich zu vertreten ist.
+
+### Prozedurale Texturen für Mars-oberfläche
+Um die niedrige Piixeldichte auf der Mars-oberfläche zu mitigieren, wurde mithilfe des Shaderreloads mit Verschiedenen Typen von Noise experimentiert.
+![Noise](images/MarsNoise.png)
+Die Ergebnisse lassen leider zu wünschen übrig.
