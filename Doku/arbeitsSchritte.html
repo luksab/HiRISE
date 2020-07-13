@@ -266,7 +266,7 @@ video {
       <div class="mume markdown-preview  ">
       <div><h1 class="mume-header" id="arbeitsschritte-f%C3%BCr-hirise">Arbeitsschritte f&#xFC;r HiRISE</h1>
 
-<p>Der gesamte code ist auf <a href="https://github.com/luksab/hirise">GitHub.com/luksab/HiRISE</a> zu finden</p>
+<p>Der gesamte code ist auf <a href="https://github.com/luksab/hirise">GitHub.com/luksab/HiRISE</a> zu finden.</p>
 <h1 class="mume-header" id="planung">Planung</h1>
 
 <h3 class="mume-header" id="storyboard">Storyboard</h3>
@@ -275,11 +275,11 @@ video {
 <h3 class="mume-header" id="story">Story</h3>
 
 <p>Der Protagonist steht von seinem Schreibtisch auf und schaut sich um - es starten Sirenen und er f&#xE4;ngt an zum Fenster zu laufen.<br>
-Auf dem Weg dahin wird er von mehreren Personen verfolgt und macht etwas Parkour &#xFC;ber Tische und andere Hindernisse.<br>
-Er bricht durch das Fenster und man sieht das Geb&#xE4;ude von au&#xDF;en, welches sich auf einem Science-Fiction Mars befindet und springt auf ein gegen&#xFC;bergelegenes Haus und l&#xE4;uft weg.</p>
+Auf dem Weg dahin <del> wird er von mehreren Personen verfolgt und </del> macht etwas Parkour &#xFC;ber Tische und andere Hindernisse.<br>
+Er bricht durch das Fenster und man sieht das Geb&#xE4;ude von au&#xDF;en, welches sich auf einem Science-Fiction Mars befindet und <del> springt auf ein gegen&#xFC;bergelegenes Haus und l&#xE4;uft weg</del> <span style="color: darkred;">f&#xE4;llt in immer langsamer werdender Slow-Motion w&#xE4;hrend die Kamera sich weiter bewegt</span>.</p>
 <h3 class="mume-header" id="technisches">Technisches</h3>
 
-<h4 class="mume-header" id="features-zu-implementieren">Features zu implementieren</h4>
+<h4 class="mume-header" id="features-zu-implementieren-in-rot-revidiert">Features zu implementieren - in rot revidiert</h4>
 
 <ul>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Minimalistische Cinematic Engine
@@ -289,10 +289,10 @@ Er bricht durch das Fenster und man sieht das Geb&#xE4;ude von au&#xDF;en, welch
 <li>einfach dae/obj</li>
 </ul>
 </li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> protobuf oder json als Dateiformat? - Custom (floats in Datei, space-separated)</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> protobuf oder json als Dateiformat? <span style="color:darkred;"> - Custom (floats in Datei, space-separated)</span></li>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Kameraposition, Skelettanimationen
 <ul>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Kameraposionen speichen</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Kamerapositionen speichen</li>
 </ul>
 </li>
 </ul>
@@ -304,7 +304,7 @@ Er bricht durch das Fenster und man sieht das Geb&#xE4;ude von au&#xDF;en, welch
 </li>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Physikalische Simulation der Glassplitter
 <ul>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> kann auch in Blender vorsimuliert werden, sollte es nicht in echtzeit m&#xF6;glich sein</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> <del>kann auch</del> <span style="color: darkred;"> wurde </span> in Blender vorsimuliert werden, <del>sollte es nicht in echtzeit m&#xF6;glich sein</del> <span style="color:darkred;">da es aus Zeitgr&#xFC;nden nicht m&#xF6;glich war</span>.</li>
 </ul>
 </li>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Reflexion im Glas
@@ -313,10 +313,10 @@ Er bricht durch das Fenster und man sieht das Geb&#xE4;ude von au&#xDF;en, welch
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Bei vielen Glassplittern andere Technik notwendig
 <ul>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Environment Map reflektieren</li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Environment Map in realtime neu erzugen</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Environment Map in realtime neu erzugen <span style="color:darkred;"> - hier nicht notwendig, um gute Ergebnisse zu erzeugen.</span></li>
 </ul>
 </li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> z.B. SS (unvollst&#xE4;ndig), Ray-tracing (zu teuer), Environment Map</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> z.B. SS (unvollst&#xE4;ndig), Ray-tracing (zu teuer), <u>Environment Map</u></li>
 </ul>
 </li>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Dispacement Mapping + PDS Parser
@@ -347,6 +347,7 @@ Er bricht durch das Fenster und man sieht das Geb&#xE4;ude von au&#xDF;en, welch
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Prozedurale Texturen f&#xFC;r Mars-oberfl&#xE4;che
 <ul>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Farben f&#xFC;r Fl&#xE4;chen, auf denen die HiRISE Kamera keine Farbinformationen erhalten hat</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> <span style="color:darkred;">ist nicht gut gelungen</span></li>
 </ul>
 </li>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> HDR-Effekte, Bewegungsunsch&#xE4;rfe, Fokusunsch&#xE4;rfe
@@ -400,7 +401,7 @@ Dies wird gemacht, damit Maxima und Minima eine symmetrischere Extremstelle aufw
 Au&#xDF;erdem werden die dort beschriebenen shader leicht ver&#xE4;ndert f&#xFC;r die PBR-Objekte verwendet.</p>
 <h2 class="mume-header" id="skeletal-animation">Skeletal animation</h2>
 
-<p>Das importieren von Skeletal Animationen hat sich als recht fragil herausgestellt und bei Exporteinstellungen, die von denen abweichen, die in <a href="blenderExport.md">blenderExport</a> beschrieben werden, geht das Modell fast sicher kaputt.</p>
+<p>Das importieren von Skeletal Animationen hat sich als recht fragil herausgestellt und bei Exporteinstellungen, die von denen abweichen, die in <a href="blenderExport.html">blenderExport</a> beschrieben werden, geht das Modell fast sicher kaputt.</p>
 <figure class="video_container">
   <video controls="true" allowfullscreen="true">
     <source src="./videos/brokenSkelett.mp4" type="video/mp4">

@@ -88,7 +88,7 @@ Außerhalb des Gebäude wird zur beleuchtung ein HDRI nach dem Vorbild von https
 Außerdem werden die dort beschriebenen shader leicht verändert für die PBR-Objekte verwendet.
 
 ## Skeletal animation
-Das importieren von Skeletal Animationen hat sich als recht fragil herausgestellt und bei Exporteinstellungen, die von denen abweichen, die in [blenderExport](blenderExport.md) beschrieben werden, geht das Modell fast sicher kaputt.
+Das importieren von Skeletal Animationen hat sich als recht fragil herausgestellt und bei Exporteinstellungen, die von denen abweichen, die in [blenderExport](blenderExport.html) beschrieben werden, geht das Modell fast sicher kaputt.
 <figure class="video_container">
   <video controls="true" allowfullscreen="true">
     <source src="./videos/brokenSkelett.mp4" type="video/mp4">
