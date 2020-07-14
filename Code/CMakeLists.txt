@@ -27,16 +27,13 @@ configure_file (
     "${PROJECT_SOURCE_DIR}/include/config.hpp"
 )
 
-find_library(IRRKLANG_LIBRARY IrrKlang HINTS /usr/lib/irrklang)
-
 include_directories(include/
                     vendor/assimp/include/
                     vendor/glad/include/
                     vendor/glfw/include/
                     vendor/glm/
                     vendor/stb/
-                    vendor/gli/
-                    vendor/irrklang/)
+                    vendor/gli/)
 
 file(GLOB VENDORS_SOURCES vendor/glad/src/glad.c src/vendor/*.cpp)
 file(GLOB PROJECT_HEADERS include/*.hpp)
@@ -64,7 +61,7 @@ foreach(PROJECT_SOURCE_FILE ${PROJECT_SOURCES})
     add_executable(${SRC_NAME} ${PROJECT_SOURCE_FILE} ${PROJECT_HEADERS}
                                ${PROJECT_SHADERS} ${PROJECT_CONFIGS}
                                ${LIBRARY_SOURCES} ${VENDORS_SOURCES})
-    target_link_libraries(${SRC_NAME} assimp glfw png ${IRRKLANG_LIBRARY}
+    target_link_libraries(${SRC_NAME} assimp glfw png
                           ${GLFW_LIBRARIES} ${GLAD_LIBRARIES})
     #set_target_properties(${SRC_NAME} PROPERTIES
         #RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})

@@ -17,7 +17,6 @@
 #include "spline.hpp"
 
 #include <imgui.hpp>
-#include <irrKlang.h>
 #include <thread>
 
 int WINDOW_WIDTH = 1920;
@@ -163,14 +162,6 @@ struct ImageThreadCall {
 
 int main(void)
 {
-    irrklang::ISoundEngine* SoundEngine = irrklang::createIrrKlangDevice();
-    if (!SoundEngine) {
-        printf("Could not start irrklang");// error starting up the engine
-        assert(0);
-    }
-    irrklang::ISound* music = SoundEngine->play2D((DATA_ROOT + "audio/breakout.ogg").c_str(), true, false, true);
-    music->setVolume(0.);
-
     Plane p;
     p.FromTriangle(glm::vec3(15.9, 0, 0), glm::vec3(15.9, 1, 0), glm::vec3(15.9, 0, 1));
 
@@ -554,8 +545,6 @@ int main(void)
     glm::vec4 factor0 = glm::vec4(2500., 0.5, 20., -0.25);
     glm::vec4 factor1 = glm::vec4(1., 1., 1., 1.);
 
-    float volume = 0.;
-
     float bias = 3.460;
 
     bool vSync = true;
@@ -568,7 +557,6 @@ int main(void)
     bool Camera = false;
     bool CameraMove = false;
     bool Color = false;
-    bool Music = false;
     bool Draw = false;
 
     bool drawObjs[6] = { true, true, true, true, true, true };
@@ -621,7 +609,6 @@ int main(void)
         ImGui::Checkbox("CameraControl", &CameraMove);
         ImGui::Checkbox("Color", &Color);
         ImGui::Checkbox("Draw", &Draw);
-        ImGui::Checkbox("Music", &Music);
         ImGui::DragFloat3("translate", &(translateVec[0]));
         // ImGui::DragFloat("Scale", &scaleChair);
         ImGui::End();
@@ -785,13 +772,6 @@ int main(void)
             ImGui::Checkbox("HiRISE", &(drawObjs[5]));
             ImGui::End();
         }
-        if (Music) {
-            ImGui::Begin("Music");
-            ImGui::SliderFloat("Volume", &volume, 0.f, 1.0f);
-            music->setVolume(volume);
-            ImGui::End();
-        }
-
         if(autoReload){
             hiriseObj.reloadCheck();
             mars.reloadCheck();
@@ -1098,7 +1078,6 @@ int main(void)
         glfwSwapBuffers(window);
     }
 
-    SoundEngine->drop();
     cleanup_imgui();
     glfwTerminate();
 }
