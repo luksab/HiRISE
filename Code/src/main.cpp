@@ -304,7 +304,7 @@ int main(void)
     humanObj.setup(&human, false);
     humanObj.use();
     humanObj.scale(0.165);
-    humanObj.move(0., 5.96, -0.29);
+    humanObj.move(0., 5.96, 0);
 
     printf("glassAnim\n");
     std::vector<animated> glassAnim = loadSceneAnim("HiRISE_new/shards.dae", false);
