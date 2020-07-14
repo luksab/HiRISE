@@ -121,17 +121,17 @@ float fractal(vec2 cords){
 
 void main() {
     // float noise = 1-abs(snoise(TexCoord_FS_in*1000.));
-    float noise = 1-abs(pNoise(TexCoord_FS_in*10., 5));
-    float noise1 = pNoise(TexCoord_FS_in*100., 10);
-    float noise2 = pNoise(TexCoord_FS_in*1000., 5);
-    float noise3 = pNoise(TexCoord_FS_in*5., 1);
-    // float noise2 = pNoise(TexCoord_FS_in*10., 10);
+    // float noise = 1-abs(pNoise(TexCoord_FS_in*10., 5));
+    // float noise1 = pNoise(TexCoord_FS_in*100., 10);
+    // float noise2 = pNoise(TexCoord_FS_in*1000., 5);
+    // float noise3 = pNoise(TexCoord_FS_in*5., 1);
+    // // float noise2 = pNoise(TexCoord_FS_in*10., 10);
     vec3 col = texture2D(tex, TexCoord_FS_in).xyz;
-    // frag_color = vec4((noise * factors2.x + factors2.y) * col, 1.);
-    // col *= noise1;
-    // frag_color = vec4(col , 1.);
-    float noiseRes = -abs((noise1*0.5+0.75)*noise2*(abs(noise3*2)+0.5))*0.2;
-    frag_color = vec4(col+noiseRes*2., 1.);
-    // frag_color = vec4(col, 1.);
+    // // frag_color = vec4((noise * factors2.x + factors2.y) * col, 1.);
+    // // col *= noise1;
+    // // frag_color = vec4(col , 1.);
+    // float noiseRes = -abs((noise1*0.5+0.75)*noise2*(abs(noise3*2)+0.5))*0.2;
+    // frag_color = vec4(col+noiseRes*.5, 1.);
+    frag_color = vec4(col, 1.);
     gl_FragDepth = col.r == 0.?1:gl_FragCoord.z;
 }
