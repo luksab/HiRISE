@@ -5,6 +5,7 @@ in vec2 interp_uv;
 out vec4 frag_color;
 
 uniform sampler2D tex;
+uniform float currentTime;
 
 const float blurSizeH = 1.0 / 1200.0;
 const float blurSizeV = 1.0 / 800.0;
@@ -24,6 +25,9 @@ void main()
                 ) / (5.*samples*samples);
         frag_color = sum;
     }else{
-        frag_color = vec4(tex_value.rgb, 1.);
+        float before = 13.361;
+        float after = 13.7;
+        float toBlack = clamp((currentTime-before)/(after-before),0.,1.);
+        frag_color = vec4(tex_value.rgb*(1-toBlack), 1.);
     }    
 }

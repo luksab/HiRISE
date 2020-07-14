@@ -600,7 +600,7 @@ int main(void)
         lastGLTime = glfwGetTime();
         currentTime += (recordFrames ? 0.0166666666 : dt) * timeScale * playbackRate * playing;
         maxTime = max(maxTime, CamPosSpline.points.back().first);
-        currentTime = fmod(currentTime, maxTime + 1e-3);
+        currentTime = min(currentTime, (float)(maxTime + 1e-3));
         nbFrames++;
         if (glfwGetTime() - lastTime >= 1.0) {// If last prinf() was more than 1 sec ago
             // reset timer
@@ -1072,6 +1072,7 @@ int main(void)
         glBindVertexArray(quad);
         glBindTextureUnit(0, framebuffer_tex);
         // Compose.setVec3("trans",translateVec);
+        Compose.setFloat("currentTime", currentTime);
         Compose.render(6);
 
         if (recordFrames) {
