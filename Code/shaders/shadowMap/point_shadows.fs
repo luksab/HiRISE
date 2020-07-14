@@ -15,7 +15,6 @@ uniform vec3 viewPos;
 
 uniform float far_plane;
 
-uniform int levels;
 
 
 // array of offset direction for sampling
@@ -109,7 +108,7 @@ void main()
     // diffuse
     vec3 lightDir = normalize(lightPos - fs_in.FragPos);
     float diff = max(dot(lightDir, normal), 0.0);
-    diff = levels>0?round(diff*levels)/levels:diff;
+    diff = round(diff*10.)/5.;
     vec3 diffuse = diff * lightColor;
     // specular
     vec3 viewDir = normalize(viewPos - fs_in.FragPos);
@@ -117,9 +116,11 @@ void main()
     float spec = 0.0;
     vec3 halfwayDir = normalize(lightDir + viewDir);  
     spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
-    vec3 specular = (levels>0?round(spec+0.3):spec) * lightColor;
+    vec3 specular = spec * lightColor;
+    specular = round(specular*20.)/50.;
     // calculate shadow
-    float shadow = levels>0?ShadowCalculationFlat(fs_in.FragPos):ShadowCalculation(fs_in.FragPos);
+    // float shadow = levels>0?ShadowCalculationFlat(fs_in.FragPos):ShadowCalculation(fs_in.FragPos);
+    float shadow = ShadowCalculation(fs_in.FragPos);
     vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;    
     
     FragColor = vec4(lighting, 1.0);
