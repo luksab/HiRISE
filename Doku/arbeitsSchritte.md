@@ -21,7 +21,7 @@ Er bricht durch das Fenster und man sieht das Gebäude von außen, welches sich 
 - [x] Rigging für Charaktere
     - [x] muss sehr gut funktion, um realistische Bewegungen zu erlauben
 - [ ] Physikalische Simulation der Glassplitter
-    - [x] <del>kann auch</del> <span style="color: darkred;"> wurde </span> in Blender vorsimuliert werden, <del>sollte es nicht in echtzeit möglich sein</del> <span style="color:darkred;">da es aus Zeitgründen nicht möglich war</span>.
+    - [x] <del>kann auch</del> <span style="color: darkred;"> wurde </span> in Blender vorsimuliert <del>werden, sollte es nicht in echtzeit möglich sein</del><span style="color:darkred;">, da es aus Zeitgründen nicht möglich war</span>.
 - [x] Reflexion im Glas
     - [x] Zunächst bei intakter Scheibe durch duplikation der Szene unsetzbar
     - [ ] Bei vielen Glassplittern andere Technik notwendig
