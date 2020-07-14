@@ -957,7 +957,7 @@ int main(void)
             mars.render(0);
         }
 
-        if (cam.position().x >= -16.2) {// reflexion drawObjs[3]
+        if (cam.position().x >= -16.2 && currentTime <= 12.2) {// reflexion drawObjs[3]
             //Draw in stencil first
             glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);// Do not draw any pixels on the back buffer
             glEnable(GL_STENCIL_TEST);
