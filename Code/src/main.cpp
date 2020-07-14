@@ -330,7 +330,9 @@ int main(void)
     printf("loading mars data\n");
     auto start = glfwGetTime();
     int image_width, image_height;
-    float* image_tex_data = load_texture_data(DATA_ROOT + "rock_ground/ESP_041121_1725_RED_A_01_ORTHO_quarter.jpg", &image_width, &image_height);
+    float* image_tex_data = load_texture_data(DATA_ROOT + "ESP_041121_1725_RED_A_01_ORTHO_half.jpg", &image_width, &image_height);
+    cout<<"image height: "<<image_height<<"\n";
+    cout<<"image width: "<<image_width<<"\n";
     int pds_width;
     int pds_height;
     int pds_channels = 1;
@@ -349,7 +351,7 @@ int main(void)
     glGenerateMipmap(GL_TEXTURE_2D);
     glTextureParameteri(pds_tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
-    int tex_w = pds_width, tex_h = pds_height;
+    int tex_w = image_width, tex_h = image_height;
     GLuint tex_output;
     glGenTextures(1, &tex_output);
     glActiveTexture(GL_TEXTURE0);
