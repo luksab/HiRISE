@@ -6,3 +6,5 @@ The main eye-catcher here is probably the martian surface generated from height 
 ![mars](Doku/images/marsDemo.png)
 
 The glsl code for it can be found [here](Code/shaders).
+
+It's currently only working on Linux. If you want to install, to to [wiki/installation](https://github.com/luksab/HiRISE/wiki/installation)
