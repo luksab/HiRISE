@@ -292,7 +292,8 @@ int main(void)
     renderCube.setInt("environmentMap", 0);
 
     printf("human\n");
-    bones human = loadMeshBone("HiRISE_new/human_smooth.dae", true);
+    bones human = loadMeshBone("HiRISE_new/human.dae", false);
+    bones humanNon = loadMeshBone("HiRISE_new/human_smooth.dae", true);
     boneObject humanObj = {};
     humanObj.setup(&human, false);
     humanObj.use();
@@ -344,7 +345,7 @@ int main(void)
     glGenerateMipmap(GL_TEXTURE_2D);
     glTextureParameteri(pds_tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
-    int tex_w = image_width/marsTexScale, tex_h = image_height/marsTexScale;
+    int tex_w = image_width / marsTexScale, tex_h = image_height / marsTexScale;
     GLuint tex_output;
     glGenTextures(1, &tex_output);
     glActiveTexture(GL_TEXTURE0);
@@ -570,6 +571,7 @@ int main(void)
     bool CameraMove = false;
     bool Color = false;
     bool Draw = false;
+    bool humanNonSmooth = false;
 
     bool drawObjs[6] = { true, true, true, true, true, true };
 
@@ -610,6 +612,11 @@ int main(void)
             frameTime = 1000.0 / double(nbFrames);
             nbFrames = 0;
             lastTime += 1.0;
+        }
+
+        if (currentTime > 12.38 && !humanNonSmooth) {
+            humanNonSmooth = true;
+            human = humanNon;
         }
 
         // define UI
