@@ -137,4 +137,4 @@ Die Funktion [reloadCheck](https://github.com/luksab/HiRISE/blob/master/Code/src
 ### Prozedurale Texturen für Mars-oberfläche
 Um die niedrige Piixeldichte auf der Mars-oberfläche zu mitigieren, wurde mithilfe des Shaderreloads mit Verschiedenen Typen von Noise experimentiert.
 ![Noise](images/MarsNoise.png)
-Die Ergebnisse lassen leider zu wünschen übrig.
+Die Ergebnisse lassen leider zu wünschen übrig und wurden deshalb nicht in das entgültige Video integriert.
