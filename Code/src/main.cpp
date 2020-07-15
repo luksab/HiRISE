@@ -34,6 +34,8 @@ unsigned int fbo = 0;
 unsigned int framebuffer_tex = 0;
 unsigned int depth_rbo = 0;
 
+const uint marsTexScale = 1;
+
 bool playing;
 bool inCameraView;
 
@@ -342,7 +344,7 @@ int main(void)
     glGenerateMipmap(GL_TEXTURE_2D);
     glTextureParameteri(pds_tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
-    int tex_w = image_width, tex_h = image_height;
+    int tex_w = image_width/marsTexScale, tex_h = image_height/marsTexScale;
     GLuint tex_output;
     glGenTextures(1, &tex_output);
     glActiveTexture(GL_TEXTURE0);
@@ -370,6 +372,7 @@ int main(void)
     glDispatchCompute((GLuint)tex_w, (GLuint)tex_h, 1);
 
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    glDeleteTextures(1, &image_tex);
 
     mars.setInt("height", 1);
 
