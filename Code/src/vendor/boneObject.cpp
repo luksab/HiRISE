@@ -1,6 +1,7 @@
 /*
 
 	Copyright 2011 Etay Meiri
+    2020 Lukas Sabatschus
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,14 +21,32 @@
 #include "common.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "shader.hpp"
+#include <chrono>
+#include <sys/stat.h>
+#include <thread>
 
-void boneObject::setup(bones* model, const char* vertex, const char* fragment)
+time_t bone_getModTime(const char* file)
+{
+    struct stat fileInfo;
+    std::string actualFile = SHADER_ROOT + file;
+    if (stat(actualFile.c_str(), &fileInfo) != 0) {// Use stat() to get the info
+        std::cerr << "Error: " << strerror(errno) << '\n';
+        abort();
+    }
+    return fileInfo.st_mtime;
+}
+
+void boneObject::setup(bones* model, const char* _vertex, const char* _fragment)
 {
     defaultMat = false;
     object = model;
+    vertex = strdup(_vertex);
+    fragment = strdup(_fragment);
     // load and compile shaders and link program
     unsigned int vertexShader = compileShader(vertex, GL_VERTEX_SHADER);
     unsigned int fragmentShader = compileShader(fragment, GL_FRAGMENT_SHADER);
+    vertexFileTime = bone_getModTime(vertex);
+    fragmentFileTime = bone_getModTime(fragment);
     shaderProgram = linkProgram(vertexShader, fragmentShader);
     //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
     // after linking the program the shader objects are no longer needed
@@ -60,8 +79,12 @@ void boneObject::setup(bones* model, bool tessellation)
         glDeleteShader(tessellationEShader);
     } else {
         // load and compile shaders and link program
-        unsigned int vertexShader = compileShader("pbr/pbrS.vert", GL_VERTEX_SHADER);
-        unsigned int fragmentShader = compileShader("pbr/pbr.frag", GL_FRAGMENT_SHADER);
+        vertex = strdup("pbr/pbrS.vert");
+        fragment = strdup("pbr/pbr.frag");
+        vertexFileTime = bone_getModTime(vertex);
+        fragmentFileTime = bone_getModTime(fragment);
+        unsigned int vertexShader = compileShader(vertex, GL_VERTEX_SHADER);
+        unsigned int fragmentShader = compileShader(fragment, GL_FRAGMENT_SHADER);
         shaderProgram = linkProgram(vertexShader, fragmentShader);
         //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
         // after linking the program the shader objects are no longer needed
@@ -93,8 +116,77 @@ void boneObject::use()
     glUseProgram(shaderProgram);
 }
 
+bool boneObject::checkReload()
+{
+    if (bone_getModTime(vertex) > vertexFileTime && loadShaderFile(vertex)[0] != '\0') {
+        return true;
+    }
+    if (bone_getModTime(fragment) > fragmentFileTime && loadShaderFile(vertex)[0] != '\0') {
+        return true;
+    }
+    return false;
+}
+
+void boneObject::reload()
+{
+    unsigned int vertexShader;
+    unsigned int fragmentShader;
+    unsigned int tessellationShader;
+    unsigned int tessellationEShader;
+    unsigned int geometryShader;
+
+    glDeleteProgram(shaderProgram);
+    // load and compile shaders and link program
+    vertexShader = compileShader(vertex, GL_VERTEX_SHADER);
+    fragmentShader = compileShader(fragment, GL_FRAGMENT_SHADER);
+    shaderProgram = linkProgram(vertexShader, fragmentShader);
+    vertexFileTime = bone_getModTime(vertex);
+    fragmentFileTime = bone_getModTime(fragment);
+    //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
+    // after linking the program the shader objects are no longer needed
+    glDeleteShader(fragmentShader);
+    glDeleteShader(vertexShader);
+
+    glUseProgram(shaderProgram);
+    model_mat_loc = glGetUniformLocation(shaderProgram, "model_mat");
+    view_mat_loc = glGetUniformLocation(shaderProgram, "view_mat");
+    proj_mat_loc = glGetUniformLocation(shaderProgram, "proj_mat");
+
+    for (const auto& value : ints) {
+        setInt(value.first, value.second);
+    }
+
+    for (const auto& value : floats) {
+        setFloat(value.first, value.second);
+    }
+
+    for (const auto& value : vec3s) {
+        setVec3(value.first, value.second);
+    }
+
+    for (const auto& value : vec4s) {
+        setVec4(value.first, value.second);
+    }
+
+    for (const auto& value : mat4s) {
+        glm::mat4 val = value.second;
+        setMat4(value.first, val);
+    }
+}
+
+void boneObject::reloadCheck()
+{
+    bool rel = checkReload();
+    if (rel) {
+        std::chrono::milliseconds timespan(20);// or whatever
+        std::this_thread::sleep_for(timespan);
+        reload();
+    }
+}
+
 void boneObject::setInt(char const* name, int value)
 {
+    ints[name] = value;
     glUseProgram(shaderProgram);
     unsigned int loc = glGetUniformLocation(shaderProgram, name);
     glUniform1i(loc, value);
@@ -102,23 +194,42 @@ void boneObject::setInt(char const* name, int value)
 
 void boneObject::setFloat(char const* name, float value)
 {
+    floats[name] = value;
     glUseProgram(shaderProgram);
     unsigned int loc = glGetUniformLocation(shaderProgram, name);
     glUniform1f(loc, value);
 }
 
-void boneObject::setMat4(char const* name, glm::mat4* value)
+void boneObject::setMat4(char const* name, glm::mat4& value)
 {
+    mat4s[name] = value;
     glUseProgram(shaderProgram);
     unsigned int loc = glGetUniformLocation(shaderProgram, name);
-    glUniformMatrix4fv(loc, 1, GL_FALSE, &(*value)[0][0]);
+    glUniformMatrix4fv(loc, 1, GL_FALSE, &value[0][0]);
 }
 
 void boneObject::setVec3(char const* name, glm::vec3 value)
 {
+    vec3s[name] = value;
     glUseProgram(shaderProgram);
     unsigned int loc = glGetUniformLocation(shaderProgram, name);
     glUniform3f(loc, value[0], value[1], value[2]);
+}
+
+void boneObject::setVec3(char const* name, float x, float y, float z)
+{
+    vec3s[name] = glm::vec3(x, y, z);
+    glUseProgram(shaderProgram);
+    unsigned int loc = glGetUniformLocation(shaderProgram, name);
+    glUniform3f(loc, x, y, z);
+}
+
+void boneObject::setVec4(char const* name, glm::vec4 value)
+{
+    vec4s[name] = value;
+    glUseProgram(shaderProgram);
+    unsigned int loc = glGetUniformLocation(shaderProgram, name);
+    glUniform4f(loc, value[0], value[1], value[2], value[3]);
 }
 
 void boneObject::setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat)
@@ -210,7 +321,7 @@ void boneObject::render(double currentTime, pbrObject shaderProg)
     glUniformMatrix4fv(boneMs, object->NumBones, GL_FALSE, mats);
     free(mats);
 
-    shaderProg.setMat4("model_mat",&objMat);
+    shaderProg.setMat4("model_mat", &objMat);
     //glUniformMatrix4fv(boneMats, object->NumBones, GL_FALSE, &(object->boneTransform[index][0][0][0]));
 
     //glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(*object).matrixAt(currentTime)[0][0]);

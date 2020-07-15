@@ -290,7 +290,7 @@ int main(void)
     renderCube.setInt("environmentMap", 0);
 
     printf("human\n");
-    bones human = loadMeshBone("HiRISE_new/human.dae", false);
+    bones human = loadMeshBone("HiRISE_new/human_smooth.dae", true);
     boneObject humanObj = {};
     humanObj.setup(&human, false);
     humanObj.use();
@@ -321,9 +321,9 @@ int main(void)
     printf("loading mars data\n");
     auto start = glfwGetTime();
     int image_width, image_height;
-    float* image_tex_data = load_texture_data(DATA_ROOT + "ESP_041121_1725_RED_A_01_ORTHO_half.jpg", &image_width, &image_height);
-    cout<<"image height: "<<image_height<<"\n";
-    cout<<"image width: "<<image_width<<"\n";
+    float* image_tex_data = load_texture_data(DATA_ROOT + "ESP_041121_1725_RED_A_01_ORTHO_quarter.jpg", &image_width, &image_height);
+    cout << "image height: " << image_height << "\n";
+    cout << "image width: " << image_width << "\n";
     int pds_width;
     int pds_height;
     int pds_channels = 1;
@@ -375,19 +375,28 @@ int main(void)
 
     printf("loading model textures\n");
     start = glfwGetTime();
-    const char* path = "rock_ground";
+    const char* path = "human";
+    stbi_set_flip_vertically_on_load(true);
 
     ImageThreadCall diff = {};
     diff.data = &diff.dataP;
-    diff.path0 = DATA_ROOT + path + "/" + path + "_diff_8k.jpg";
+    diff.path0 = DATA_ROOT + path + "/" + path + "_Material_BaseColor.png";
     diff.widthP = &diff.width;
     diff.heightP = &diff.height;
     diff.nrComponentsP = &diff.nrComponents;
     diff.t = std::thread(loadTextureData, diff.data, diff.path0.c_str(), diff.widthP, diff.heightP, diff.nrComponentsP);
 
+    ImageThreadCall metal = {};
+    metal.data = &metal.dataP;
+    metal.path0 = DATA_ROOT + path + "/" + path + "_Material_Metallic.png";
+    metal.widthP = &metal.width;
+    metal.heightP = &metal.height;
+    metal.nrComponentsP = &metal.nrComponents;
+    metal.t = std::thread(loadTextureData, metal.data, metal.path0.c_str(), metal.widthP, metal.heightP, metal.nrComponentsP);
+
     ImageThreadCall nor = {};
     nor.data = &nor.dataP;
-    nor.path0 = DATA_ROOT + path + "/" + path + "_nor_8k.jpg";
+    nor.path0 = DATA_ROOT + path + "/" + path + "_Material_Normal.png";
     nor.widthP = &nor.width;
     nor.heightP = &nor.height;
     nor.nrComponentsP = &nor.nrComponents;
@@ -395,7 +404,7 @@ int main(void)
 
     ImageThreadCall rough = {};
     rough.data = &rough.dataP;
-    rough.path0 = DATA_ROOT + path + "/" + path + "_rough_8k.jpg";
+    rough.path0 = DATA_ROOT + path + "/" + path + "_Material_Roughness.png";
     rough.widthP = &rough.width;
     rough.heightP = &rough.height;
     rough.nrComponentsP = &rough.nrComponents;
@@ -403,7 +412,7 @@ int main(void)
 
     ImageThreadCall ao = {};
     ao.data = &ao.dataP;
-    ao.path0 = DATA_ROOT + path + "/" + path + "_ao_8k.jpg";
+    ao.path0 = DATA_ROOT + path + "/" + path + "_Material_AO.png";
     ao.widthP = &ao.width;
     ao.heightP = &ao.height;
     ao.nrComponentsP = &ao.nrComponents;
@@ -411,7 +420,7 @@ int main(void)
 
     ImageThreadCall disp = {};
     disp.data = &disp.dataP;
-    disp.path0 = DATA_ROOT + path + "/" + path + "_disp_8k.jpg";
+    disp.path0 = DATA_ROOT + path + "/" + path + "_Material_Height.png";
     disp.widthP = &disp.width;
     disp.heightP = &disp.height;
     disp.nrComponentsP = &disp.nrComponents;
@@ -436,7 +445,7 @@ int main(void)
     rockTex[1].texture = loadTexture(nor.dataP, nor.width, nor.height, nor.nrComponents);
     rockTex[2].type = GL_TEXTURE_2D;
     rockTex[2].spot = 5;
-    glGenTextures(1, &rockTex[2].texture);
+    rockTex[2].texture = loadTexture(metal.dataP, metal.width, metal.height, metal.nrComponents);
     rockTex[3].type = GL_TEXTURE_2D;
     rockTex[3].spot = 6;
     rockTex[3].texture = loadTexture(rough.dataP, rough.width, rough.height, rough.nrComponents);
@@ -462,7 +471,7 @@ int main(void)
     rockTex[7].type = GL_TEXTURE_CUBE_MAP;
     rockTex[7].spot = 1;
     rockTex[7].texture = envtex.prefilterMap;
-    rockTex[8].type = GL_TEXTURE_CUBE_MAP;
+    rockTex[8].type = GL_TEXTURE_2D;
     rockTex[8].spot = 2;
     rockTex[8].texture = envtex.brdfLUTTexture;
     stop = glfwGetTime();
@@ -772,7 +781,7 @@ int main(void)
             ImGui::Checkbox("HiRISE", &(drawObjs[5]));
             ImGui::End();
         }
-        if(autoReload){
+        if (autoReload) {
             hiriseObj.reloadCheck();
             mars.reloadCheck();
             chairObj.reloadCheck();
@@ -781,6 +790,7 @@ int main(void)
             glassOutObj.reloadCheck();
             textObj.reloadCheck();
             Compose.reloadCheck();
+            humanObj.reloadCheck();
         }
 
         mars.setVec4("factors", factor0);
@@ -894,9 +904,7 @@ int main(void)
             humanObj.setFloat("bias", bias);
             humanObj.setMaticies(&view_matrix, &proj_matrix);
             humanObj.setVec3("camPos", cam.position());
-            glDisable(GL_CULL_FACE);
             humanObj.render(currentTime);
-            glEnable(GL_CULL_FACE);
         }
         // if (drawObjs[4]) {//render table
         //     bindTextures(rockTex);

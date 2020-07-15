@@ -53,6 +53,7 @@ unsigned int loadTexture(char const* path)
 
 unsigned int loadTexture(unsigned char* data, int width, int height, int nrComponents)
 {
+    cout << "texture loaded with width " << width << " and height " << height << "\n";
     unsigned int textureID;
     glGenTextures(1, &textureID);
 
@@ -135,8 +136,8 @@ pbrTex setupPBR(animated* pbr, char const* path, pbrObject* mars, uint tex_outpu
     unsigned int equirectangularMap_locF_irra = glGetUniformLocation(filterCube.shaderProgram, "environmentMap");
     filterCube.setInt("environmentMap", 0);
 
-    pbrObject brdfCube = {};
-    brdfCube.setup(pbr, "brdf/brdf.vs", "brdf/brdf.fs");
+    shaderObject brdfCube = {};
+    brdfCube.setup("brdf/brdf.vs", "brdf/brdf.fs");
 
     printf("loading hdri\n");
     stbi_set_flip_vertically_on_load(true);
@@ -342,6 +343,8 @@ pbrTex setupPBR(animated* pbr, char const* path, pbrObject* mars, uint tex_outpu
 
     glViewport(0, 0, 512, 512);
     brdfCube.use();
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     renderQuad();
 
