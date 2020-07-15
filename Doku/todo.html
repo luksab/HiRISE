@@ -1,5 +1,5 @@
 <!DOCTYPE html><html><head>
-      <title>arbeitsSchritte</title>
+      <title>todo</title>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       
@@ -270,24 +270,7 @@ video {
     </head>
     <body for="html-export">
       <div class="mume markdown-preview  ">
-      <div><h1 class="mume-header" id="arbeitsschritte-f%C3%BCr-hirise">Arbeitsschritte f&#xFC;r HiRISE</h1>
-
-<p>Der gesamte code ist auf <a href="https://github.com/luksab/hirise">GitHub.com/luksab/HiRISE</a> zu finden.</p>
-<h1 class="mume-header" id="planung">Planung</h1>
-
-<h3 class="mume-header" id="storyboard">Storyboard</h3>
-
-<p><img src="images/storyBoard1.jpg" alt></p>
-<h3 class="mume-header" id="story">Story</h3>
-
-<p>Der Protagonist steht von seinem Schreibtisch auf und schaut sich um - es starten Sirenen und er f&#xE4;ngt an zum Fenster zu laufen.<br>
-Auf dem Weg dahin <del> wird er von mehreren Personen verfolgt und </del> macht etwas Parkour &#xFC;ber Tische und andere Hindernisse.<br>
-Er bricht durch das Fenster und man sieht das Geb&#xE4;ude von au&#xDF;en, welches sich auf einem Science-Fiction Mars befindet und <del> springt auf ein gegen&#xFC;bergelegenes Haus und l&#xE4;uft weg</del> <span style="color: darkred;">f&#xE4;llt in immer langsamer werdender Slow-Motion w&#xE4;hrend die Kamera sich weiter bewegt</span>.</p>
-<h3 class="mume-header" id="technisches">Technisches</h3>
-
-<h4 class="mume-header" id="features-zu-implementieren-in-rot-revidiert">Features zu implementieren - in rot revidiert</h4>
-
-<ul>
+      <div><ul>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Minimalistische Cinematic Engine
 <ul>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Datenformat aus Blender exportieren, in Programm importieren
@@ -295,10 +278,10 @@ Er bricht durch das Fenster und man sieht das Geb&#xE4;ude von au&#xDF;en, welch
 <li>einfach dae/obj</li>
 </ul>
 </li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> protobuf oder json als Dateiformat? <span style="color:darkred;"> - Custom (floats in Datei, space-separated)</span></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> protobuf oder json als Dateiformat? - Custom (floats in Datei, space-separated)</li>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Kameraposition, Skelettanimationen
 <ul>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Kamerapositionen speichen</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Kameraposionen speichen</li>
 </ul>
 </li>
 </ul>
@@ -310,19 +293,18 @@ Er bricht durch das Fenster und man sieht das Geb&#xE4;ude von au&#xDF;en, welch
 </li>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Physikalische Simulation der Glassplitter
 <ul>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> <del>kann auch</del> <span style="color: darkred;"> wurde </span> in Blender vorsimuliert <del>werden, sollte es nicht in echtzeit m&#xF6;glich sein</del><span style="color:darkred;">, da es aus Zeitgr&#xFC;nden nicht m&#xF6;glich war</span>.</li>
+<li>kann auch in Blender vorsimuliert werden, sollte es nicht in echtzeit m&#xF6;glich sein</li>
 </ul>
 </li>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Reflexion im Glas
 <ul>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Zun&#xE4;chst bei intakter Scheibe durch duplikation der Szene unsetzbar</li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Bei vielen Glassplittern andere Technik notwendig
+<li>[o] Bei vielen Glassplittern andere Technik notwendig
 <ul>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Environment Map reflektieren</li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Environment Map in realtime neu erzugen <span style="color:darkred;"> - hier nicht notwendig, um gute Ergebnisse zu erzeugen.</span></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Environment Map in realtime neu erzugen</li>
 </ul>
 </li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> z.B. SS (unvollst&#xE4;ndig), Ray-tracing (zu teuer), <u>Environment Map</u></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> z.B. SS (unvollst&#xE4;ndig), Ray-tracing (zu teuer), Environment Map</li>
 </ul>
 </li>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Dispacement Mapping + PDS Parser
@@ -331,18 +313,15 @@ Er bricht durch das Fenster und man sieht das Geb&#xE4;ude von au&#xDF;en, welch
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Marsoberfl&#xE4;che von HiRISE-daten</li>
 </ul>
 </li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Sound
+<li>[o] Sound
 <ul>
-<li>Etwas Musikunterlage
-<ul>
+<li>Etwas Musikunterlage</li>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Code</li>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Musik selbst</li>
 </ul>
 </li>
 </ul>
-</li>
-</ul>
-<h4 class="mume-header" id="optionale-features">Optionale Features</h4>
+<h3 class="mume-header" id="optionale-features">Optionale Features</h3>
 
 <ul>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Dynamische Subdivision Surface der Marsoberfl&#xE4;che
@@ -353,7 +332,6 @@ Er bricht durch das Fenster und man sieht das Geb&#xE4;ude von au&#xDF;en, welch
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Prozedurale Texturen f&#xFC;r Mars-oberfl&#xE4;che
 <ul>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> Farben f&#xFC;r Fl&#xE4;chen, auf denen die HiRISE Kamera keine Farbinformationen erhalten hat</li>
-<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" checked> <span style="color:darkred;">ist nicht gut gelungen</span></li>
 </ul>
 </li>
 <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> HDR-Effekte, Bewegungsunsch&#xE4;rfe, Fokusunsch&#xE4;rfe
@@ -362,101 +340,6 @@ Er bricht durch das Fenster und man sieht das Geb&#xE4;ude von au&#xDF;en, welch
 </ul>
 </li>
 </ul>
-<h1 class="mume-header" id="durchf%C3%BChrung">Durchf&#xFC;hrung</h1>
-
-<h2 class="mume-header" id="charakteranimation">Charakteranimation</h2>
-
-<p>Um die animation des Charakters realistisch zu gestalten wurden Referenzvideos aufgenommen, die dann in Blender als Hintergrund benutzt wurden, um dann mithilfe von inverse kinematics zu animieren.<br>
-<img src="images/blender_animation_setup.jpg" alt><br>
-Die Referenzvideos sind mit der expliziten Erlaubnis von Ben Karcher aufgenommen und verwendet.<br>
-<img src="images/BenKarcherErlaubnis.jpg" alt></p>
-<h2 class="mume-header" id="marsoberfl%C3%A4che">Marsoberfl&#xE4;che</h2>
-
-<p>Da als Umgebung eine Marsoberfl&#xE4;che gew&#xFC;nscht wurde, werden H&#xF6;hendaten und ein Schwarz-Wei&#xDF; Bild vom High Resolution Imaging Science Experiment (HiRISE, daher stammt auch der Projektname) benutzt.<br>
-Der genaue Datensatz l&#xE4;sst sich unter <a href="https://www.uahirise.org/dtm/dtm.php?ID=ESP_048136_1725">https://www.uahirise.org/dtm/dtm.php?ID=ESP_048136_1725</a> finden.</p>
-<p>Um aus den H&#xF6;hendaten und dem Schwarz-Wei&#xDF; Bild ein 3D-Objekt mit Farben zu erstellen wurde ein Referenzbild in Farbe benutzt, um ein Node-Netzwerk in Blender anzupassen, um nahe an das Referenzbild zu gelangen.<br>
-<img src="images/nodeNetwork.jpg" alt><br>
-In Blender lassen sich in Echtzeit Parameter und Zusammenh&#xE4;nge ausprobieren um schnell zu iterieren und so zu einer L&#xF6;sung zu kommen. Dieses Node-Netzwerk wurde dann in Shader-Code umgesetzt.<br>
-<img src="images/marsShader.jpg" alt></p>
-<h3 class="mume-header" id="mars-in-hirise-gerendered">Mars in HiRISE gerendered</h3>
-
-<p><img src="images/marsDemo.jpg" alt></p>
-<h2 class="mume-header" id="kamera-und-ui">Kamera und UI</h2>
-
-<p>Hier ist die Entwicklungsumgebung mit allen UI-Elementen aktiviert:<br>
-<img src="images/Screenshot_UI_demo.jpg" alt><br>
-Zur Entwicklung des Benutzerinterfaces wurde dear ImGui benutzt. Dies erlaubt schnell relativ komlexe Bedienelemente einzubinden.<br>
-Die Entwicklung der einzelnen <a href="https://github.com/luksab/HiRISE/blob/master/Code/src/main.cpp#L615">Elemente</a> fand zum Gro&#xDF;teil dadurch statt, dass eine Variable im Programm in Echtzeit ver&#xE4;ndert werden sollte, wodurch dann genau ein Element n&#xF6;tig wurde.<br>
-Da diese Element jeweils also genau einen Verwendungszweck habem , lassen sie sich jeweils deaktivieren, um Platz zu sparen.</p>
-<h2 class="mume-header" id="kamerafahrt">Kamerafahrt</h2>
-
-<p>Diese wird mithilfe von Splines, welche durch Punkte, durch die die Kamera gehen soll definiert werden.<br>
-Hier ist die erste Kamerafahrt. Bei dieser sind die Tangenten noch nicht korrekt gesetzt, weswegen sie etwas abgehackt erscheint.</p>
-<figure class="video_container">
-  <video controls="true" allowfullscreen="true">
-    <source src="./videos/first Cam.mp4" type="video/mp4">
-  </video>
-</figure>
-<p>Die Punkte, durch die die Kamera gehen soll, werden in einem nach dem ersten Element von dem std::pair sortierten std::vector&lt;std::pair&lt;float, std::vector&lt;float&gt;&gt;&gt; gespeichert. Es wird, um zwischen dem iten und (i+1)ten Punkt eine Kurve auszurechnen werden die Punkte i-1, i, i+1 und i+2 mit der globalen Zeit an <a href="https://github.com/luksab/HiRISE/blob/486d4ef89b60513d377432117c05703218515664/Code/include/spline.hpp#L150">eval</a> &#xFC;bergeben.<br>
-Diese rechnet dann zun&#xE4;chst die Steigungen der Kontrollpunkte von den Punkten p1 und p2 aus aus, welche p2-p0 und p3-p1 normiert entsprechen, wenn p1 zwischen p0 und p2 und p2 zwischen p1 und p3 liegt. Sonst werden die Kontrollpunkte auf die x-Koordinate beschr&#xE4;nkt.<br>
-Dies wird gemacht, damit Maxima und Minima eine symmetrischere Extremstelle aufweisen.<br>
-<img src="images/spline.png" alt="spline code"></p>
-<h2 class="mume-header" id="pbr-hdri">PBR &amp; HDRI</h2>
-
-<p>Au&#xDF;erhalb des Geb&#xE4;ude wird zur beleuchtung ein HDRI nach dem Vorbild von <a href="https://learnopengl.com/PBR/IBL/Specular-IBL">https://learnopengl.com/PBR/IBL/Specular-IBL</a> benutzt.<br>
-Au&#xDF;erdem werden die dort beschriebenen shader leicht ver&#xE4;ndert f&#xFC;r die PBR-Objekte verwendet.</p>
-<h2 class="mume-header" id="skeletal-animation">Skeletal animation</h2>
-
-<p>Das importieren von Skeletal Animationen hat sich als recht fragil herausgestellt und bei Exporteinstellungen, die von denen abweichen, die in <a href="blenderExport.html">blenderExport</a> beschrieben werden, geht das Modell fast sicher kaputt.</p>
-<figure class="video_container">
-  <video controls="true" allowfullscreen="true">
-    <source src="./videos/brokenSkelett.mp4" type="video/mp4">
-  </video>
-</figure>
-Es werden die einzelnen Knochen rekursiv von der H&#xFC;fte aus importiert, indem die Transformationsmatrizen pro frame immer an die Kinder weitergegeben werden. Dadurch werden, wenn z.B der Arm bewegt wird die Hand und dadurch auch die Hand mitbewegt.
-<p>Hier ist der Anfang in Blender Animiert:</p>
-<figure class="video_container">
-  <video controls="true" allowfullscreen="true">
-    <source src="./videos/animationFromScratch.mp4" type="video/mp4">
-  </video>
-</figure>
-<h2 class="mume-header" id="spiegelung">Spiegelung</h2>
-
-<p>F&#xFC;r den gro&#xDF;en Spiegel mit Echtzeitreflexionen wird die Szene zwei mal gerendert. Ein mal normal und ein mal gespiegelt und mit einem Stencil auf die richtige Form zurechtgeschnitten. Dies geschieht in der main datei um Zeile <a href="https://github.com/luksab/HiRISE/blob/master/Code/src/main.cpp#L960">960</a>.</p>
-<p>F&#xFC;r die vielen kleinen Glasscherben wird lediglich die Environment Map reflektiert abgebildet. Dies geschieht vollst&#xE4;ndig im <a href="https://github.com/luksab/HiRISE/blob/master/Code/shaders/glass/glass.frag">shader code</a>.</p>
-<h2 class="mume-header" id="modelle">Modelle</h2>
-
-<h3 class="mume-header" id="mars">Mars</h3>
-
-<p>Da die Marsoberfl&#xE4;che vollst&#xE4;ndig aus Texturen entsteht, muss nur ein relativ hochaufgel&#xF6;stes Quadrat eingeladen werden.<br>
-Diese muss bereits einiges an Aufl&#xF6;sung aufweisen, da meine Nvidia gtx 1070 ti leider nur 64 Tessellation levels unterst&#xFC;tzt, was nicht ausreicht, um aus einem einzelnen Rechteck genug Detail herauszuhohlen.<br>
-Die Farbtextur wird in einem Computeshader vorberechnet um zur Laufzeit Rechenleistung zu sparen. Dadurch l&#xE4;sst sich in der Szene beim Zeitpunkt der <a href="https://github.com/luksab/HiRISE/commit/5c31de87f14faa08e156b4710158d1e16780ce2e">Implementation</a> eine Performacesteigerung von nahezu 10x feststellen, da das berechnen der Farbinformationen sehr aufwendig ist.</p>
-<h3 class="mume-header" id="tisch-stuhl-bildschirm-usb-stick">Tisch, Stuhl, Bildschirm, USB-Stick</h3>
-
-<p>Diese Objekte wurden alle von mir in Blender modelliert, in dem Primitive zu einem Mesh zusammengef&#xFC;gt und dann teilweise leicht ver&#xE4;ndert wurden.<br>
-<img src="images/modelling.jpg" alt></p>
-<h3 class="mume-header" id="hirise-text">HiRISE Text</h3>
-
-<p>Der text wurde in Blender mithilfe des Text-Objektes ertellt. Dieses kann dann in Geometrie umgewandelt werden, die dann extrudiert wird, um ein dreidimensionales Objekt des urspr&#xFC;nglichen Textes zu erstellen.</p>
-<h2 class="mume-header" id="glasssplitter-simulation">Glasssplitter simulation</h2>
-
-<p>Der urspr&#xFC;ngliche Plan war es eine vollst&#xE4;ndige Simulation von Glass zu schreiben, die das Glas zersplittern und mit der Szene interagieren lassen sollte. Dies ist allerdings aus Zeitgr&#xFC;nden nicht gelungen und wird jetzt durch das Blender Add-on <a href="https://docs.blender.org/manual/en/2.83/addons/object/cell_fracture.html">Cell Fracture</a> und die Ridgid Body Simulation von Blender ersetzt.<br>
-Dort wird das Glas zun&#xE4;chst von Cell Fracture zersplittert und die einzelnen resultierenden Objekte interagieren dann miteinander und mit der Szene.<br>
-<img src="images/cellFracture.png" alt="eine Beispielkonfiguration von Cell Fracture"><br>
-<img src="images/shards.png" alt="shards"></p>
-<h2 class="mume-header" id="extras">Extras</h2>
-
-<h3 class="mume-header" id="shader-auto-reload">Shader auto-reload</h3>
-
-<p>Zum beschleunigen der Entwicklung von Shadercode wurde die <a href="https://github.com/luksab/HiRISE/blob/master/Code/src/vendor/shaderObject.cpp">Shaderklasse</a> mit der Funktion <a href="https://github.com/luksab/HiRISE/blob/master/Code/src/vendor/shaderObject.cpp#L200">reload</a>, welche den Shadercode neul&#xE4;d und <a href="https://github.com/luksab/HiRISE/blob/master/Code/src/vendor/shaderObject.cpp#L298">checkReload</a>, welche &#xFC;berpr&#xFC;ft, ob die Datei seit dem letzten Laden/ Neuladen ver&#xE4;ndert wurde.<br>
-Damit L&#xE4;sst sich jeden Frame &#xFC;berpr&#xFC;fen, ob eine Datei ver&#xE4;ndert wurde, und wenn dies der Fall ist den zugeh&#xF6;renden Shader neuzuladen.<br>
-Diese Schritte m&#xFC;ssen allerdings mit einem Delay versehen werden, da das scheiben des neuen Shadercodes in die Datei etwas Zeit in anspruch nimmt.<br>
-Die Funktion <a href="https://github.com/luksab/HiRISE/blob/master/Code/src/vendor/shaderObject.cpp#L338">reloadCheck</a> &#xFC;bernimmt diese Aufgabe und wartet 20ms, bevor der n&#xE4;chste Shader geladen wird. Das sorgt zwar daf&#xFC;r, dass die Frametime f&#xFC;r einen Frame deutlich ansteigt, da aber nur in der Entwicklung und auch da im Vergleich zu der Gesamtzahl der gerenderten Bilder sehr selten die Shader neugeladen werden m&#xFC;ssen, ist das ein Kompromiss, der sicherlich zu vertreten ist.</p>
-<h3 class="mume-header" id="prozedurale-texturen-f%C3%BCr-mars-oberfl%C3%A4che">Prozedurale Texturen f&#xFC;r Mars-oberfl&#xE4;che</h3>
-
-<p>Um die niedrige Piixeldichte auf der Mars-oberfl&#xE4;che zu mitigieren, wurde mithilfe des Shaderreloads mit Verschiedenen Typen von Noise experimentiert.<br>
-<img src="images/MarsNoise.png" alt="Noise"><br>
-Die Ergebnisse lassen leider zu w&#xFC;nschen &#xFC;brig und wurden deshalb nicht in das entg&#xFC;ltige Video integriert.</p>
 </div>
       </div>
       
