@@ -283,6 +283,15 @@ int main(void)
     monitor.transform[0] = glm::mat4(1);
     monitorObj.shaderProgram.defaultMat = true;
 
+    printf("USB Stick\n");
+    animated USB = loadMeshAnim("HiRISE_new/USB.dae", false);//toAnimated(loadMesh("chair.dae", false, glm::vec4(0.f, 0.f, 0.f, 1.f)));
+    pbrObject USBObj = {};
+    // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.26, 0.26, 0.26));
+    // scaleMat = glm::translate(scaleMat, glm::vec3(0., 0.49, -0.12));
+    // chair.transform[0] = scaleMat;
+    USBObj.setup(&USB, "simple/simple.vert", "simple/USB.frag");
+    USBObj.shaderProgram.defaultMat = true;
+
     printf("cube\n");
     animated pbr = loadMeshAnim("cube.dae", true);
 
@@ -801,6 +810,7 @@ int main(void)
             textObj.reloadCheck();
             Compose.reloadCheck();
             humanObj.reloadCheck();
+            USBObj.reloadCheck();
         }
 
         mars.setVec4("factors", factor0);
@@ -889,6 +899,7 @@ int main(void)
         simpleDepthShader.setVec3("camPos", cam.position());
         chairObj.render(currentTime, simpleDepthShader.shaderProgram);
         monitorObj.render(currentTime, simpleDepthShader.shaderProgram);
+        USBObj.render(currentTime, simpleDepthShader.shaderProgram);
 
         skinningDepthShader.use();
         for (unsigned int i = 0; i < 6; ++i)
@@ -948,6 +959,9 @@ int main(void)
             bindTextures(indoorTex);
             monitorObj.setMaticies(&view_matrix, &proj_matrix);
             monitorObj.render(ident);
+
+            USBObj.setMaticies(&view_matrix, &proj_matrix);
+            USBObj.render(currentTime);
         }
 
         if (drawObjs[2]) {// render mars
@@ -995,6 +1009,9 @@ int main(void)
             bindTextures(indoorTex);
             monitorObj.setMaticies(&view_matrix_new, &proj_matrix);
             monitorObj.render(ident);
+
+            USBObj.setMaticies(&view_matrix_new, &proj_matrix);
+            USBObj.render(currentTime);
 
             bindTextures(rockTex);
             // tableObj.setMaticies(&view_matrix_new, &proj_matrix);
