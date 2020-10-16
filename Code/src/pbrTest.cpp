@@ -1,4 +1,5 @@
 #include <random>
+#include <unistd.h>
 #include <glm/gtx/transform.hpp>
 #include <stb_image.h>
 
@@ -94,6 +95,25 @@ unsigned int loadTexture(char const *path)
     return textureID;
 }
 
+std::vector<unsigned int> loadPBR(char const * path)
+{
+    std::vector<unsigned int> ret;
+    ret.push_back(loadTexture((DATA_ROOT + path+"/"+path+"_diff_8k.jpg").c_str()));
+    ret.push_back(loadTexture((DATA_ROOT + path+"/"+path+"_nor_8k.jpg").c_str()));
+    if(access( (DATA_ROOT + path+"/"+path+"_disp_8k.jpg").c_str(), F_OK ) != -1){
+
+    }
+    //ret.push_back(loadTexture((path+"/"+path+"_disp_8k.png").c_str()));
+    unsigned int metallic;
+    glGenTextures(1, &metallic);
+    ret.push_back(metallic);
+    ret.push_back(loadTexture((DATA_ROOT + path+"/"+path+"_rough_8k.jpg").c_str()));
+    ret.push_back(loadTexture((DATA_ROOT + path+"/"+path+"_ao_8k.jpg").c_str()));
+    ret.push_back(loadTexture((DATA_ROOT + path+"/"+path+"_disp_8k.jpg").c_str()));
+
+    return ret;
+}
+
 int main(int, char *argv[])
 {
     GLFWwindow *window = initOpenGL(WINDOW_WIDTH, WINDOW_HEIGHT, argv[0]);
@@ -103,6 +123,8 @@ int main(int, char *argv[])
 
     init_imgui(window);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
+    printf("loading meshes\n");
 
     animated pbr = loadMeshAnim("cube.dae", true);
     pbrObject hdrCube = {};
@@ -129,17 +151,20 @@ int main(int, char *argv[])
     pbrObject brdfCube = {};
     brdfCube.setup(&pbr, "brdf/brdf.vs", "brdf/brdf.fs");
 
-    pbrObject Cube = {};
-    Cube.setup(&pbr, false);
-    Cube.use();
-    Cube.setInt("irradianceMap", 0);
-    Cube.setInt("prefilterMap", 1);
-    Cube.setInt("brdfLUT", 2);
-    Cube.setInt("albedoMap", 3);
-    Cube.setInt("normalMap", 4);
-    Cube.setInt("metallicMap", 5);
-    Cube.setInt("roughnessMap", 6);
-    Cube.setInt("aoMap", 7);
+    animated suzanne = loadMeshAnim("hiresSphere.dae", false);
+    pbrObject pbrObj = {};
+    glPatchParameteri(GL_PATCH_VERTICES, 3);
+    pbrObj.setup(&suzanne, false);
+    pbrObj.use();
+    pbrObj.setInt("irradianceMap", 0);
+    pbrObj.setInt("prefilterMap", 1);
+    pbrObj.setInt("brdfLUT", 2);
+    pbrObj.setInt("albedoMap", 3);
+    pbrObj.setInt("normalMap", 4);
+    pbrObj.setInt("metallicMap", 5);
+    pbrObj.setInt("roughnessMap", 6);
+    pbrObj.setInt("aoMap", 7);
+    pbrObj.setInt("heightMap", 8);
 
     // load PBR material textures
     // --------------------------
@@ -149,14 +174,19 @@ int main(int, char *argv[])
     // unsigned int roughness = loadTexture((DATA_ROOT + "rust/roughness.png").c_str());
     // unsigned int ao = loadTexture((DATA_ROOT + "rust/ao.png").c_str());
 
-    unsigned int albedo = loadTexture((DATA_ROOT + "book/book_pattern_col2_8k.png").c_str());
-    unsigned int normal = loadTexture((DATA_ROOT + "book/book_pattern_nor_8k.png").c_str());
+    printf("loading textures\n");
+    std::vector<unsigned int> pbrImgs = loadPBR("rock_ground");
+    unsigned int albedo = pbrImgs[0];//loadTexture((DATA_ROOT + "book/book_pattern_col2_8k.png").c_str());
+    unsigned int normal = pbrImgs[1];//vloadTexture((DATA_ROOT + "book/book_pattern_nor_8k.png").c_str());
     //unsigned int metallic = loadTexture((DATA_ROOT + "book/book_pattern_disp_8k.png").c_str());
-    unsigned int metallic;
-    glGenTextures(1, &metallic);
-    unsigned int roughness = loadTexture((DATA_ROOT + "book/book_pattern_rough_8k.png").c_str());
-    unsigned int ao = loadTexture((DATA_ROOT + "book/book_pattern_AO_8k.png").c_str());
+    unsigned int metallic = pbrImgs[0];
+    //glGenTextures(1, &metallic);
+    unsigned int roughness = pbrImgs[3];//loadTexture((DATA_ROOT + "book/book_pattern_rough_8k.png").c_str());
+    unsigned int ao = pbrImgs[4];//loadTexture((DATA_ROOT + "book/book_pattern_AO_8k.png").c_str());
+    //unsigned int disp = loadTexture((DATA_ROOT + "SphereDisplacement.png").c_str());//pbrImgs[5];
+    unsigned int disp = pbrImgs[5];
 
+    printf("loading hdri\n");
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrComponents;
     float *data = stbi_loadf((DATA_ROOT + "construction_yard_8k.hdr").c_str(), &width, &height, &nrComponents, 0);
@@ -178,8 +208,9 @@ int main(int, char *argv[])
     {
         std::cout << "Failed to load HDR image." << std::endl;
     }
-    int resolution = 512;
+    int resolution = 4096;
 
+    printf("converting hdri to environment map\n");
     unsigned int captureFBO, captureRBO;
     glGenFramebuffers(1, &captureFBO);
     glGenRenderbuffers(1, &captureRBO);
@@ -237,7 +268,7 @@ int main(int, char *argv[])
     glGenerateMipmap(envCubemap);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    //conv code
+    printf("converting environment map to irradiance map\n");
     resolution = 32;
     unsigned int irradianceMap;
     glGenTextures(1, &irradianceMap);
@@ -283,7 +314,7 @@ int main(int, char *argv[])
     // glUniform1i(environmentMap_loc_render, 0);
     //glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
 
-    //roughness Map
+    printf("converting environment map to roughness map\n");
     unsigned int prefilterMap;
     glGenTextures(1, &prefilterMap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
@@ -335,6 +366,7 @@ int main(int, char *argv[])
 
     // pbr: generate a 2D LUT from the BRDF equations used.
     // ----------------------------------------------------
+    printf("precomputing brdf\n");
     unsigned int brdfLUTTexture;
     glGenTextures(1, &brdfLUTTexture);
 
@@ -370,6 +402,8 @@ int main(int, char *argv[])
     bool vSync = true;
     bool Framerate = true;
     bool Camera = false;
+
+    float df = 0.25;
 
     //fuer fps
     double lastTime = glfwGetTime();
@@ -412,9 +446,12 @@ int main(int, char *argv[])
         if (Camera)
         {
             ImGui::Begin("Camera");
-            ImGui::SliderFloat("float", &FOV, 90.0f, 5.0f);
+            ImGui::SliderFloat("FOV", &FOV, 90.0f, 5.0f);
+            ImGui::SliderFloat("displacement", &df, 0.0f, 5.0f);
             ImGui::End();
         }
+
+        pbrObj.setFloat("displacementFactor", df);
 
         if (vSync)
         {
@@ -453,10 +490,12 @@ int main(int, char *argv[])
         glBindTexture(GL_TEXTURE_2D, roughness);
         glActiveTexture(GL_TEXTURE7);
         glBindTexture(GL_TEXTURE_2D, ao);
+        glActiveTexture(GL_TEXTURE8);
+        glBindTexture(GL_TEXTURE_2D, disp);
 
-        Cube.setMaticies(&view_matrix, &proj_matrix);
-        Cube.setVec3("camPos", cam.position());
-        Cube.render(0);
+        pbrObj.setMaticies(&view_matrix, &proj_matrix);
+        pbrObj.setVec3("camPos", cam.position());
+        pbrObj.render(0);
 
         // render UI
         imgui_render();

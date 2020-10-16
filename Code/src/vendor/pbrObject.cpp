@@ -46,13 +46,11 @@ void pbrObject::setup(animated *model, bool tessellation)
     useTessellation = tessellation;
     if (tessellation)
     {
-        printf("Not implemented correctly yet.");
-        assert(0);
         // load and compile shaders and link program
-        unsigned int vertexShader = compileShader("pbr/pbr.vert", GL_VERTEX_SHADER);
-        unsigned int fragmentShader = compileShader("pbr/pbr.frag", GL_FRAGMENT_SHADER);
-        unsigned int tessellationShader = compileShader("main.tess", GL_TESS_CONTROL_SHADER);
-        unsigned int tessellationEShader = compileShader("main.tesse", GL_TESS_EVALUATION_SHADER);
+        unsigned int vertexShader = compileShader("pbr/pbrT.vert", GL_VERTEX_SHADER);
+        unsigned int fragmentShader = compileShader("pbr/pbrT.frag", GL_FRAGMENT_SHADER);
+        unsigned int tessellationShader = compileShader("pbr/pbrT.tess", GL_TESS_CONTROL_SHADER);
+        unsigned int tessellationEShader = compileShader("pbr/pbrT.tesse", GL_TESS_EVALUATION_SHADER);
         shaderProgram = linkProgram(vertexShader, fragmentShader, tessellationShader, tessellationEShader);
         //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
         // after linking the program the shader objects are no longer needed
@@ -64,8 +62,8 @@ void pbrObject::setup(animated *model, bool tessellation)
     else
     {
         // load and compile shaders and link program
-        unsigned int vertexShader = compileShader("pbr/pbrT.vs", GL_VERTEX_SHADER);
-        unsigned int fragmentShader = compileShader("pbr/pbrT.fs", GL_FRAGMENT_SHADER);
+        unsigned int vertexShader = compileShader("pbr/pbr.vert", GL_VERTEX_SHADER);
+        unsigned int fragmentShader = compileShader("pbr/pbr.frag", GL_FRAGMENT_SHADER);
         shaderProgram = linkProgram(vertexShader, fragmentShader);
         //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
         // after linking the program the shader objects are no longer needed

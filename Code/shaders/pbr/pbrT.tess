@@ -1,0 +1,50 @@
+#version 430 core
+
+layout (vertices = 3) out;
+in vec2 TexCoord_CS_in[];
+in vec3 Normal_CS_in[];
+
+out vec2 TexCoord_ES_in[];
+out vec3 Normal_ES_in[];
+out float factor_ES_in[];
+
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+uniform mat4 proj_mat;
+
+float GetTessLevel(float Distance0, float Distance1)                                            
+{                                                                                               
+    float AvgDistance = (Distance0 + Distance1) / 2.0;   
+
+    if (AvgDistance <= 0.5) {                                                                   
+        return 32.0;                                                                            
+    }else if (AvgDistance <= 2.0) {                                                                   
+        return 10.0;                                                                            
+    }                                                                                           
+    else if (AvgDistance <= 5.0) {                                                              
+        return 7.0;                                                                             
+    }                                                                                           
+    else {                                                                                      
+        return 3.0;                                                                             
+    }                                                                                           
+}
+
+void main(void)
+{
+    if (gl_InvocationID == 0)
+    {
+        vec4 pos = gl_in[gl_InvocationID].gl_Position;
+
+        gl_TessLevelOuter[0] = 10.;//GetTessLevel(length(proj_mat * view_mat * model_mat * gl_in[1].gl_Position), length(proj_mat * view_mat * model_mat * gl_in[2].gl_Position));
+        gl_TessLevelOuter[1] = 10.;//GetTessLevel(length(proj_mat * view_mat * model_mat * gl_in[2].gl_Position), length(proj_mat * view_mat * model_mat * gl_in[0].gl_Position));
+        gl_TessLevelOuter[2] = 10.;//GetTessLevel(length(proj_mat * view_mat * model_mat * gl_in[0].gl_Position), length(proj_mat * view_mat * model_mat * gl_in[1].gl_Position));
+        gl_TessLevelInner[0] = 10.;//gl_TessLevelOuter[2];
+        gl_TessLevelInner[1] = 10.;
+        factor_ES_in[gl_InvocationID] = gl_TessLevelOuter[2];
+    }
+
+    gl_out[gl_InvocationID].gl_Position =
+        gl_in[gl_InvocationID].gl_Position;
+    TexCoord_ES_in[gl_InvocationID] = TexCoord_CS_in[gl_InvocationID];
+    Normal_ES_in[gl_InvocationID] = Normal_CS_in[gl_InvocationID];
+}
