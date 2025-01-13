@@ -2,7 +2,7 @@
          h1 {color: orchid!important;}
 </style>
 #HiRISE
-<span style="color:red">Lukas Sabatschus</span>
+<span style="color:red">Emma Sabatschus</span>
 ##Story
 Der Protagonist steht von seinem Schreibtisch auf und schaut sich um - es starten Sirenen und er fängt an zum Fenster zu laufen.
 Auf dem Weg dahin wird er von mehreren Personen verfolgt und macht etwas Parkour über Tische und andere Hindernisse.

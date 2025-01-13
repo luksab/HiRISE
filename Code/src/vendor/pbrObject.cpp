@@ -1,7 +1,7 @@
 /*
 
-	Copyright 2011 Etay Meiri
-    2020 Lukas Sabatschus
+    Copyright 2011 Etay Meiri
+    2020 Emma Sabatschus
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,25 +22,25 @@
 #include "glm/gtx/string_cast.hpp"
 #include "shader.hpp"
 
-void pbrObject::setup(animated* model, const char* vertex, const char* fragment)
+void pbrObject::setup(animated *model, const char *vertex, const char *fragment)
 {
     object = model;
     shaderProgram.setup(vertex, fragment);
 }
 
-void pbrObject::setup(animated* model, const char* vertex, const char* fragment, const char* geometry)
+void pbrObject::setup(animated *model, const char *vertex, const char *fragment, const char *geometry)
 {
     object = model;
     shaderProgram.setup(vertex, fragment, geometry);
 }
 
-void pbrObject::setup(animated* model, const char* vertex, const char* fragment, const char* tess, const char* tesse)
+void pbrObject::setup(animated *model, const char *vertex, const char *fragment, const char *tess, const char *tesse)
 {
     object = model;
     shaderProgram.setup(vertex, fragment, tess, tesse);
 }
 
-void pbrObject::setup(animated* model, bool tessellation)
+void pbrObject::setup(animated *model, bool tessellation)
 {
     object = model;
     shaderProgram.setup(tessellation);
@@ -58,30 +58,33 @@ void pbrObject::setup(animated* model, bool tessellation)
     setFloat("displacementFactor", 0.);
 }
 
-void pbrObject::setup(animated* model, std::string vertex, std::string fragment)
+void pbrObject::setup(animated *model, std::string vertex, std::string fragment)
 {
     setup(model, vertex.c_str(), fragment.c_str());
 }
 
-void pbrObject::setup(animated* model, std::string vertex, std::string fragment, std::string geometry)
+void pbrObject::setup(animated *model, std::string vertex, std::string fragment, std::string geometry)
 {
     setup(model, vertex.c_str(), fragment.c_str(), geometry.c_str());
 }
 
-void setup(animated* model, std::string vertex, std::string tess, std::string tesse, std::string fragment)
+void setup(animated *model, std::string vertex, std::string tess, std::string tesse, std::string fragment)
 {
     setup(model, vertex.c_str(), tess.c_str(), tesse.c_str(), fragment.c_str());
 }
 
-void pbrObject::reload(){
+void pbrObject::reload()
+{
     shaderProgram.reload();
 }
 
-void pbrObject::reloadCheck(){
+void pbrObject::reloadCheck()
+{
     shaderProgram.reloadCheck();
 }
 
-bool pbrObject::checkReload(){
+bool pbrObject::checkReload()
+{
     return shaderProgram.checkReload();
 }
 
@@ -90,37 +93,37 @@ void pbrObject::use()
     shaderProgram.use();
 }
 
-void pbrObject::setInt(char const* name, int value)
+void pbrObject::setInt(char const *name, int value)
 {
     shaderProgram.setInt(name, value);
 }
 
-void pbrObject::setFloat(char const* name, float value)
+void pbrObject::setFloat(char const *name, float value)
 {
     shaderProgram.setFloat(name, value);
 }
 
-void pbrObject::setMat4(char const* name, glm::mat4* value)
+void pbrObject::setMat4(char const *name, glm::mat4 *value)
 {
     shaderProgram.setMat4(name, *value);
 }
 
-void pbrObject::setVec3(char const* name, glm::vec3 value)
+void pbrObject::setVec3(char const *name, glm::vec3 value)
 {
     shaderProgram.setVec3(name, value);
 }
 
-void pbrObject::setVec3(char const* name, float x, float y, float z)
+void pbrObject::setVec3(char const *name, float x, float y, float z)
 {
     shaderProgram.setVec3(name, x, y, z);
 }
 
-void pbrObject::setVec4(char const* name, glm::vec4 value)
+void pbrObject::setVec4(char const *name, glm::vec4 value)
 {
     shaderProgram.setVec4(name, value);
 }
 
-void pbrObject::setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat)
+void pbrObject::setMaticies(glm::mat4 *view_mat, glm::mat4 *proj_mat)
 {
     shaderProgram.setMaticies(view_mat, proj_mat);
 }
@@ -139,7 +142,7 @@ void pbrObject::render(double currentTime, shaderObject shaderProg)
     shaderProg.render(modelMat, object->vertex_count);
 }
 
-void pbrObject::render(glm::mat4& matrix)
+void pbrObject::render(glm::mat4 &matrix)
 {
     (*object).bind();
     shaderProgram.render(matrix, object->vertex_count);
@@ -150,14 +153,15 @@ void pbrObject::renderRotated(float rotation, float t)
     glm::mat4 trans = (*object).matrixAt(t);
     trans = glm::rotate(trans, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
     double mat[4][4] = {
-        { cos(t), sin(t), 0., 0. },
-        { -sin(t), cos(t), 0., 0. },
-        { 0., 0., 1., 0. },
-        { 0., 0., 0., 1. }
-    };
+        {cos(t), sin(t), 0., 0.},
+        {-sin(t), cos(t), 0., 0.},
+        {0., 0., 1., 0.},
+        {0., 0., 0., 1.}};
     trans = glm::mat4(1);
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
             trans[j][i] = mat[i][j];
         }
     }

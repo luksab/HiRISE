@@ -1,7 +1,7 @@
 /*
 
-	Copyright 2011 Etay Meiri
-    2020 Lukas Sabatschus
+    Copyright 2011 Etay Meiri
+    2020 Emma Sabatschus
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 #include "glm/gtx/string_cast.hpp"
 #include "shader.hpp"
 
-void pbrMultiObject::setup(std::vector<animated> model, const char* vertex, const char* fragment)
+void pbrMultiObject::setup(std::vector<animated> model, const char *vertex, const char *fragment)
 {
     defaultMat = false;
     object = model;
@@ -30,8 +30,8 @@ void pbrMultiObject::setup(std::vector<animated> model, const char* vertex, cons
     unsigned int vertexShader = compileShader(vertex, GL_VERTEX_SHADER);
     unsigned int fragmentShader = compileShader(fragment, GL_FRAGMENT_SHADER);
     shaderProgram = linkProgram(vertexShader, fragmentShader);
-    //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
-    // after linking the program the shader objects are no longer needed
+    // unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
+    //  after linking the program the shader objects are no longer needed
     glDeleteShader(fragmentShader);
     glDeleteShader(vertexShader);
 
@@ -41,7 +41,7 @@ void pbrMultiObject::setup(std::vector<animated> model, const char* vertex, cons
     proj_mat_loc = glGetUniformLocation(shaderProgram, "proj_mat");
 }
 
-void pbrMultiObject::setup(std::vector<animated> model, const char* vertex, const char* fragment, const char* geometry)
+void pbrMultiObject::setup(std::vector<animated> model, const char *vertex, const char *fragment, const char *geometry)
 {
     defaultMat = false;
     object = model;
@@ -50,8 +50,8 @@ void pbrMultiObject::setup(std::vector<animated> model, const char* vertex, cons
     unsigned int fragmentShader = compileShader(fragment, GL_FRAGMENT_SHADER);
     unsigned int geometryShader = compileShader(geometry, GL_GEOMETRY_SHADER);
     shaderProgram = linkProgram(vertexShader, fragmentShader, geometryShader);
-    //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
-    // after linking the program the shader objects are no longer needed
+    // unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
+    //  after linking the program the shader objects are no longer needed
     glDeleteShader(fragmentShader);
     glDeleteShader(vertexShader);
     glDeleteShader(geometryShader);
@@ -62,7 +62,7 @@ void pbrMultiObject::setup(std::vector<animated> model, const char* vertex, cons
     proj_mat_loc = glGetUniformLocation(shaderProgram, "proj_mat");
 }
 
-void pbrMultiObject::setup(std::vector<animated> model, const char* vertex, const char* fragment, const char* tess, const char* tesse)
+void pbrMultiObject::setup(std::vector<animated> model, const char *vertex, const char *fragment, const char *tess, const char *tesse)
 {
     defaultMat = false;
     object = model;
@@ -72,8 +72,8 @@ void pbrMultiObject::setup(std::vector<animated> model, const char* vertex, cons
     unsigned int tessellationShader = compileShader(tess, GL_TESS_CONTROL_SHADER);
     unsigned int tessellationEShader = compileShader(tesse, GL_TESS_EVALUATION_SHADER);
     shaderProgram = linkProgram(vertexShader, fragmentShader, tessellationShader, tessellationEShader);
-    //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
-    // after linking the program the shader objects are no longer needed
+    // unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
+    //  after linking the program the shader objects are no longer needed
     glDeleteShader(fragmentShader);
     glDeleteShader(vertexShader);
     glDeleteShader(tessellationShader);
@@ -90,26 +90,29 @@ void pbrMultiObject::setup(std::vector<animated> model, bool tessellation)
     defaultMat = true;
     object = model;
     useTessellation = tessellation;
-    if (tessellation) {
+    if (tessellation)
+    {
         // load and compile shaders and link program
         unsigned int vertexShader = compileShader("pbr/pbrT.vert", GL_VERTEX_SHADER);
         unsigned int fragmentShader = compileShader("pbr/pbrT.frag", GL_FRAGMENT_SHADER);
         unsigned int tessellationShader = compileShader("pbr/pbrT.tess", GL_TESS_CONTROL_SHADER);
         unsigned int tessellationEShader = compileShader("pbr/pbrT.tesse", GL_TESS_EVALUATION_SHADER);
         shaderProgram = linkProgram(vertexShader, fragmentShader, tessellationShader, tessellationEShader);
-        //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
-        // after linking the program the shader objects are no longer needed
+        // unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
+        //  after linking the program the shader objects are no longer needed
         glDeleteShader(fragmentShader);
         glDeleteShader(vertexShader);
         glDeleteShader(tessellationShader);
         glDeleteShader(tessellationEShader);
-    } else {
+    }
+    else
+    {
         // load and compile shaders and link program
         unsigned int vertexShader = compileShader("pbr/pbr.vert", GL_VERTEX_SHADER);
         unsigned int fragmentShader = compileShader("pbr/pbr.frag", GL_FRAGMENT_SHADER);
         shaderProgram = linkProgram(vertexShader, fragmentShader);
-        //unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
-        // after linking the program the shader objects are no longer needed
+        // unsigned int shaderProgram = linkProgram(vertexShader, fragmentShader);
+        //  after linking the program the shader objects are no longer needed
         glDeleteShader(fragmentShader);
         glDeleteShader(vertexShader);
     }
@@ -152,49 +155,49 @@ void pbrMultiObject::use()
     glUseProgram(shaderProgram);
 }
 
-void pbrMultiObject::setInt(char const* name, int value)
+void pbrMultiObject::setInt(char const *name, int value)
 {
     glUseProgram(shaderProgram);
     unsigned int loc = glGetUniformLocation(shaderProgram, name);
     glUniform1i(loc, value);
 }
 
-void pbrMultiObject::setFloat(char const* name, float value)
+void pbrMultiObject::setFloat(char const *name, float value)
 {
     glUseProgram(shaderProgram);
     unsigned int loc = glGetUniformLocation(shaderProgram, name);
     glUniform1f(loc, value);
 }
 
-void pbrMultiObject::setMat4(char const* name, glm::mat4* value)
+void pbrMultiObject::setMat4(char const *name, glm::mat4 *value)
 {
     glUseProgram(shaderProgram);
     unsigned int loc = glGetUniformLocation(shaderProgram, name);
     glUniformMatrix4fv(loc, 1, GL_FALSE, &(*value)[0][0]);
 }
 
-void pbrMultiObject::setVec3(char const* name, glm::vec3 value)
+void pbrMultiObject::setVec3(char const *name, glm::vec3 value)
 {
     glUseProgram(shaderProgram);
     unsigned int loc = glGetUniformLocation(shaderProgram, name);
     glUniform3f(loc, value[0], value[1], value[2]);
 }
 
-void pbrMultiObject::setVec3(char const* name, float x, float y, float z)
+void pbrMultiObject::setVec3(char const *name, float x, float y, float z)
 {
     glUseProgram(shaderProgram);
     unsigned int loc = glGetUniformLocation(shaderProgram, name);
     glUniform3f(loc, x, y, z);
 }
 
-void pbrMultiObject::setVec4(char const* name, glm::vec4 value)
+void pbrMultiObject::setVec4(char const *name, glm::vec4 value)
 {
     glUseProgram(shaderProgram);
     unsigned int loc = glGetUniformLocation(shaderProgram, name);
     glUniform4f(loc, value[0], value[1], value[2], value[3]);
 }
 
-void pbrMultiObject::setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat)
+void pbrMultiObject::setMaticies(glm::mat4 *view_mat, glm::mat4 *proj_mat)
 {
     glUseProgram(shaderProgram);
     view_matrix = view_mat;
@@ -204,18 +207,23 @@ void pbrMultiObject::setMaticies(glm::mat4* view_mat, glm::mat4* proj_mat)
 void pbrMultiObject::render(double currentTime)
 {
     glUseProgram(shaderProgram);
-    if (defaultMat) {
+    if (defaultMat)
+    {
         glUniformMatrix4fv(view_mat_loc, 1, GL_FALSE, &(*view_matrix)[0][0]);
         glUniformMatrix4fv(proj_mat_loc, 1, GL_FALSE, &(*proj_matrix)[0][0]);
     }
 
-    for (uint i = 0; i < object.size(); i++) {
+    for (uint i = 0; i < object.size(); i++)
+    {
         glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(object[i].matrixAt(currentTime))[0][0]);
         object[i].bind();
-        if (useTessellation) {
-            glDrawElements(GL_PATCHES, object[i].vertex_count, GL_UNSIGNED_INT, (void*)0);
-        } else {
-            glDrawElements(GL_TRIANGLES, object[i].vertex_count, GL_UNSIGNED_INT, (void*)0);
+        if (useTessellation)
+        {
+            glDrawElements(GL_PATCHES, object[i].vertex_count, GL_UNSIGNED_INT, (void *)0);
+        }
+        else
+        {
+            glDrawElements(GL_TRIANGLES, object[i].vertex_count, GL_UNSIGNED_INT, (void *)0);
         }
     }
 }
@@ -224,13 +232,17 @@ void pbrMultiObject::render(double currentTime, unsigned int shaderProg)
 {
     glUseProgram(shaderProg);
 
-    for (uint i = 0; i < object.size(); i++) {
+    for (uint i = 0; i < object.size(); i++)
+    {
         object[i].bind();
         glUniformMatrix4fv(model_mat_loc, 1, GL_FALSE, &(object[i].matrixAt(currentTime))[0][0]);
-        if (useTessellation) {
-            glDrawElements(GL_PATCHES, object[i].vertex_count, GL_UNSIGNED_INT, (void*)0);
-        } else {
-            glDrawElements(GL_TRIANGLES, object[i].vertex_count, GL_UNSIGNED_INT, (void*)0);
+        if (useTessellation)
+        {
+            glDrawElements(GL_PATCHES, object[i].vertex_count, GL_UNSIGNED_INT, (void *)0);
+        }
+        else
+        {
+            glDrawElements(GL_TRIANGLES, object[i].vertex_count, GL_UNSIGNED_INT, (void *)0);
         }
     }
 }
